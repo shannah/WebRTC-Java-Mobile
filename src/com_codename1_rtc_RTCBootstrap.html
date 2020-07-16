@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Web RTC</title>
+        <script>  
+        
+        function uuid(){
+            var dt = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = (dt + Math.random()*16)%16 | 0;
+                dt = Math.floor(dt/16);
+                return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+            });
+            return uuid;
+        }
+
+
+
+        
+        var f =function() {
+            
+            
+            
+            function addEventListener(o, type_) {
+                var type = Array.isArray(type_) ? type_[0] : type_;
+               
+                
+                o.addEventListener(type, function(e) {
+                    if (window.cn1Callback) {
+                        var data = {
+                            target: registry.id(o),
+                            type: type
+                        };
+                        if (Array.isArray(type_)) {
+                            for (key in type_[1]) {
+                                data[key] = type_[1][key](o);
+                            }
+                        }
+                        window.cn1Callback(data);
+                    }
+                });
+            }
+            
+            
+            function installEventListeners(o) {
+                if (o instanceof MediaStream) {
+                    addEventListener(o, 'ended');
+                    var tracks = o.getTracks();
+                    var len = tracks.length;
+                    for (var i=0; i<len; i++) {
+                        installEventListeners(tracks[i]);
+                    }
+                   
+                    return;
+                } else if (o instanceof HTMLMediaElement) {
+                    ['abort', 'canplay', 'canplaythrough', 
+                        ['durationchange', {'duration' : function(el){return el.duration;}}], 
+                        'emptied', 'ended', 
+                        ['error', {'message' : function(el){return el.error.message;}, 'code' : function(el){return el.error.code;}}], 
+                        'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play', 'playing', 
+                        'progress', 
+                        ['ratechange', {'playbackRate' : function(el) {return el.playbackRate;}}], 
+                        'seeked', 'seeking', 'stalled', 'suspend', 
+                        ['timeupdate', {'currentTime' : function(el){return el.currentTime;}}], 
+                        ['volumechange', {'volume' : function(el){return el.volume;}}], 
+                        'waiting']
+                            .forEach(function(type, index, array) {
+                            addEventListener(o, type);
+                            
+                            
+                        });
+                        
+                    if (o instanceof HTMLVideoElement) {
+                        addEventListener(o, 
+                            ['resize', 
+                                {'videoWidth' : function(el){return el.videoWidth;},
+                                    'videoHeight': function(el){return el.videoHeight;}
+                                }
+                            ]
+                        );
+                    }
+                } else if (o instanceof MediaStreamTrack) {
+                    ['ended', 'mute', 'unmute'].forEach(function(type, index, array){
+                        addEventListener(o, type);
+                    });
+                }
+            }
+            
+            function RTCRegistry() {
+                var registry = {};
+                
+                this.get = function(id) {
+                    return registry[id];
+                };
+                
+                this.retain = function (o, requestedUuid) {
+                    if (typeof o == 'string') {
+                        o = registry[o];
+                    }
+                    if (!o) {
+                        throw new Error("Cannot find reference");
+                    }
+                    if (!o._cn1) {
+                        Object.defineProperty(o, "_cn1", {
+                            enumerable: false,
+                            writable: true,
+                            readable: true
+                        });
+                        o._cn1 = {};
+                        o._cn1.count = 0;
+                        o._cn1.id = requestedUuid || uuid();
+                        registry[o._cn1.id] = o;
+                        installEventListeners(o);
+                        
+                    }
+                    
+                    o._cn1.count++;
+                    
+                };
+                
+                this.release = function(o) {
+                    if (typeof o == 'string') {
+                        o = registry[o];
+                    }
+                    if (!o) {
+                        throw new Error("Cannot find reference");
+                    }
+                    if (o._cn1) {
+                        if (o._cn1.id) {
+                            if (--o._cn1.count == 0) {
+                                var id = o._cn1.id;
+                                delete o._cn1;
+                                delete registry[id];
+                                
+                            }
+                            return;
+                        } 
+                    }
+                    throw new Error("Object "+o+" is not reference counted");
+                    
+                };
+                
+                this.id = function(o) {
+                    
+                    if (o && o._cn1 && o._cn1.id) {
+                        return o._cn1.id;
+                    }
+                    return '';
+                };
+            }
+            
+            window.registry = new RTCRegistry();
+        };
+        f();  
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>
