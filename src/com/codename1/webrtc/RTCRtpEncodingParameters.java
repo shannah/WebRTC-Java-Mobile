@@ -5,93 +5,96 @@
  */
 package com.codename1.webrtc;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  *
  * @author shannah
  */
-public class RTCRtpEncodingParameters {
+public class RTCRtpEncodingParameters implements JSObject {
 
     /**
      * @return the active
      */
-    public boolean isActive() {
+    public Boolean isActive() {
         return active;
     }
 
     /**
      * @param active the active to set
      */
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 
     /**
      * @return the codecPayloadType
      */
-    public int getCodecPayloadType() {
+    public Integer getCodecPayloadType() {
         return codecPayloadType;
     }
 
     /**
      * @param codecPayloadType the codecPayloadType to set
      */
-    public void setCodecPayloadType(int codecPayloadType) {
+    public void setCodecPayloadType(Integer codecPayloadType) {
         this.codecPayloadType = codecPayloadType;
     }
 
     /**
      * @return the dtx
      */
-    public boolean isDtx() {
+    public Boolean isDtx() {
         return dtx;
     }
 
     /**
      * @param dtx the dtx to set
      */
-    public void setDtx(boolean dtx) {
+    public void setDtx(Boolean dtx) {
         this.dtx = dtx;
     }
 
     /**
      * @return the maxBitrate
      */
-    public long getMaxBitrate() {
+    public Integer getMaxBitrate() {
         return maxBitrate;
     }
 
     /**
      * @param maxBitrate the maxBitrate to set
      */
-    public void setMaxBitrate(long maxBitrate) {
+    public void setMaxBitrate(Integer maxBitrate) {
         this.maxBitrate = maxBitrate;
     }
 
     /**
      * @return the maxFramerate
      */
-    public double getMaxFramerate() {
+    public Double getMaxFramerate() {
         return maxFramerate;
     }
 
     /**
      * @param maxFramerate the maxFramerate to set
      */
-    public void setMaxFramerate(double maxFramerate) {
+    public void setMaxFramerate(Double maxFramerate) {
         this.maxFramerate = maxFramerate;
     }
 
     /**
      * @return the ptime
      */
-    public long getPtime() {
+    public Integer getPtime() {
         return ptime;
     }
 
     /**
      * @param ptime the ptime to set
      */
-    public void setPtime(long ptime) {
+    public void setPtime(Integer ptime) {
         this.ptime = ptime;
     }
 
@@ -112,22 +115,36 @@ public class RTCRtpEncodingParameters {
     /**
      * @return the scaleResolutionDownBy
      */
-    public double getScaleResolutionDownBy() {
+    public Double getScaleResolutionDownBy() {
         return scaleResolutionDownBy;
     }
 
     /**
      * @param scaleResolutionDownBy the scaleResolutionDownBy to set
      */
-    public void setScaleResolutionDownBy(double scaleResolutionDownBy) {
+    public void setScaleResolutionDownBy(Double scaleResolutionDownBy) {
         this.scaleResolutionDownBy = scaleResolutionDownBy;
     }
-    private boolean active;
-    private int codecPayloadType;
-    private boolean dtx;
-    private long maxBitrate;
-    private double maxFramerate;
-    private long ptime;
+    private Boolean active;
+    private Integer codecPayloadType;
+    private Boolean dtx;
+    private Integer maxBitrate;
+    private Double maxFramerate;
+    private Integer ptime;
     private String rid;
-    private double scaleResolutionDownBy;
+    private Double scaleResolutionDownBy;
+
+    @Override
+    public Object toJSONStruct() {
+        Map out = new LinkedHashMap();
+        if (active != null) out.put("active", active);
+        if (codecPayloadType != null) out.put("codecPayloadType", codecPayloadType);
+        if (dtx != null) out.put("dtx", dtx);
+        if (maxBitrate != null) out.put("maxBitrate", maxBitrate);
+        if (maxFramerate != null) out.put("maxFramerate", maxFramerate);
+        if (ptime != null) out.put("ptime", ptime);
+        if (rid != null) out.put("rid", rid);
+        if (scaleResolutionDownBy != null) out.put("scaleResolutionDownBy", scaleResolutionDownBy);
+        return out;
+    }
 }

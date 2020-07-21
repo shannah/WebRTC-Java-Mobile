@@ -9,13 +9,13 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCRtpSender {
+public interface RTCRtpSender extends RefCounted {
     public RTCDTMFSender getDtmf();
-    public RTCDtlsTransport getRtcpTransport();
-    public MediaStreamTrack getTrack();
-    public RTCDtlsTransport getTransport();
     
-    public RTCRtpParameters getParameters();
+    public MediaStreamTrack getTrack();
+    
+    
+    public RTCRtpSendParameters getParameters();
     public RTCStatsReport getStats();
     public RTCPromise setParameters(RTCRtpSendParameters parameters);
     public RTCPromise replaceTrack(MediaStreamTrack newTrack);

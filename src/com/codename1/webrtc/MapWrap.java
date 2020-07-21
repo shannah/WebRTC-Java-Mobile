@@ -25,10 +25,43 @@ class MapWrap {
         }
         return defaultVal;
     }
+    
+    public String getString(String key, String defaultVal) {
+        return String.valueOf(get(key, defaultVal));
+    }
+    
+    public Integer getInt(String key, Integer defaultVal) {
+        if (has(key)) {
+            Object val = m.get(key);
+            if (val == null) {
+                return defaultVal;
+            }
+            if (!(val instanceof Number)) {
+                throw new IllegalArgumentException("Expected integer but found "+val);
+            }
+            return ((Number)val).intValue();
+        }
+        return defaultVal;
+    }
+    
+    public Boolean getBoolean(String key, Boolean defaultVal) {
+        if (has(key)) {
+            return ((Boolean)m.get(key)).booleanValue();
+        }
+        return defaultVal;
+    }
+    
+    public Long getLong(String key, Long defaultVal) {
+        if (has(key)) {
+            return ((Number)m.get(key)).longValue();
+        }
+        return defaultVal;
+    }
 
     Object get(String key) {
         return m.get(key);
     }
+    
 
     boolean has(String key) {
         return m.containsKey(key);

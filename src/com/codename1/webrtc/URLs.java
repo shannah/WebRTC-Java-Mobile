@@ -12,6 +12,15 @@ import java.util.Iterator;
  *
  * @author shannah
  */
-public class URLs extends RTCList<String>{
+public class URLs extends RTCList<String> implements JSObject {
+
+    @Override
+    public Object toJSONStruct() {
+        ArrayList out = new ArrayList();
+        for (String str : this) {
+            out.add(str);
+        }
+        return out;
+    }
     
 }

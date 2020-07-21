@@ -5,10 +5,21 @@
  */
 package com.codename1.webrtc;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author shannah
  */
-public class RTCCertificates extends RTCList<RTCCertificate> {
+public class RTCCertificates extends RTCList<RTCCertificate> implements JSObject {
+
+    @Override
+    public Object toJSONStruct() {
+        ArrayList out = new ArrayList();
+        for (RTCCertificate cert : this) {
+            out.add(cert.toJSONStruct());
+        }
+        return out;
+    }
     
 }

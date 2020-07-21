@@ -9,13 +9,13 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCDataChannel extends EventTarget {
+public interface RTCDataChannel extends EventTarget, RefCounted {
     public String getBinaryType();
     public int getBufferedAmount();
     public int getBufferedAmountLowThreshold();
     public int getId();
     public String getLabel();
-    public Long getMaxPacketLifeTime();
+    public Integer getMaxPacketLifeTime();
     public Integer getMaxRetransmits();
     public boolean isNegotiated();
     public String getProtocol();
@@ -36,6 +36,10 @@ public interface RTCDataChannel extends EventTarget {
         
         RTCDataChannelState(String str) {
             this.string = str;
+        }
+
+        public boolean matches(String readyStateStr) {
+            return string.equals(readyStateStr);
         }
     }
     

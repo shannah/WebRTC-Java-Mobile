@@ -10,5 +10,14 @@ package com.codename1.webrtc;
  * @author shannah
  */
 public interface RTCElement {
+    public void setId(String id);
+    public String getId();
+    
+    // Sets element dimensions to fill the RTC component.
+    public void fill();
+    
+    
+    public void applyStyle(RTCStyle style);
+    public void applyStyle(String css);
     
 }

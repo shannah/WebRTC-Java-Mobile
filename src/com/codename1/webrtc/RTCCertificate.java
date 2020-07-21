@@ -11,6 +11,6 @@ import java.util.Date;
  *
  * @author shannah
  */
-public interface RTCCertificate {
+public interface RTCCertificate extends JSObject {
     public Date getExpires();
 }

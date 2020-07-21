@@ -16,4 +16,5 @@ public interface RTCPromise<T> {
     public RTCPromise<T> then(SuccessCallback<T> onFulfilled, SuccessCallback<Throwable> onRejected);
     public RTCPromise<T> onCatch(SuccessCallback<Throwable> onRejected);
     public RTCPromise<T> onFinally(SuccessCallback onFinally);
+    public T get();
 }

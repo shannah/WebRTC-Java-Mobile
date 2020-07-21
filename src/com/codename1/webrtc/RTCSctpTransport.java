@@ -13,5 +13,5 @@ public interface RTCSctpTransport extends EventTarget {
     public int getMaxChannels();
     public int getMaxMessageSize();
     public String getState();
-    public RTCDtlsTransport getTransport();
+    
 }

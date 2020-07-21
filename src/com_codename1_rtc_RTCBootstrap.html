@@ -2,7 +2,19 @@
 <html>
     <head>
         <title>Web RTC</title>
+        <style type="text/css">
+            html, body {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
         <script>  
+        
+        if (typeof String.prototype.toCamel !== 'function') {
+            String.prototype.toCamel = function(){
+              return this.replace(/[-_]([a-z])/g, function (g) { return g[1].toUpperCase(); })
+            };
+          }
         
         function uuid(){
             var dt = new Date().getTime();
@@ -18,6 +30,29 @@
 
         
         var f =function() {
+            window.cn1 = {
+                wrapRTCRtpReceiver : wrapRTCRtpReceiver,
+                wrapRTCRtpTransceiver : wrapRTCRtpTransceiver,
+                wrapRTCRtpSender : wrapRTCRtpSender,
+                wrapRTCRtpContributingSource : wrapRTCRtpContributingSource,
+                wrapRTCDtlsTransport : wrapRTCDtlsTransport,
+                wrapMediaStream : wrapMediaStream,
+                wrapMediaStreamTrack : wrapMediaStreamTrack,
+                wrapMediaTrackSettings : wrapMediaTrackSettings,
+                wrapMediaTrackConstraints : wrapMediaTrackConstraints,
+                wrapMediaTrackCapabilities : wrapMediaTrackCapabilities,
+                wrapRTCRtpSendParameters : wrapRTCRtpSendParameters,
+                wrapRTCSessionDescription : wrapRTCSessionDescription
+
+            };
+            
+            function wrapRTCSessionDescription(desc) {
+                return desc;
+            }
+            
+            function wrapRTCRtpSendParameters(params) {
+                return params;
+            }
             
             
             
@@ -33,7 +68,7 @@
                         };
                         if (Array.isArray(type_)) {
                             for (key in type_[1]) {
-                                data[key] = type_[1][key](o);
+                                data[key] = type_[1][key](o, e);
                             }
                         }
                         window.cn1Callback(data);
@@ -41,6 +76,189 @@
                 });
             }
             
+            
+            
+            function wrapRTCRtpReceiver(receiver) {
+                //https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpReceiver
+                if (!receiver) return null;
+                var out = {};
+                registry.retain(receiver);
+                out.refId = registry.id(receiver);
+                if (receiver.track) {
+                    out.track = wrapMediaStreamTrack(receiver.track);
+                }
+                out.contributingSources = [];
+                if (receiver.getContributingSources) {
+                    receiver.getContributingSources().forEach(function(source, index, array) {
+                        out.contributingSources.push(wrapRTCRtpContributingSource(source));
+                    });
+                }
+                
+                out.parameters = receiver.getParameters();
+               
+                
+                
+                return out;
+            }
+            
+            function wrapRTCRtpTransceiver(transceiver) {
+                if (!transceiver) {
+                    return null;
+                }
+                var out = {};
+                registry.retain(transceiver);
+                out.refId = registry.id(transceiver);
+                out.currentDirection = transceiver.currentDirection;
+                out.direction = transceiver.direction;
+                out.mid = transceiver.mid;
+                out.stopped = transceiver.stopped;
+                
+                out.receiver = wrapRTCRtpReceiver(transceiver.receiver);
+                out.sender = wrapRTCRtpSender(transceiver.sender);
+                
+                return out;
+            }
+            
+            function wrapRTCRtpSender(sender) {
+                if (!sender) return null;
+                var out = {};
+                registry.retain(sender);
+                out.refId = registry.id(sender);
+                out.dtmf = sender.dtmf;
+                out.rtcpTransport = sender.rtcpTransport;
+                out.track = wrapMediaStreamTrack(sender.track);
+                return out;
+            }
+            
+            function wrapRTCRtpContributingSource(source) {
+                if (!source) return null;
+                var out = {};
+                var props = ['audioLevel', 'rtpTimestamp', 'source', 'timestamp'];
+                props.forEach(function(prop, index, array){
+                    out[prop] = source[prop];
+                });
+                return out;
+            }
+            
+            function wrapRTCDtlsTransport(transport) {
+                // Not supported in Safari yet so we'll skip for now
+                //https://developer.mozilla.org/en-US/docs/Web/API/RTCDtlsTransport
+                if (!transport) return null;
+                var out = {};
+                
+                return out;
+                
+            }
+            
+            function wrapMediaStream(stream) {
+                if (!stream) {
+                    return null;
+                }
+                var out = {};
+                registry.retain(stream);
+                out.refId = registry.id(stream);
+                var props = ['active', 'ended', 'id'];
+                props.forEach(function(prop, index, array) {
+                    out[prop] = stream[prop];
+                });
+                out.tracks = [];
+                stream.getTracks().forEach(function(track, index, array) {
+                    out.tracks.push(wrapMediaStreamTrack(track));
+                });
+                return out;
+            }
+            
+            function wrapMediaStreamTrack(track) {
+                if (!track) {
+                    return null;
+                }
+                var out = {};
+                registry.retain(track);
+                out.refId = registry.id(track);
+                out.id = track.id;
+                out.isolated = track.isolated;
+                out.kind = track.kind;
+                out.label = track.label;
+                out.muted = track.muted;
+                out.readonly = track.readonly;
+                out.readyState = track.readyState;
+                out.remote = track.remote;
+                out.settings = wrapMediaTrackSettings(track.kind, track.getSettings());
+                out.constraints = wrapMediaTrackConstraints(track.kind, track.getConstraints());
+                out.capabilities = wrapMediaTrackCapabilities(track.kind, track.getCapabilities());
+                return out;
+            }
+            
+            function wrapMediaTrackSettings(kind, settings) {
+                if (!settings) return null;
+                var out = {};
+                var props = ['deviceId', 'groupId'];
+                if (kind == 'audio') {
+                    props = props.concat(['autoGainControl', 'channelCount', 'echoCancellation', 'latency', 'noiseSuppression', 'sampleRate', 'sampleSize', 'volume']);
+                } else if (kind == 'video' ) {
+                    props = props.concat(['aspectRatio', 'facingMode', 'frameRate', 'height', 'width', 'resizeMode']);
+                } else if (kind == 'image') {
+                    props = props.concat(['whiteBalanceMode', 'exposureMode', 'focusMode', 'pointsOfInterest', 'exposureCompensation', 'colorTemperature', 'iso', 'brightness', 'contrast', 'saturation', 'sharpness', 'focusDistance', 'zoom', 'torch']);
+                } else if (kind == 'screen') {
+                    props = props.concat(['curor', 'displaySurface', 'logicalSurface']);
+                }
+                props.forEach(function(prop, index, array) {
+                    out[prop] = settings[prop];
+                });
+                return out;
+                
+            }
+            
+            function wrapMediaTrackConstraints(kind, constraints) {
+                if (!constraints) return null;
+                var out = {};
+                var props = ['deviceId', 'groupId'];
+                if (kind == 'audio') {
+                    props = props.concat(['autoGainControl', 'channelCount', 'echoCancellation', 'latency', 'noiseSuppression', 'sampleRate', 'sampleSize', 'volume']);
+                } else if (kind == 'video' ) {
+                    props = props.concat(['aspectRatio', 'facingMode', 'frameRate', 'height', 'width', 'resizeMode']);
+                } else if (kind == 'image') {
+                    props = props.concat(['whiteBalanceMode', 'exposureMode', 'focusMode', 'pointsOfInterest', 'exposureCompensation', 'colorTemperature', 'iso', 'brightness', 'contrast', 'saturation', 'sharpness', 'focusDistance', 'zoom', 'torch']);
+                } else if (kind == 'screen') {
+                    props = props.concat(['curor', 'displaySurface', 'logicalSurface']);
+                }
+                props.forEach(function(prop, index, array) {
+                    out[prop] = constraints[prop];
+                });
+                return out;
+            }
+            
+            function wrapRTCIceCandidate(candidate) {
+                if (!candidate) {
+                    return null;
+                }
+                var out = {};
+                ['candidate', 'component', 'foundation', 'ip', 'port', 'priority', 'protocol', 'relatedAddress', 'relatedPort', 'sdpMid', 
+                'sdpMLineIndex', 'tcpType', 'type', 'usernameFragment'].forEach(function(prop, index, array) {
+                    out[prop] = candidate[prop];
+                });
+                return out;
+                
+            }
+            
+            function wrapMediaTrackCapabilities(kind, capabilities) {
+                if (!capabilities) return null;
+                var out = {};
+                var props = ['deviceId', 'groupId'];
+                if (kind == 'audio') {
+                    props = props.concat(['autoGainControl', 'channelCount', 'echoCancellation', 'latency', 'noiseSuppression', 'sampleRate', 'sampleSize', 'volume']);
+                } else if (kind == 'video' ) {
+                    props = props.concat(['aspectRatio', 'facingMode', 'frameRate', 'height', 'width', 'resizeMode']);
+                } else if (kind == 'image') {
+                    props = props.concat(['whiteBalanceMode', 'exposureMode', 'focusMode', 'pointsOfInterest', 'exposureCompensation', 'colorTemperature', 'iso', 'brightness', 'contrast', 'saturation', 'sharpness', 'focusDistance', 'zoom', 'torch']);
+                } else if (kind == 'screen') {
+                    props = props.concat(['curor', 'displaySurface', 'logicalSurface']);
+                }
+                props.forEach(function(prop, index, array) {
+                    out[prop] = capabilities[prop];
+                });
+                return out;
+            }
             
             function installEventListeners(o) {
                 if (o instanceof MediaStream) {
@@ -83,6 +301,99 @@
                     ['ended', 'mute', 'unmute'].forEach(function(type, index, array){
                         addEventListener(o, type);
                     });
+                } else if (o instanceof RTCPeerConnection) {
+                    [['connectionstatechange', {connectionState:function(el){return el.connectionState;}}], 
+                        ['datachannel', {
+                            //https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent
+                             refId : function(el, e) {
+                                registry.retain(e.channel);
+                                return registry.id(e.channel);
+                            },
+                            id : function(el, e) {
+                                return e.channel.id;
+                            },
+                            binaryType : function(el, e) {
+                                return e.channel.binaryType;
+                            },
+                            bufferedAmount : function(el, e) {
+                                return e.channel.bufferedAmount;
+                            },
+                            bufferedAmountLowThreshold : function(el, e) {
+                                return e.channel.bufferedAmountLowThreshold;
+                            },
+                            label : function(el, e) {
+                                return e.channel.label;
+                            },
+                            maxPacketLifeTime : function(el, e) {
+                                return e.channel.maxPacketLifeTime;
+                            },
+                            maxRetransmits : function(el, e) {
+                                return e.channel.maxRetransmits;
+                            },
+                            negotiated : function(el, e) {
+                                return e.channel.negotiated;
+                            },
+                            ordered : function(el, e) {
+                                return e.channel.ordered;
+                            },
+                            protocol : function(el, e) {
+                                return e.channel.protocol;
+                            },
+                            readyState : function(el, e) {
+                                return e.channel.readyState;
+                            }
+                            
+                        }], 
+                        ['icecandidate', {
+                                //https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceEvent
+                                candidate : function(el,e){return wrapRTCIceCandidate(e.candidate);}
+                                
+                        }], 
+                        ['icecandidateerror', {
+                            errorCode : function(el,e){return e.errorCode;}
+                        }], 
+                        ['iceconnectionstatechange', {
+                                iceConnectionState : function(el,e) {return el.iceConnectionState;}
+                        }], 
+                        ['icegatheringstatechange', {
+                                iceGatheringState : function(el, e) {return el.iceGatheringState;}
+                        }], 'isolationchange', 'identityresult', 
+                        'negotiationneeded', 
+                        ['signalingstatechange', {
+                                signalingState : function(el, e) { return el.signalingState;}
+                        }], 
+                        ['track', {
+                                // https://developer.mozilla.org/en-US/docs/Web/API/RTCTrackEvent
+                                refId : function(el,e) {
+                                    registry.retain(e);
+                                    return registry.id(e);
+                                },
+                                receiver : function(el, e) {
+                                    return wrapRTCRtpReceiver(e.receiver);
+                                },
+                                streams : function(el, e) {
+                                    var out = [];
+                                    e.streams.forEach(function(stream, index, array){
+                                        out.push(wrapMediaStream(stream));
+                                    });
+                                    return out;
+                                },
+                                track : function(el, e) {
+                                    return wrapMediaStreamTrack(e.track);
+                                },
+                                transceiver : function(el, e) {
+                                    return wrapRTCRtpTransceiver(e.transceiver);
+                                }
+                                
+                                
+                        }]].forEach(function(type, index, array) {
+                            addEventListener(o, type);
+                        });
+                    
+                } else if (o instanceof RTCDataChannel) {
+                    ['message', 'open', 'close'].forEach(function(type, index, array) {
+                        addEventListener(o, type);
+                    });
                 }
             }
             
@@ -119,11 +430,12 @@
                 };
                 
                 this.release = function(o) {
+                    var origO = o;
                     if (typeof o == 'string') {
                         o = registry[o];
                     }
                     if (!o) {
-                        throw new Error("Cannot find reference");
+                        throw new Error("Cannot find reference for "+origO);
                     }
                     if (o._cn1) {
                         if (o._cn1.id) {

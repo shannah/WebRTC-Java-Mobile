@@ -9,13 +9,14 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCMediaElement extends RTCElement {
+public interface RTCMediaElement extends RTCElement, EventTarget {
     public double getCurrentTime();
     public double getDuration();
     public boolean isEnded();
     public RTCMediaError getError();
     public boolean isLoop();
     public boolean isMuted();
+    public void setMuted(boolean muted);
     public NetworkState getNetworkState();
     public boolean isPaused();
     public double getPlaybackRate();

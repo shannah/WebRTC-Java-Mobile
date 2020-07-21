@@ -17,5 +17,9 @@ public enum RTCIceCredentialType {
     RTCIceCredentialType(String str) {
         this.string = str;
     }
+    
+    public String getStringValue() {
+        return string;
+    }
         
 }

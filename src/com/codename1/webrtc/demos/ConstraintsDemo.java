@@ -34,7 +34,7 @@ import com.codename1.webrtc.VideoTrackConstraints;
  * This demo was adapted from https://webrtc.github.io/samples/src/content/getusermedia/resolution/
  * @author shannah
  */
-public class ConstraintsDemo extends Form {
+public class ConstraintsDemo extends Form implements AutoCloseable {
     private MediaStream stream;
     private RTCVideoElement video;
     private RTC rtc;
@@ -173,6 +173,14 @@ public class ConstraintsDemo extends Form {
         });
         
         
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (rtc != null) {
+            rtc.close();
+            rtc = null;
+        }
     }
     
     private static class Link extends Button {

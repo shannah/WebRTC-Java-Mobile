@@ -29,14 +29,25 @@ public class RTCList<T> implements Iterable<T> {
     }
     
     public void add(T item) {
+        if (item instanceof RefCounted) {
+            ((RefCounted)item).retain();
+        }
         list.add(item);
     }
     
     public void clear() {
+        for (T item : list) {
+            if (item instanceof RefCounted) {
+                ((RefCounted)item).release();
+            }
+        }
         list.clear();
     }
     
     public boolean remove(T item) {
+        if (item instanceof RefCounted) {
+            ((RefCounted)item).release();
+        }
         return list.remove(item);
     }
     

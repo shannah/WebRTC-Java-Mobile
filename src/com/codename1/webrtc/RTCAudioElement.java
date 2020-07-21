@@ -9,8 +9,6 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCVideoElement extends RTCMediaElement {
-    public int getVideoWidth();
-    public int getVideoHeight();
+public interface RTCAudioElement extends RTCMediaElement {
     
 }

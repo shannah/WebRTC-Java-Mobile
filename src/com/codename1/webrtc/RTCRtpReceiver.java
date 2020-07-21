@@ -9,10 +9,8 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCRtpReceiver {
+public interface RTCRtpReceiver extends RefCounted {
     public MediaStreamTrack getTrack();
-    public RTCDtlsTransport getRtcpTransport();
-    public RTCDtlsTransport getTransport();
     
     public RTCRtpContributingSources getContributingSources();
     public RTCRtpParameters getParameters();

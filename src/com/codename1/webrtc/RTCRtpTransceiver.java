@@ -9,9 +9,10 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCRtpTransceiver {
+public interface RTCRtpTransceiver extends RefCounted {
     public RTCRtpTransceiverDirection getCurrentDirection();
     public RTCRtpTransceiverDirection getDirection();
+    public void setDirection(RTCRtpTransceiverDirection dir);
     public String getMid();
     public RTCRtpReceiver getReceiver();
     public RTCRtpSender getSender();

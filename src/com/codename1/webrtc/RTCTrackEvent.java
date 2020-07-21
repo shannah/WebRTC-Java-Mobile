@@ -9,7 +9,7 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCTrackEvent {
+public interface RTCTrackEvent extends Event {
     public RTCRtpReceiver getReceiver();
     public MediaStreams getStreams();
     public MediaStreamTrack getTrack();

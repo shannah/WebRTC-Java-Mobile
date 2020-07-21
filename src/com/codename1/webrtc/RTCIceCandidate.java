@@ -9,7 +9,7 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public interface RTCIceCandidate {
+public interface RTCIceCandidate extends JSObject {
     public String getCandidate();
     public String getComponent();
     public String getFoundation();

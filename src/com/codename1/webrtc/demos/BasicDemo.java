@@ -17,11 +17,13 @@ import com.codename1.webrtc.RTCVideoElement;
  *
  * @author shannah
  */
-public class BasicDemo extends Form {
+public class BasicDemo extends Form implements AutoCloseable {
+    private RTC rtc;
     public BasicDemo() {
         super("Basic WebRTC Demo", new BorderLayout());
         Form hi = this;
         RTC.createRTC().ready(rtc->{
+            this.rtc = rtc;
             MediaStreamConstraints constraints = new MediaStreamConstraints()
                     .audio()
                     .echoCancellation(true)
@@ -40,5 +42,13 @@ public class BasicDemo extends Form {
             hi.add(BorderLayout.CENTER, rtc.getVideoComponent());
             hi.revalidate();
         });
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (rtc != null) {
+            rtc.close();
+            rtc = null;
+        }
     }
 }
