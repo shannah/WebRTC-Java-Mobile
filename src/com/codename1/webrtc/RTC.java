@@ -89,7 +89,7 @@ public class RTC implements AutoCloseable {
     private void init(String htmlBody, String css) {
         web = new BrowserComponent();
         web.addWebEventListener(BrowserComponent.onLoad, e->{
-            System.out.println("In onLoad handler");
+            
             web.addJSCallback("window.cn1Callback = function(data) {callback.onSuccess(JSON.stringify(data))}", (value) -> {
                 try {
                     Map data = parseJSON(value.getValue());
@@ -104,6 +104,7 @@ public class RTC implements AutoCloseable {
                         if (eventType.equals("datachannel")) {
                             evt = new RTCDataChannelEventImpl(data);
                         } else if (eventType.equals("icecandidate")) {
+                            
                             evt = new RTCPeerConnectionIceEventImpl(eventType, data);
                         } else if (eventType.equals("icecandidateerror")) {
                             evt = new RTCPeerConnectionIceErrorEventImpl(((Number)data.get("errorCode")).intValue());
@@ -311,7 +312,10 @@ public class RTC implements AutoCloseable {
             Map trackInfo = (Map)w.get("track", null);
             
             if (trackInfo != null) {
-                track = findTrackById((String)trackInfo.get("id"));
+                track = (MediaStreamTrack)registry.get((String)trackInfo.get("refId"));
+                //if (track == null) {
+                //    track = findTrackById((String)trackInfo.get("id"));
+                //}
                 if (track == null) {
                     track = new MediaStreamTrackImpl(trackInfo);
                     
@@ -391,7 +395,10 @@ public class RTC implements AutoCloseable {
                         try {
                             Map data = parseJSON(res.getValue());
                             Map trackInfo = (Map)data.get("track");
-                            MediaStreamTrack track = findTrackById((String)trackInfo.get("id"));
+                            MediaStreamTrack track = (MediaStreamTrack)registry.get((String)trackInfo.get("refId"));
+                            //if (track == null) {
+                            //    track = findTrackById((String)trackInfo.get("id"));
+                            //}
                             if (track != null) {
                                 if (track != this.track) {
                                     if (this.track != null) {
@@ -440,7 +447,8 @@ public class RTC implements AutoCloseable {
             setRefId((String)data.get("refId"));
             retain();
             Map trackInfo = (Map)data.get("track");
-            MediaStreamTrack existingTrack = findTrackById((String)trackInfo.get("id"));
+            MediaStreamTrack existingTrack = (MediaStreamTrack)registry.get((String)trackInfo.get("refId"));
+            //if (existingTrack == null) existingTrack = findTrackById((String)trackInfo.get("id"));
             if (existingTrack != null) {
                 track = existingTrack;
                 track.retain();
@@ -648,7 +656,8 @@ public class RTC implements AutoCloseable {
             streams = new MediaStreams();
             List<Map> streamsData = (List<Map>)data.get("streams");
             for (Map streamMap : streamsData) {
-                MediaStream stream = findStreamById((String)streamMap.get("id"));
+                MediaStream stream = (MediaStream)registry.get((String)streamMap.get("refId"));
+                
                 boolean release = false;
                 if (stream == null) {
                     stream = newMediaStream(streamMap);
@@ -660,7 +669,9 @@ public class RTC implements AutoCloseable {
                 }
             }
             Map trackMap = (Map)data.get("track");
-            track = findTrackById((String)trackMap.get("id"));
+            track = (MediaStreamTrack)registry.get((String)trackMap.get("refId"));
+            
+            //if (track == null) track = findTrackById((String)trackMap.get("id"));
             if (track == null) {
                 track = new MediaStreamTrackImpl(trackMap);
             } else {
@@ -1024,6 +1035,7 @@ public class RTC implements AutoCloseable {
     
     private MediaStreamTrack newMediaStreamTrack(Map data) {
         String trackId = (String)data.get("id");
+        
         return  new MediaStreamTrackImpl(
                         (String)data.get("refId"),
                         trackId,
@@ -1032,7 +1044,7 @@ public class RTC implements AutoCloseable {
                         (String)data.get("kind"),
                         (String)data.get("label"),
                         (boolean)data.get("muted"),
-                        (boolean)data.get("readOnly"),
+                        (boolean)data.get("readonly"),
                         (String)data.get("readyState"),
                         (boolean)data.get("remote"),
                         newMediaTrackSettings((String)data.get("kind"), (Map)data.get("settings"))
@@ -1105,7 +1117,7 @@ public class RTC implements AutoCloseable {
         private TrackKind kind;
         private String label;
         private boolean muted;
-        private boolean readOnly;
+        private boolean readonly;
         private ReadyState readyState;
         private boolean remote;
         private MediaTrackSettings settings;
@@ -1127,7 +1139,7 @@ public class RTC implements AutoCloseable {
             }
             String label = w.getString("label", "");
             boolean muted = w.getBoolean("muted", false);
-            boolean readOnly = w.getBoolean("readOnly", false);
+            boolean readonly = w.getBoolean("readonly", false);
             String readyState = w.getString("readyState", "");
             if (readyState.isEmpty()) {
                 throw new IllegalArgumentException("No readyState supplied for MediaStreamTrack");
@@ -1136,7 +1148,7 @@ public class RTC implements AutoCloseable {
             MediaTrackSettings settings = newMediaTrackSettings(kind, (Map)w.get("settings", null));
             
             //MediaTrackConstraints constraints = newMediaTrackConstraints(kind, (Map)w.get("constraints", null));
-            init(refId, id, contentHint, enabled, kind, label, muted, readOnly, readyState, remote, settings);
+            init(refId, id, contentHint, enabled, kind, label, muted, readonly, readyState, remote, settings);
             //this.constraints = constraints;
             
         }
@@ -1188,7 +1200,7 @@ public class RTC implements AutoCloseable {
             }
             this.label = label;
             this.muted = muted;
-            this.readOnly = readonly;
+            this.readonly = readonly;
             this.remote = remote;
             this.settings = settings;
             retain();
@@ -1244,7 +1256,7 @@ public class RTC implements AutoCloseable {
 
         @Override
         public boolean isReadOnly() {
-            return readOnly;
+            return readonly;
         }
 
         @Override
@@ -1340,7 +1352,6 @@ public class RTC implements AutoCloseable {
     
     public RTCPromise<MediaStream> getUserMedia(MediaStreamConstraints constraints) {
         RTCPromise<MediaStream> out = newPromise(MediaStream.class);
-        System.out.println("About to get user media");
         web.execute("try{navigator.getUserMedia("+constraints.toJSON()+", "
                 + "function(stream){"
                 + "  registry.retain(stream);window.stream = stream;"
@@ -1351,7 +1362,7 @@ public class RTC implements AutoCloseable {
                 + "    var track = tracks[i];"
                 + "    registry.retain(track);"
                 + "    var track_ = {refId : registry.id(track)};"
-                + "    ['contentHint', 'id', 'enabled', 'kind', 'label', 'muted', 'readyState', 'readOnly', 'remote'].forEach(function(val, index, array){"
+                + "    ['contentHint', 'id', 'enabled', 'kind', 'label', 'muted', 'readyState', 'readonly', 'remote'].forEach(function(val, index, array){"
                 + "        track_[val] = track[val]||false;"
                 + "    });"
                 + "    track_.contentHint = track_.contentHint || '';"
@@ -1372,7 +1383,7 @@ public class RTC implements AutoCloseable {
                 + "{console.log('exception in getUserMedia', e);callback.onError(JSON.stringify(e));}", new Callback<BrowserComponent.JSRef>() {
                     @Override
                     public void onSucess(BrowserComponent.JSRef value) {
-                        System.out.println("getUserMedia complete");
+                        
                         try {
                             Map res = parseJSON(value.getValue());
                             List<Map> tracks = (List)res.get("tracks");
@@ -1398,7 +1409,7 @@ public class RTC implements AutoCloseable {
 
                     @Override
                     public void onError(Object sender, Throwable err, int errorCode, String errorMessage) {
-                        System.out.println("GetUserMedia failed");
+                        
                         ((RTCPromiseImpl)out).error(new AsyncResource.AsyncExecutionException(err));
                     }
                 }
@@ -1971,18 +1982,18 @@ public class RTC implements AutoCloseable {
                 addTrackParams.append(", registry.get(${"+i+"})");
             }
             addTrackParams.append(")");
-            System.out.println("Adding track "+((MediaStreamTrackImpl)track).getRefId());
+            
             
             String js = "var conn = registry.get(${0});var sender = conn.addTrack"+addTrackParams.toString()+"; callback.onSuccess(JSON.stringify(cn1.wrapRTCRtpSender(sender)));";
-            System.out.println("Executing "+js);
+            
             execute(js, params, (res,error) -> {
                 try {
                     if (error != null) {
-                        System.out.println("Failed to add track");
+                        
                         Log.e(error);
                         return;
                     }
-                    System.out.println("Track added successfully "+((MediaStreamTrackImpl)track).getRefId());
+                    
                     Map data = parseJSON(res.getValue());
                     sender.setRefId((String)data.get("refId"));
                     
@@ -2001,6 +2012,19 @@ public class RTC implements AutoCloseable {
 
         @Override
         public void close() {
+            
+            close(true);
+                    
+        }
+        
+        private void close(boolean release) {
+            
+            if (signalingState == RTCSignalingState.Closed) {
+                
+                return;
+            }
+            
+            web.execute("registry.get(${0}).close()", new Object[]{getRefId()});
             if (receivers != null) {
                 receivers.clear();
                 receivers = null;
@@ -2009,11 +2033,21 @@ public class RTC implements AutoCloseable {
                 senders.clear();
             }
             connectionState = RTCPeerConnectionState.Closed;
+            signalingState = RTCSignalingState.Closed;
             currentLocalDescription = null;
-            
-            release();
-                    
+            currentRemoteDescription = null;
+            if (release) {
+                release();
+            }
         }
+
+        @Override
+        public void dealloc() {
+            close(false);
+            super.dealloc();
+        }
+        
+        
 
         @Override
         public RTCPromise<RTCSessionDescription> createAnswer(RTCAnswerOptions options) {
@@ -2197,6 +2231,7 @@ public class RTC implements AutoCloseable {
         public RTCPeerConnectionImpl(RTCConfiguration configuration) {
             
             init(Util.getUUID(), "new RTCPeerConnection("+configuration.toJSONStruct()+")");
+            
             retain();
             addEventListener("connectionstatechange", evt-> {
                 EventImpl e = (EventImpl)evt;
@@ -2255,6 +2290,8 @@ public class RTC implements AutoCloseable {
                         break;
                     }
                 }
+                
+                
             });
             
             addEventListener("track", evt->{
@@ -2565,12 +2602,12 @@ public class RTC implements AutoCloseable {
 
         @Override
         public String getRelatedAddress() {
-            throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return relatedAddress;
         }
 
         @Override
         public int getRelatedPort() {
-            throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return relatedPort;
         }
 
         @Override
@@ -2659,5 +2696,20 @@ public class RTC implements AutoCloseable {
     }
     
     
+    public static RTCPromise all(RTCPromise... promises) {
+        AsyncResource[] asyncs = new AsyncResource[promises.length];
+        for (int i=0; i<promises.length; i++) {
+            asyncs[i] = (AsyncResource)promises[i];
+        }
+        RTCPromiseImpl out = new RTCPromiseImpl();
+        AsyncResource.all(asyncs).onResult((res, err)->{
+            if (err != null) {
+                out.error(err);
+            } else {
+                out.complete(null);
+            }
+        });
+        return out;
+    }
     
 }

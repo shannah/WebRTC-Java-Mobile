@@ -176,13 +176,14 @@
                 registry.retain(track);
                 out.refId = registry.id(track);
                 out.id = track.id;
+                out.enabled = track.enabled || false;
                 out.isolated = track.isolated;
                 out.kind = track.kind;
                 out.label = track.label;
-                out.muted = track.muted;
-                out.readonly = track.readonly;
+                out.muted = track.muted || false;
+                out.readonly = track.readonly || false;
                 out.readyState = track.readyState;
-                out.remote = track.remote;
+                out.remote = track.remote || false;
                 out.settings = wrapMediaTrackSettings(track.kind, track.getSettings());
                 out.constraints = wrapMediaTrackConstraints(track.kind, track.getConstraints());
                 out.capabilities = wrapMediaTrackCapabilities(track.kind, track.getCapabilities());
@@ -205,6 +206,7 @@
                 props.forEach(function(prop, index, array) {
                     out[prop] = settings[prop];
                 });
+                console.log("Wrapping mediaTrack settings", settings, out);
                 return out;
                 
             }
@@ -346,7 +348,10 @@
                         }], 
                         ['icecandidate', {
                                 //https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceEvent
-                                candidate : function(el,e){return wrapRTCIceCandidate(e.candidate);}
+                                candidate : function(el,e){
+                                    //console.log('getting candidate in icecandidate event', el, e);
+                                    return wrapRTCIceCandidate(e.candidate);
+                                }
                                 
                         }], 
                         ['icecandidateerror', {

@@ -22,13 +22,15 @@ import com.codename1.webrtc.RTCConfiguration;
 import com.codename1.webrtc.RTCPeerConnection;
 import com.codename1.webrtc.RTCPeerConnection.RTCOfferOptions;
 import com.codename1.webrtc.RTCPeerConnectionIceEvent;
+import com.codename1.webrtc.RTCPromise;
 import com.codename1.webrtc.RTCSessionDescription;
 import com.codename1.webrtc.RTCTrackEvent;
 import com.codename1.webrtc.RTCVideoElement;
 import java.util.Date;
 
 /**
- *
+ * This example is adapted from https://webrtc.github.io/samples/src/content/peerconnection/pc1/
+ * https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/pc1/js/main.js
  * @author shannah
  */
 public class PeerConnectionDemo extends Form implements AutoCloseable {
@@ -108,17 +110,18 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     private void start() {
         System.out.println("Requesting local stream");
         startButton.setEnabled(false);
-        try {
-            MediaStream stream = rtc.getUserMedia(new MediaStreamConstraints().audio(true).video(true)).get();
+        
+        rtc.getUserMedia(new MediaStreamConstraints().audio(true).video(true)).then(stream->{
             System.out.println("Received local stream");
             localVideo.setSrcObject(stream);
             localStream = stream;
             callButton.setEnabled(true);
-        } catch (Throwable t) {
+        }).onCatch(t->{
             Log.e(t);
             Dialog.show("Error", "getUserMedia() error: "+t.getMessage(), "OK", null);
-        }
-    }
+        });
+            
+    }    
     
     
     
@@ -156,13 +159,12 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         }
         System.out.println("Added local stream to pc1");
         
-        try {
-            System.out.println("pc1 createOffer start");
-            RTCSessionDescription offer = pc1.createOffer(offerOptions).get();
-            onCreateOfferSuccess(offer);
-        } catch (Throwable e) {
-            onCreateSessionDescriptionError(e);
-        }
+        
+        System.out.println("pc1 createOffer start");
+        pc1.createOffer(offerOptions).then(offer->onCreateOfferSuccess(offer))
+                .onCatch(e-> onCreateSessionDescriptionError(e));
+
+        
         
         
         
@@ -182,49 +184,58 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     private void onCreateOfferSuccess(RTCSessionDescription desc) {
         System.out.println("offer from pc1\n"+desc.getSdp());
         System.out.println("pc1 setLocalDescription start");
-        try {
-            pc1.setLocalDescription(desc).get();
-            onSetLocalSuccess(pc1);
-        } catch (Throwable t) {
-            Log.e(t);
-            onSetSessionDescriptionError();
-        }
-        System.out.println("pc2 setRemoteDescription start");
-        try {
-            pc2.setRemoteDescription(desc).get();
-            onSetRemoteSuccess(pc2);
-        } catch (Throwable t) {
-            Log.e(t);
-            onSetSessionDescriptionError();
-        }
         
-        System.out.println("pc2 createAnswer start");
-        try {
-            RTCSessionDescription answer = pc2.createAnswer().get();
-            onCreateAnswerSuccess(answer);
-        } catch (Throwable e) {
-            onCreateSessionDescriptionError(e);
-        }
+        RTCPromise p1 = pc1.setLocalDescription(desc).then(res->onSetLocalSuccess(pc1))
+                .onCatch(e->{
+                    Log.e((Throwable)e);
+                    onSetSessionDescriptionError();
+                });
+            
+        
+        System.out.println("pc2 setRemoteDescription start");
+        
+        RTCPromise p2 = pc2.setRemoteDescription(desc).then(res->onSetRemoteSuccess(pc2))
+                .onCatch(t->{
+                    Log.e((Throwable)t);
+                    onSetSessionDescriptionError();
+                });
+        
+        
+        RTC.all(p1, p2).then(res->{
+            System.out.println("pc2 createAnswer start");
+            
+            pc2.createAnswer().then(answer->{
+                onCreateAnswerSuccess(answer);
+            }).onCatch(e->{
+                onCreateSessionDescriptionError(e);
+            });
+                
+           
+        });
+        
+        
     }
     
     private void onCreateAnswerSuccess(RTCSessionDescription desc) {
         System.out.println("Anwswer from pc2:\n"+desc.getSdp());
         System.out.println("pc2 setLocalDescription start");
-        try {
-            pc2.setLocalDescription(desc).get();
+
+        pc2.setLocalDescription(desc).then(res -> {
             onSetLocalSuccess(pc2);
-        } catch (Throwable e) {
-            Log.e(e);
-            onSetSessionDescriptionError(e);
-        }
+        }).onCatch(e->{
+            Log.e((Throwable)e);
+            onSetSessionDescriptionError((Throwable)e);
+        });
+        
         System.out.println("pc1 setRemoteDescription start");
-        try {
-            pc1.setRemoteDescription(desc).get();
+        
+        pc1.setRemoteDescription(desc).then(res->{
             onSetRemoteSuccess(pc1);
-        } catch (Throwable e) {
-            Log.e(e);
-            onSetSessionDescriptionError(e);
-        }
+        }).onCatch(e->{
+            Log.e((Throwable)e);
+            onSetSessionDescriptionError((Throwable)e);
+        });
+
     }
     
     private void onSetSessionDescriptionError() {
@@ -252,14 +263,21 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     
     
     private void onIceCandidate(RTCPeerConnection pc, RTCPeerConnectionIceEvent event) {
-        try {
-            getOtherPc(pc).addIceCandidate(event.getCandidate()).get();
-            onAddIceCandidateSuccess(pc);
-        } catch (Throwable e) {
-            Log.e(e);
-            onAddIceCandidateError(pc, e);
+        if (event.getCandidate() == null) {
+            System.out.println("No ICE candidate included in event");
+            return;
         }
-        System.out.println(getName(pc)+" ICE candidate:\n"+(event.getCandidate() != null ? event.getCandidate().getCandidate() : "(null"));
+        
+        getOtherPc(pc).addIceCandidate(event.getCandidate()).then(res->{
+            onAddIceCandidateSuccess(pc);
+        }).onCatch(e->{
+            Log.e((Throwable)e);
+            onAddIceCandidateError(pc, (Throwable)e);
+        }).onFinally(e->{
+            System.out.println(getName(pc)+" ICE candidate:\n"+(event.getCandidate() != null ? event.getCandidate().getCandidate() : "(null"));
+        });
+         
+        
     }
     
     private void onSetSessionDescriptionError(Throwable e) {

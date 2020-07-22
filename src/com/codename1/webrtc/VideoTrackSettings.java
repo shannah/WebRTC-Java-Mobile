@@ -16,14 +16,14 @@ public class VideoTrackSettings extends MediaTrackSettings {
     /**
      * @return the aspectRatio
      */
-    public double getAspectRatio() {
+    public Double getAspectRatio() {
         return aspectRatio;
     }
 
     /**
      * @param aspectRatio the aspectRatio to set
      */
-    public void setAspectRatio(double aspectRatio) {
+    public void setAspectRatio(Double aspectRatio) {
         this.aspectRatio = aspectRatio;
     }
 
@@ -44,42 +44,42 @@ public class VideoTrackSettings extends MediaTrackSettings {
     /**
      * @return the frameRate
      */
-    public double getFrameRate() {
+    public Double getFrameRate() {
         return frameRate;
     }
 
     /**
      * @param frameRate the frameRate to set
      */
-    public void setFrameRate(double frameRate) {
+    public void setFrameRate(Double frameRate) {
         this.frameRate = frameRate;
     }
 
     /**
      * @return the width
      */
-    public int getWidth() {
+    public Integer getWidth() {
         return width;
     }
 
     /**
      * @param width the width to set
      */
-    public void setWidth(int width) {
+    public void setWidth(Integer width) {
         this.width = width;
     }
 
     /**
      * @return the height
      */
-    public int getHeight() {
+    public Integer getHeight() {
         return height;
     }
 
     /**
      * @param height the height to set
      */
-    public void setHeight(int height) {
+    public void setHeight(Integer height) {
         this.height = height;
     }
 
@@ -102,16 +102,33 @@ public class VideoTrackSettings extends MediaTrackSettings {
         super.fromJSONStruct(struct);
         if (struct instanceof Map) {
             Map m = (Map)struct;
-            aspectRatio = ((Number)m.get("aspectRatio")).doubleValue();
+            MapWrap w = new MapWrap(m);
+            if (w.has("aspectRatio")) {
+                aspectRatio = ((Number)m.get("aspectRatio")).doubleValue();
+            } else {
+                aspectRatio = null;
+            }
             for (FacingMode mode : FacingMode.values()) {
                 if (mode.matches((String)m.get("facingMode"))) {
                     facingMode = mode;
                     break;
                 }
             }
-            frameRate = ((Number)m.get("frameRate")).doubleValue();
-            width = ((Number)m.get("width")).intValue();
-            height = ((Number)m.get("height")).intValue();
+            if (w.has("frameRate")) {
+                frameRate = ((Number)m.get("frameRate")).doubleValue();
+            } else {
+                frameRate = null;
+            }
+            if (w.has("width")) {
+                width = ((Number)m.get("width")).intValue();
+            } else {
+                width = null;
+            }
+            if (w.has("height")) {
+                height = ((Number)m.get("height")).intValue();
+            } else {
+                height = null;
+            }
             for (ResizeMode mode : ResizeMode.values()) {
                 if (mode.matches((String)m.get("resizeMode"))) {
                     resizeMode = mode;
@@ -123,11 +140,11 @@ public class VideoTrackSettings extends MediaTrackSettings {
     
     
     
-    private double aspectRatio;
+    private Double aspectRatio;
     private FacingMode facingMode;
-    private double frameRate;
-    private int width;
-    private int height;
+    private Double frameRate;
+    private Integer width;
+    private Integer height;
     private ResizeMode resizeMode;
    
 }
