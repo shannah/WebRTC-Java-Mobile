@@ -379,7 +379,7 @@ public class RTC implements AutoCloseable {
                 onReady.add(()->setParameters(parameters, out));
                 return out;
             }
-            execute("var sender = registry.get(${0}); sender.setParameters("+parameters.toJSONStruct()+").then(function() {"
+            execute("var sender = registry.get(${0}); sender.setParameters("+Result.fromContent((Map)parameters.toJSONStruct()).toString()+").then(function() {"
                     + "  callback.onSuccess(JSON.stringify({"
                     + "    track: cn1.wrapMediaStreamTrack(sender.track),"
                     + "    parameters: cn1.wrapRTCRtpSendParameters(sender.parameters)"
@@ -1275,7 +1275,7 @@ public class RTC implements AutoCloseable {
                 throw new IllegalStateException("Track is already ended");
             }
             RTCPromiseImpl out = new RTCPromiseImpl();
-            web.execute("var track = registry.get(${0});track.applyConstraints("+constraints.toJSONStruct()+")"
+            web.execute("var track = registry.get(${0});track.applyConstraints("+Result.fromContent((Map)constraints.toJSONStruct()).toString()+")"
                     + ".then(function(res){"
                     + "  callback.onSuccess(JSONStringify({settings:track.getSettings()}));"
                     + "})"
@@ -2230,7 +2230,7 @@ public class RTC implements AutoCloseable {
 
         public RTCPeerConnectionImpl(RTCConfiguration configuration) {
             
-            init(Util.getUUID(), "new RTCPeerConnection("+configuration.toJSONStruct()+")");
+            init(Util.getUUID(), "new RTCPeerConnection("+Result.fromContent((Map)configuration.toJSONStruct()).toString()+")");
             
             retain();
             addEventListener("connectionstatechange", evt-> {
@@ -2425,7 +2425,7 @@ public class RTC implements AutoCloseable {
         }
         
         RTCDataChannelImpl(RTCPeerConnectionImpl conn, String label, RTCDataChannelInit options) {
-            String jsString = "registry.get('"+conn.getRefId()+"').createDataChannel("+options.toJSONStruct()+")";
+            String jsString = "registry.get('"+conn.getRefId()+"').createDataChannel("+Result.fromContent((Map)options.toJSONStruct()).toString()+")";
             negotiated = options.isNegotiated();
             ordered = options.isOrdered();
             id = options.getId();
