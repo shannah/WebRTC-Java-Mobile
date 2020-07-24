@@ -50,7 +50,7 @@
     
     <target depends="-do-test-run" description="Run unit tests." name="test"/>
 
-    <target name="-pre-compile" depends="-cn1-compile-css">
+    <target name="-pre-compile" depends="-cn1-compile-css,cn1lib">
         <echo>Compile is forcing compliance to the supported API's/features for maximum device compatibility. This allows smaller
         code size and wider device support</echo>
         <mkdir dir="build/tmp"/>
@@ -619,4 +619,10 @@
         <property value="JavaSE.jar:lib/CLDC11.jar:lib/lib/impl/cls" name="javac.classpath"/>        
     </target>
     <target depends="pre-javadoc,init,-javadoc-build,-javadoc-browse" description="Build Javadoc." name="javadoc"/>
+    
+    <target name="cn1lib">
+        <ant dir="webrtc" target="jar" useNativeBasedir="true"/>
+        <copy file="webrtc/dist/webrtc.cn1lib" todir="lib"/>
+        <antcall target="refresh-libs-impl"/>
+    </target>
 </project>

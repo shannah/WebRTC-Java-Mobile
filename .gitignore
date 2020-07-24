@@ -3,3 +3,7 @@ build
 *.jar
 private
 lib/CodenameOne_SRC.zip
+lib/impl
+codenameone_settings.properties
+webrtc/lib/CodenameOne_SRC.zip
+lib/webrtc.cn1lib
