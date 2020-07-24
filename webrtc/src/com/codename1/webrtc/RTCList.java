@@ -10,6 +10,8 @@ import java.util.Iterator;
 
 /**
  *
+ * A base class for a collection of RTC objects.  This will properly handle reference counting for
+ * {@link RefCounted} objects.
  * @author shannah
  */
 public class RTCList<T> implements Iterable<T> {

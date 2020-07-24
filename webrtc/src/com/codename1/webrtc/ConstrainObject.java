@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * A constraint used by {@link MediaTrackConstraints}, {@link AudioTrackConstraints}, and {@link VideoTrackConstraints}
+ * to constrain the allowed values of certain constraints.
  * @author shannah
  */
 public class ConstrainObject<T> implements JSObject {
@@ -87,6 +88,10 @@ public class ConstrainObject<T> implements JSObject {
         return null;
     }
     
+    /**
+     * A list of constraint objects.
+     * @param <T> 
+     */
     public static class ConstrainValues<T> extends RTCList<T> implements JSObject {
 
         @Override

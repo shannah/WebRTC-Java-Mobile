@@ -625,4 +625,23 @@
         <copy file="webrtc/dist/webrtc.cn1lib" todir="lib"/>
         <antcall target="refresh-libs-impl"/>
     </target>
+    <target  description="Build Javadoc." name="docs" depends="init">
+        <echoproperties />
+        <javadoc destdir="docs/javadoc"
+            linkoffline="https://www.codenameone.com/javadoc/ javadoc-dependencies/com.codename1"
+            classpath="lib/CodenameOne.jar:lib/CLDC11.jar"
+             executable="${platform.javadoc}"
+             sourcepath="webrtc/src"
+             overview="webrtc/src/overview.adoc">
+            <doclet name="org.asciidoctor.Asciidoclet" path="webrtc/lib/asciidoclet-1.5.7-SNAPSHOT-shaded.jar">
+              <param name="--base-dir" value="${basedir}"/>
+              <param name="--attribute" value="name=${ant.project.name}"/>
+              <param name="--attribute" value="version=${version}"/>
+              <param name="--attribute" value="title-link=http://example.com[${ant.project.name} ${version}]"/>
+            </doclet>
+      </javadoc>
+
+        
+    </target>   
+    
 </project>

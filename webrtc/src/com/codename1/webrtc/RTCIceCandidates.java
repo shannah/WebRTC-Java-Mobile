@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A list of RTCIceCandidate objects
  * @author shannah
  */
 public class RTCIceCandidates extends RTCList<RTCIceCandidate> {

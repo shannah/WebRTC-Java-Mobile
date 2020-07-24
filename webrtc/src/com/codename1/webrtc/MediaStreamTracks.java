@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A list of MediaStreamTracks
  * @author shannah
  */
 public class MediaStreamTracks extends RTCList<MediaStreamTrack> {

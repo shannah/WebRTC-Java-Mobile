@@ -8,9 +8,14 @@ package com.codename1.webrtc;
 import java.util.Date;
 
 /**
- *
+ * The interface of the the WebRTC API provides an object represents a certificate that an RTCPeerConnection uses to authenticate.
  * @author shannah
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCCertificate
  */
 public interface RTCCertificate extends JSObject {
+    /**
+     * Returns the expiration date of the certificate.
+     * @return 
+     */
     public Date getExpires();
 }

@@ -6,8 +6,13 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A range of allowed numbers used in a constraint.
+ * 
  * @author shannah
+ * @see MediaTrackConstraints
+ * @see MediaStreamConstraints
+ * @see AudioTrackConstraints
+ * @see VideoTrackConstraints
  */
 public class NumberRange<T extends Number> {
 

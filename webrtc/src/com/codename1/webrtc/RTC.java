@@ -35,7 +35,62 @@ import java.util.Objects;
 import java.util.Timer;
 
 /**
- *
+ * The main access point for WebRTC.  An RTC instance wraps a BrowserComponent, which is used to 
+ * host all WebRTC sessions. Use the {@link #getVideoComponent() } to access the visual component
+ * associated with the RTC session.  This component can be placed into a UI hierarchy.
+ * 
+ * == Creating RTC Object
+ * 
+ * Use {@link #createRTC() } to create a new RTC object.  All videos, peer connections, data channels, etc.. will be created by
+ * and bound to the resulting RTC object.
+ * 
+ * [source,java]
+ * ----
+ * RTC.createRTC().then(rtc->{
+ *     //  The RTC object is created.  You can now start working with it.
+ * });
+ * ----
+ * 
+ * == Basic Example
+ * 
+ * The following example is a minimal example that accesses the device camera and microphone
+ * and streams the output to the screen.  It highlights the use of {@link #getUserMedia(com.codename1.webrtc.MediaStreamConstraints) }
+ * to access the device's camera and microphone.  This is based on the https://webrtc.github.io/samples/src/content/getusermedia/gum/[Basic getUserMedia demo]
+ * on the https://webrtc.github.io/[WebRTC web site].
+ * 
+ * [source,java]
+ * ----
+ * RTC.createRTC().ready(rtc->{ <1>
+        MediaStreamConstraints constraints = new MediaStreamConstraints() <2>
+                .audio()
+                .echoCancellation(true)
+                .noiseSuppression(true)
+                .video(true)
+                .stream();
+
+        rtc.getUserMedia(constraints).then(stream->{ <3>
+            RTCVideoElement video = rtc.createVideo(); <4>
+            video.setAutoplay(true);
+            video.setSrcObject(stream);
+            video.applyStyle("position:fixed;width:100%;height:100%;"); <5>
+            rtc.append(video); <6>
+        }).onCatch(error-> {
+            Log.e(error);
+        });
+        hi.add(BorderLayout.CENTER, rtc.getVideoComponent()); <7>
+        hi.revalidate();
+    });
+ * ----
+ * <1> Create the RTC object using {@link #createRTC() }.  This is an asynchronous call which returns an {@link AsyncResource<RTC>}.
+ * <2> Set up requirements for accessing user media using {@link MediaStreamConstraints}
+ * <3> Call {@link #getUserMedia(com.codename1.webrtc.MediaStreamConstraints) }, to access camera and mic.  This is an asynchronous call.
+ * <4> Create a new Video element using {@link #createVideo() }.  A single RTC instance can include multiple video elements.
+ * <5> Set up the video element so that it fills the RTC canvas.   {@link RTCElement#applyStyle(java.lang.String) } allows you to 
+ * set arbitrary CSS styles to the video elements.  Positioning is relative to the RTC component itself, so in this case with "position:fixed"
+ * it will allow us to fill the entire RTC component with the video element.
+ * <6> Append the video to the RTC canvas.  Until we do this, the video element will not appear in the RTC component.
+ * <7> Add the RTC's visual component to the Codename One UI hierarchy.
+ * 
  * @author shannah
  */
 public class RTC implements AutoCloseable {
@@ -46,6 +101,13 @@ public class RTC implements AutoCloseable {
     private static boolean audioPermission, videoPermission;
     private static Map<String,Runnable> callbacks = new HashMap<String,Runnable>();
     
+    /**
+     * Internal callback function used by Native interface.  Do not use.
+     * @param callbackId The callback ID
+     * @param audio True if audio permission is granted.
+     * @param video True if video permission is granted.
+     * @deprecated Internal use only
+     */
     public static void permissionCallback(final String callbackId, boolean audio, boolean video) {
         if (audio) audioPermission = true;
         if (video) videoPermission = true;
@@ -58,6 +120,21 @@ public class RTC implements AutoCloseable {
         });
     }
     
+    /**
+     * Checks/requests native permission for audio/video access.  This will call {@link WebRTCNative#requestPermissions(java.lang.String, boolean, boolean) }
+     * of the native interface, if it is supported.  The native interface will request permissions and call the provided callback when complete.
+     * 
+     * This is called inside {@link #getUserMedia(com.codename1.webrtc.MediaStreamConstraints) }.  Currently Android
+     * is the only platform that requires this.  For platforms that don't require this, it will automatically grant permissions
+     * and call the callback.
+     * 
+     * The current state of the permissions are stored in {@link #audioPermission} and {@link #videoPermission} respectively.  The native
+     * interface will call {@link #permissionCallback(java.lang.String, boolean, boolean) } to trigger the callback.
+     * 
+     * @param audio True if requesting audio permission.
+     * @param video True if requesting video permission
+     * @param callback Run on the EDT after permission request is complete.
+     */
     private void checkPermission(boolean audio, boolean video, Runnable callback) {
         boolean requiresCheck = audio && !audioPermission || video && !videoPermission;
         String id = Util.getUUID();
@@ -74,7 +151,13 @@ public class RTC implements AutoCloseable {
         init(htmlBody, css);
     }
     
-    
+    /**
+     * Wrapper around {@link BrowserComponent#execute(java.lang.String, com.codename1.util.SuccessCallback) } that uses 
+     * {@link AsyncResult} for callback rather than {@link Callback} or {@link SuccessCallback}.
+     * @param javascript The javascript to run.
+     * @param params The parameters for insertion.
+     * @param onResult Callback.
+     */
     private void execute(String javascript, Object[] params, AsyncResult<JSRef> onResult) {
         web.execute(javascript, params, new Callback<JSRef>() {
             @Override
@@ -90,6 +173,12 @@ public class RTC implements AutoCloseable {
         });
     }
     
+    /**
+     * Wrapper around {@link BrowserComponent#execute(java.lang.String, com.codename1.util.SuccessCallback) } that uses 
+     * {@link AsyncResult} for callback rather than {@link Callback} or {@link SuccessCallback}.
+     * @param javascript The javascript to run.
+     * @param onResult Callback.
+     */
     private void execute(String javascript, AsyncResult<JSRef> onResult) {
         web.execute(javascript, new Callback<JSRef>() {
             @Override
@@ -105,11 +194,21 @@ public class RTC implements AutoCloseable {
         });
     }
     
-    
+    /**
+     * Creates a new RTC object.
+     * @return Promise that resolves to the resulting {@link RTC} object.
+     */
     public static AsyncResource<RTC> createRTC() {
         return createRTC("", "");
     }
     
+    /**
+     * Creates a new RTC object.  Injects HTML content into the webpage body and CSS
+     * into the webpage head that is used to host the RTC.
+     * @param htmlBody HTML string to inject into the `<body>` of the page.
+     * @param css CSS styles to inject into a `<style>` tag in the `<head>` of the page.
+     * @return Promise that resolves to the resulting {@link RTC} object.
+     */
     public static AsyncResource<RTC> createRTC(String htmlBody, String css) {
         return new RTC(htmlBody, css).async;
     }
@@ -175,6 +274,11 @@ public class RTC implements AutoCloseable {
         
     }
 
+    /**
+     * Closes the RTC session.  When you are finished with the RTC session, you should call this method to prevent
+     * memory leaks, and free up resources such as the camera and microphone.
+     * @throws Exception 
+     */
     @Override
     public void close() throws Exception {
         for (RefCounted ref : registry.values()) {
@@ -184,6 +288,11 @@ public class RTC implements AutoCloseable {
         }
     }
     
+    /**
+     * A utility class that provides event listener and dispatch functionality to 
+     * help other classes support the {@link EventTarget} interface.  This is used
+     * similar to the way PropertyChangeSupport is used, via composition.
+     */
     private class EventSupport implements EventTarget {
         private final EventTarget target;
         private Map<String,ArrayList<EventListener>> listeners = new HashMap<>();
@@ -228,14 +337,27 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * Implementation of the {@link Event} interface.
+     */
     private class EventImpl implements Event {
         private String type;
         private boolean canceled;
         private Map data;
+        
+        /**
+         * Creates a new event of the given type.
+         * @param type 
+         */
         public EventImpl(String type) {
             this.type = type;
         }
         
+        /**
+         * Creates a new event of the given type, and associated data.
+         * @param type The type of the event
+         * @param data Data stored in the event.
+         */
         public EventImpl(String type, Map data) {
             this.type = type;
             this.data = data;
@@ -256,6 +378,9 @@ public class RTC implements AutoCloseable {
         }
     }
     
+    /**
+     * Implementation of {@link RTCDataChannelEvent}.
+     */
     private class RTCDataChannelEventImpl extends EventImpl implements RTCDataChannelEvent {
         private RTCDataChannel channel;
         @Override
@@ -263,6 +388,10 @@ public class RTC implements AutoCloseable {
             return channel;
         }
         
+        /**
+         * Creates a new event with given data.
+         * @param data Map of data.  Expected to have at least "channel" property.
+         */
         RTCDataChannelEventImpl(Map data) {
             super("datachannel", data);
             channel = new RTCDataChannelImpl(data);
@@ -270,9 +399,17 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * Implementation of {@link RTCPeerConnectionIceEvent} which is used in "icecandidate" events.
+     */
     private class RTCPeerConnectionIceEventImpl extends EventImpl implements RTCPeerConnectionIceEvent {
         private RTCIceCandidate candidate;
         
+        /**
+         * Creates a new event. 
+         * @param type Should always be "icecandidate"
+         * @param data The data.  Should at least contain "candidate" property.
+         */
         public RTCPeerConnectionIceEventImpl(String type, Map data) {
             super(type, data);
             Map candidateInfo = (Map)data.get("candidate");
@@ -288,9 +425,16 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * Implementation of {@link RTCPeerConnectionIceErrorEvent} which is fired with the "icecandidateerror" event.
+     */
     private class RTCPeerConnectionIceErrorEventImpl extends EventImpl implements RTCPeerConnectionIceErrorEvent {
         private int errorCode;
 
+        /**
+         * Creates new event
+         * @param errorCode The error code.
+         */
         public RTCPeerConnectionIceErrorEventImpl(int errorCode) {
             super("icecandidateerror");
             this.errorCode = errorCode;
@@ -306,18 +450,9 @@ public class RTC implements AutoCloseable {
         
     }
     
-    private MediaStreamTrack findTrackById(String id) {
-        for (RefCounted o : registry.values()) {
-            if (o instanceof MediaStreamTrack) {
-                MediaStreamTrack track = (MediaStreamTrack)o;
-                if (id.equals(track.getId())) {
-                    return track;
-                }
-            }
-        }
-        return null;
-    }
-    
+    /**
+     * Implementation of {@link RTCRtpSender}.
+     */
     private class RTCRtpSenderImpl extends RefCountedImpl implements RTCRtpSender {
         private RTCDTMFSender dtmf;
         
@@ -328,6 +463,15 @@ public class RTC implements AutoCloseable {
         private boolean ready;
         private List<Runnable> onReady = new ArrayList<Runnable>();
         
+        /**
+         * Creates new sender with the given track.
+         * 
+         * NOTE: When using this version of the constructor, the sender object will be in a "not ready"
+         * state until the {@link #fireReady()} method is called. This is because it hasn't yet been 
+         * associated with a peer inside the web view.  This version of the constructor is used by {@link RTCPeerConnection#addTrack(com.codename1.webrtc.MediaStreamTrack, com.codename1.webrtc.MediaStream...) }
+         * so you can see that implementation to see the flow.  It calls {@link #fireReady() } in its javascript callback.
+         * @param track The track to include in the sender object.
+         */
         RTCRtpSenderImpl(MediaStreamTrack track) {
             this.track = track;
             track.retain();
@@ -335,6 +479,10 @@ public class RTC implements AutoCloseable {
             
         }
         
+        /**
+         * A callback that is fired to indicate that the object has been bound to a 
+         * peer in the webview and is ready to use.
+         */
         void fireReady() {
             ready = true;
             while (onReady != null && !onReady.isEmpty()) {
@@ -343,6 +491,10 @@ public class RTC implements AutoCloseable {
             onReady = null;
         }
         
+        /**
+         * Creates a new sender object using data retrieved from a JS callback.
+         * @param data The data.  Should contain at least `refId` and `track` properties.
+         */
         RTCRtpSenderImpl(Map data) {
             setRefId((String)data.get("refId"));
             ready = true;
@@ -352,12 +504,15 @@ public class RTC implements AutoCloseable {
             
             if (trackInfo != null) {
                 track = (MediaStreamTrack)registry.get((String)trackInfo.get("refId"));
-                //if (track == null) {
-                //    track = findTrackById((String)trackInfo.get("id"));
-                //}
+                
+                // There are two possibilities for the track
+                // 1. The track already exists in the registry.  In this case we need to 
+                //    explicitly "retain" to increment its reference count.
+                // 2. The track doesn't already exist.  In this case we create a new object
+                //    We don't retain it explicitly because retain is always called RefCounted objects
+                //    are created.
                 if (track == null) {
                     track = new MediaStreamTrackImpl(trackInfo);
-                    
                 } else {
                     track.retain();
                 }
@@ -473,6 +628,9 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * Implements the {@link RTCRtpReceiver} interface.
+     */
     private class RTCRtpReceiverImpl extends RefCountedImpl implements RTCRtpReceiver {
         private MediaStreamTrack track;
         
@@ -480,7 +638,10 @@ public class RTC implements AutoCloseable {
         private RTCRtpParameters parameters;
         private RTCRtpSynchronizationSources rtcRtpSynchronizationSources;
         
-        
+        /**
+         * Creates new receiver with given data.
+         * @param data Data.  Should contain at least `refId` and `track`.
+         */
         RTCRtpReceiverImpl(Map data) {
             MapWrap w = new MapWrap(data);
             setRefId((String)data.get("refId"));
@@ -541,6 +702,9 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * Implementation of {@link RTCRtpTransceiver}
+     */
     private class RTCRtpTransceiverImpl extends RefCountedImpl implements RTCRtpTransceiver {
         private RTCRtpTransceiverDirection currentDirection;
         
@@ -549,7 +713,10 @@ public class RTC implements AutoCloseable {
         private RTCRtpSender sender;
         private Timer poller;
         
-        
+        /**
+         * Creates new transceiver
+         * @param data The data.  Should contain at least `refId`, `mid`, `sender`, `receiver`.
+         */
         RTCRtpTransceiverImpl(Map data) {
             
             MapWrap w = new MapWrap(data);
@@ -596,10 +763,14 @@ public class RTC implements AutoCloseable {
 
         @Override
         public void dealloc() {
-            sender.release();
-            sender = null;
-            receiver.release();
-            receiver = null;
+            if (sender != null) {
+                sender.release();
+                sender = null;
+            }
+            if (receiver != null) {
+                receiver.release();
+                receiver = null;
+            }
             if (poller != null) {
                 poller.cancel();
                 poller = null;
@@ -656,12 +827,19 @@ public class RTC implements AutoCloseable {
         }
     }
     
-    
+    /**
+     * Implementation of {@link RTCTrackEvent}.
+     */
     private class RTCTrackEventImpl extends EventImpl implements RTCTrackEvent, RefCounted {
         private RTCRtpReceiver receiver;
         private MediaStreams streams;
         private MediaStreamTrack track;
         private RTCRtpTransceiver transceiver;
+        
+        /**
+         * Since this extends EventImpl and not RefCountedImpl, we use a RefCountedSupport
+         * to encapsulate the reference counting.
+         */
         private RefCountedSupport ref=new RefCountedSupport(this) {
             @Override
             public void dealloc() {
@@ -688,6 +866,10 @@ public class RTC implements AutoCloseable {
             
         };
         
+        /**
+         * Creates a new track event.
+         * @param data The data.  Should contain at least `refId`, `streams`, `track`, `transceiver`, and `receiver`.
+         */
         RTCTrackEventImpl(Map data) {
             super("track", data);
             System.out.println("Creating RTCTrackEventImpl with data "+data);
@@ -762,6 +944,13 @@ public class RTC implements AutoCloseable {
         }
     }
     
+    /**
+     * Utility wrapper for the {@link JSONParser#parseJSON(java.io.Reader) } that configures it
+     * with booleans instead of strings, just how we like.
+     * @param json
+     * @return
+     * @throws IOException 
+     */
     private static Map parseJSON(String json) throws IOException {
         JSONParser p = new JSONParser();
         p.setUseBoolean(true);
@@ -771,6 +960,10 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * Implementation of {@link RTCPromise}
+     * @param <T> 
+     */
     private static class RTCPromiseImpl<T> extends AsyncResource<T> implements RTCPromise<T> {
 
         @Override
@@ -807,36 +1000,89 @@ public class RTC implements AutoCloseable {
     }
     
    
-    
+    /**
+     * Creates a new promise.
+     * @param <T> The type that the promise resolves to.
+     * @param type The type that the promise resolves to.
+     * @return The prommise.
+     */
     public <T> RTCPromise<T> newPromise(Class<T> type) {
         return new RTCPromiseImpl<T>();
     }
     
+    /**
+     * A utility class to help objects implement {@link RefCounted}
+     */
     private class RefCountedSupport extends RefCountedImpl {
         public RefCountedSupport(RefCounted proxying) {
             super(proxying);
         }
     }
     
-    
+    /**
+     * Base implementation of any class that uses reference counting to manage binding
+     * to a peer in the web view.
+     */
     private class RefCountedImpl implements RefCounted {
         
+        /**
+         * If using composition rather than inheritance, {@link #proxying} will refer
+         * to the actual java object that is being reference counted.
+         */
         private RefCounted proxying=this;
+        
+        /**
+         * The unique ID of the object. This is used to maintain the binding between the
+         * java object and its peer javascript object.
+         */
         private String refId;
+        
+        /**
+         * The current number of active references to this object.
+         */
         private int count;
         
+        /**
+         * Creates new object that reference counts the given proxying object
+         * @param proxying The object that is to be reference counted.
+         */
         public RefCountedImpl(RefCounted proxying) {
             this.proxying = proxying;
         }
         
+        /**
+         * Default constructor that should be used by subclasses.
+         */
         public RefCountedImpl() {
             
         }
         
+        /**
+         * Initializes the object, assigning a unique reference ID, and Javascript code that should be used
+         * to create the Javascript peer.  This should only be used for initializing objects that are created
+         * on the java side.  For objects that are created to be peers of existing javascript objects, do not
+         * use this method.  Simply call {@link #setRefId(java.lang.String) } with the refId provided in the 
+         * javascript callback, and then call {@link #retain() }.
+         * 
+         * @param refId The reference ID to assign to the object.
+         * @param javascript Javascript code to create the javascript peer.  Should return the javascript peer object itself.
+         */
         public void init(String refId, String javascript) {
             init(refId, javascript, null, null);
         }
         
+        /**
+         * Initializes the object, assigning a unique reference ID, and Javascript code that should be used
+         * to create the Javascript peer.  This should only be used for initializing objects that are created
+         * on the java side.  For objects that are created to be peers of existing javascript objects, do not
+         * use this method.  Simply call {@link #setRefId(java.lang.String) } with the refId provided in the 
+         * javascript callback, and then call {@link #retain() }.
+         * 
+         * @param refId The reference ID to assign to the object.
+         * @param javascript Javascript code to create the javascript peer.  Should return the javascript peer object itself.
+         * @param callbackJs Javascript code to call the callback.
+         * @param callback Callback to be executed when instantiation is done.
+         */
         public void init(String refId, String javascript, String callbackJs, SuccessCallback<JSRef> callback) {
             this.refId = refId;
             String js = "var o = ("+javascript+");registry.retain(o, ${0})";
@@ -882,6 +1128,10 @@ public class RTC implements AutoCloseable {
         }
         
        
+        /**
+         * Sets the reference ID of the Java object.
+         * @param id 
+         */
         public void setRefId(String id) {
             refId = id;
             
@@ -897,18 +1147,10 @@ public class RTC implements AutoCloseable {
         
     }
     
-    private MediaStream findStreamById(String id) {
-        for (RefCounted ref : registry.values()) {
-            if (ref instanceof MediaStream) {
-                MediaStream stream = (MediaStream)ref;
-                if (id.equals(stream.getId())) {
-                    return stream;
-                }
-            }
-        }
-        return null;
-    }
     
+    /**
+     * Implementation of {@link MediaStream}.
+     */
     private class MediaStreamImpl extends RefCountedImpl implements MediaStream, AutoCloseable {
         private String id;
         private boolean active, ended;
@@ -1054,7 +1296,12 @@ public class RTC implements AutoCloseable {
     
     
     
-    
+    /**
+     * Creates {@link MediaTrackSettings} object of given kind, with given data.
+     * @param kind The kind. Either "audio" or "video"
+     * @param m The data to populate the settings.  Generally passed as javascript callback.
+     * @return 
+     */
     private MediaTrackSettings newMediaTrackSettings(String kind, Map m) {
         
         if ("audio".equals(kind)) {
@@ -1073,6 +1320,11 @@ public class RTC implements AutoCloseable {
         return out;
     }
     
+    /**
+     * Creates new {@link MediaStreamTrack} with given data.
+     * @param data Data.  Should contain at least `id`, `refId`, `contentHint`, `enabled`, `kind`, `label`, `muted`, `readonly`, `readyState`, `remote`, and `settings`.
+     * @return 
+     */
     private MediaStreamTrack newMediaStreamTrack(Map data) {
         String trackId = (String)data.get("id");
         
@@ -1092,6 +1344,11 @@ public class RTC implements AutoCloseable {
                 );
     }
     
+    /**
+     * Creates new {@link MediaStream}
+     * @param data The data.  Should contain at least `refId`, `id`, `active`, `ended`, and `tracks`.
+     * @return 
+     */
     private MediaStream newMediaStream(Map data) {
         MapWrap w = new MapWrap(data);
         String refId = w.getString("refId", "");
@@ -1105,6 +1362,15 @@ public class RTC implements AutoCloseable {
         return newMediaStream(refId, id, active, ended, tracks);
     }
     
+    /**
+     * Creates new {@link MediaStream}
+     * @param refId The unique refId to bind the javascript peer to the java peer.
+     * @param id The stream ID
+     * @param active 
+     * @param ended
+     * @param tracks
+     * @return 
+     */
     private MediaStream newMediaStream(String refId, String id, boolean active, boolean ended, List<Map> tracks) {
         MediaStreamImpl out = new MediaStreamImpl();
         out.id = id;
@@ -1150,6 +1416,9 @@ public class RTC implements AutoCloseable {
         return out;
     }
     
+    /**
+     * Implementation of {@link MediaStreamTrack}
+     */
     private class MediaStreamTrackImpl extends RefCountedImpl implements MediaStreamTrack {
         private String contentHint;
         private boolean enabled;
@@ -1164,6 +1433,10 @@ public class RTC implements AutoCloseable {
         private MediaTrackConstraints constraints;
         private EventSupport es = new EventSupport(this);
         
+        /**
+         * Creates new MediaStreamTrack.
+         * @param data The data.  Should contain at least `refId`, `contentHint`, `enabled`, `id`, `kind`, `label`, `muted`, `readonly`, `readyState`, `remote`, and settings.
+         */
         private MediaStreamTrackImpl(Map data) {
             MapWrap w = new MapWrap(data);
             String refId = w.getString("refId", "");
@@ -1390,10 +1663,24 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * A promise that is used for {@link #getUserMedia(com.codename1.webrtc.MediaStreamConstraints) }.  It 
+     * 
+     */
     private class MediaStreamPromise extends RTCPromiseImpl<MediaStream> {
+        /**
+         * Whether native permissions have been requested yet.  The should only be requested
+         * once if necessary.  If permissions aren't granted and this flag is already set,
+         * then the promise will fail.
+         */
         private boolean permissionRequested;
     }
     
+    /**
+     * Obtain access to the device camera and/or microphone.
+     * @param constraints The constraints.
+     * @return Promise that resolves to {@link MediaStream}.
+     */
     public RTCPromise<MediaStream> getUserMedia(MediaStreamConstraints constraints) {
         MediaStreamPromise out = new MediaStreamPromise();
         return getUserMedia(constraints, out);
@@ -1487,6 +1774,10 @@ public class RTC implements AutoCloseable {
                 
     }
     
+    /**
+     * Gets the UI component associated with the RTC.  Place this component in your UI hierarchy.
+     * @return 
+     */
     public Component getVideoComponent() {
         return web;
     }
@@ -1530,6 +1821,9 @@ public class RTC implements AutoCloseable {
        
     }
     
+    /**
+     *
+     */
     private class RTCAudioElementImpl extends RTCMediaElementImpl implements RTCAudioElement {
         public RTCAudioElementImpl() {
             super("audio");
@@ -1927,15 +2221,28 @@ public class RTC implements AutoCloseable {
         
     }
     
+    /**
+     * Creates a video element that can be used to display a video stream.
+     * @return 
+     */
     public RTCVideoElement createVideo() {
         RTCVideoElementImpl out = new RTCVideoElementImpl();
         return out;
     }
     
+    /**
+     * Creates an audio element that can be used to play an audio stream.
+     * @return 
+     */
     public RTCAudioElement createAudio() {
         return new RTCAudioElementImpl();
     }
-    
+   
+    /**
+     * Appends an audio or video element to the RTC canvas.  Use {@link RTCElement#applyStyle(java.lang.String) }
+     * to position the element the way you like.
+     * @param el 
+     */
     public void append(RTCElement el) {
         if (el instanceof RefCounted) {
             RefCountedImpl ref = (RefCountedImpl)el;
@@ -2789,7 +3096,12 @@ public class RTC implements AutoCloseable {
         
     }
     
-    
+    /**
+     * Wraps a set of promises and returns a new promise that will resolve after all of the 
+     * promises have resolved, or fails if any of the promises fails.
+     * @param promises
+     * @return 
+     */
     public static RTCPromise all(RTCPromise... promises) {
         AsyncResource[] asyncs = new AsyncResource[promises.length];
         for (int i=0; i<promises.length; i++) {

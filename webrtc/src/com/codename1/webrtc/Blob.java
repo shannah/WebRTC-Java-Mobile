@@ -8,6 +8,7 @@ package com.codename1.webrtc;
 /**
  *
  * @author shannah
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Blob
  */
 public interface Blob {
     

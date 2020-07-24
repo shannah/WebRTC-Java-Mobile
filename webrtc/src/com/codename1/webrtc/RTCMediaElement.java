@@ -6,8 +6,9 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * The RTCMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface.
  * @author shannah
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
  */
 public interface RTCMediaElement extends RTCElement, EventTarget {
     public double getCurrentTime();

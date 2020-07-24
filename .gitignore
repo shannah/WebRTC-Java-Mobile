@@ -7,3 +7,5 @@ lib/impl
 codenameone_settings.properties
 webrtc/lib/CodenameOne_SRC.zip
 lib/webrtc.cn1lib
+!webrtc/lib/asciidoclet-1.5.7-SNAPSHOT-shaded.jar
+.DS_Store

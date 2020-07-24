@@ -8,7 +8,7 @@ package com.codename1.webrtc;
 import java.util.Map;
 
 /**
- *
+ * Utility class to wrap a Map and make it easier to get values from it.
  * @author shannah
  */
 class MapWrap {

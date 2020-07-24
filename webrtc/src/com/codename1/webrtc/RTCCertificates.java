@@ -8,7 +8,7 @@ package com.codename1.webrtc;
 import java.util.ArrayList;
 
 /**
- *
+ * A list of RTCCertificate objects.
  * @author shannah
  */
 public class RTCCertificates extends RTCList<RTCCertificate> implements JSObject {

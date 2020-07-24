@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A list of {@link AudioTrack} objects.
  * @author shannah
  */
 public class AudioTracks extends RTCList<AudioTrack> {

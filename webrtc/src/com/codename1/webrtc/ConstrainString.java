@@ -6,7 +6,8 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A constraint used by {@link MediaTrackConstraints}, {@link AudioTrackConstraints}, and {@link VideoTrackConstraints}
+ * to constrain the allowed values of certain constraints.
  * @author shannah
  */
 public class ConstrainString extends ConstrainObject<String> {

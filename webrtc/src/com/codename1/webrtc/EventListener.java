@@ -6,9 +6,14 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * The EventListener interface represents an object that can handle an event dispatched by an {@link EventTarget} object.
  * @author shannah
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/EventListener
  */
 public interface EventListener {
+    /**
+     * Triggered to handle an event.
+     * @param evt 
+     */
     public void handleEvent(Event evt);
 }

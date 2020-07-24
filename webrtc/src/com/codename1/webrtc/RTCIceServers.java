@@ -8,7 +8,7 @@ package com.codename1.webrtc;
 import java.util.ArrayList;
 
 /**
- *
+ * A list of RTCIceServer objects
  * @author shannah
  */
 public class RTCIceServers extends RTCList<RTCIceServer> implements JSObject {
