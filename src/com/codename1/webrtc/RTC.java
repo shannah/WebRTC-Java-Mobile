@@ -9,6 +9,7 @@ import com.codename1.io.JSONParser;
 import com.codename1.io.Log;
 import com.codename1.io.Util;
 import com.codename1.processing.Result;
+import com.codename1.system.NativeLookup;
 import com.codename1.ui.BrowserComponent;
 import com.codename1.ui.BrowserComponent.JSRef;
 import com.codename1.ui.CN;
@@ -41,6 +42,33 @@ public class RTC implements AutoCloseable {
     private BrowserComponent web;
     private Map<String,RefCounted> registry = new HashMap<>();
     private final AsyncResource<RTC> async = new AsyncResource<RTC>();
+    private WebRTCNative webrtcNative;
+    private static boolean audioPermission, videoPermission;
+    private static Map<String,Runnable> callbacks = new HashMap<String,Runnable>();
+    
+    public static void permissionCallback(final String callbackId, boolean audio, boolean video) {
+        if (audio) audioPermission = true;
+        if (video) videoPermission = true;
+        CN.callSerially(()->{
+            if (callbacks.containsKey(callbackId)) {
+                Runnable callback = callbacks.get(callbackId);
+                callbacks.remove(callbackId);
+                callback.run();
+            }
+        });
+    }
+    
+    private void checkPermission(boolean audio, boolean video, Runnable callback) {
+        boolean requiresCheck = audio && !audioPermission || video && !videoPermission;
+        String id = Util.getUUID();
+        callbacks.put(id, callback);
+        if (webrtcNative != null && webrtcNative.isSupported() && requiresCheck) {
+            webrtcNative.requestPermissions(id, audio, video);
+        } else {
+            permissionCallback(id, true, true);
+        }
+    }
+    
     
     private RTC(String htmlBody, String css) {
         init(htmlBody, css);
@@ -87,6 +115,17 @@ public class RTC implements AutoCloseable {
     }
     
     private void init(String htmlBody, String css) {
+        try {
+            webrtcNative = (WebRTCNative)NativeLookup.create(WebRTCNative.class);
+        } catch (Throwable t) {
+            Log.e(t);
+        }
+        String androidGrantPermissionsAtOrigin = CN.getProperty("android.WebView.grantPermissionsFrom", "");
+        if (androidGrantPermissionsAtOrigin.indexOf("http://localhost/") == -1) {
+            androidGrantPermissionsAtOrigin += " http://localhost/";
+            androidGrantPermissionsAtOrigin = androidGrantPermissionsAtOrigin.trim();
+            CN.setProperty("android.WebView.grantPermissionsFrom", androidGrantPermissionsAtOrigin);
+        }
         web = new BrowserComponent();
         web.addWebEventListener(BrowserComponent.onLoad, e->{
             
@@ -651,6 +690,7 @@ public class RTC implements AutoCloseable {
         
         RTCTrackEventImpl(Map data) {
             super("track", data);
+            System.out.println("Creating RTCTrackEventImpl with data "+data);
             ref.setRefId((String)data.get("refId"));
             ref.retain();
             streams = new MediaStreams();
@@ -1350,10 +1390,36 @@ public class RTC implements AutoCloseable {
         
     }
     
+    private class MediaStreamPromise extends RTCPromiseImpl<MediaStream> {
+        private boolean permissionRequested;
+    }
+    
     public RTCPromise<MediaStream> getUserMedia(MediaStreamConstraints constraints) {
-        RTCPromise<MediaStream> out = newPromise(MediaStream.class);
-        web.execute("try{navigator.getUserMedia("+constraints.toJSON()+", "
+        MediaStreamPromise out = new MediaStreamPromise();
+        return getUserMedia(constraints, out);
+    }
+    
+    private RTCPromise<MediaStream> getUserMedia(MediaStreamConstraints constraints, MediaStreamPromise out) {
+        boolean requiresPermissions = !audioPermission && MediaStreamConstraints.isAudioRequested(constraints)
+                || !videoPermission && MediaStreamConstraints.isVideoRequested(constraints);
+        
+        if (requiresPermissions) {
+            if (out.permissionRequested) {
+                if (!out.isDone()) {
+                    out.error(new RuntimeException("Permission denied"));
+                }
+                return out;
+            }
+            out.permissionRequested = true;
+            checkPermission(MediaStreamConstraints.isAudioRequested(constraints), MediaStreamConstraints.isVideoRequested(constraints), ()->{
+                getUserMedia(constraints, out);
+            });
+            return out;
+        }
+        
+        web.execute("try{navigator.mediaDevices.getUserMedia("+constraints.toJSON()+").then("
                 + "function(stream){"
+                + "  console.log('getUserMedia callback', stream);"
                 + "  registry.retain(stream);window.stream = stream;"
                 + "  var tracks = stream.getTracks();"
                 + "  var len = tracks.length;"
@@ -1365,6 +1431,7 @@ public class RTC implements AutoCloseable {
                 + "    ['contentHint', 'id', 'enabled', 'kind', 'label', 'muted', 'readyState', 'readonly', 'remote'].forEach(function(val, index, array){"
                 + "        track_[val] = track[val]||false;"
                 + "    });"
+                + "    track_.label = track_.label || '';"
                 + "    track_.contentHint = track_.contentHint || '';"
                 + "    track_.settings = track.getSettings();"
                 + "    tracks_.push(track_);"
@@ -1376,11 +1443,12 @@ public class RTC implements AutoCloseable {
                 + "    active:stream.active||false, "
                 + "    ended:stream.ended||false,"
                 + "    tracks: tracks_}));"
-                + "},"
+                + "}).catch("
                 + "function(error){"
-                + "  callback.onError(JSON.stringify(error));"
+                + "  console.log('getUserMedia error callback', error);"
+                + "  callback.onError(error.message, 0);"
                 + "})} catch (e)"
-                + "{console.log('exception in getUserMedia', e);callback.onError(JSON.stringify(e));}", new Callback<BrowserComponent.JSRef>() {
+                + "{console.log('exception in getUserMedia', e);callback.onError(e.message, 0);}", new Callback<BrowserComponent.JSRef>() {
                     @Override
                     public void onSucess(BrowserComponent.JSRef value) {
                         
@@ -1426,6 +1494,7 @@ public class RTC implements AutoCloseable {
     private class RTCVideoElementImpl extends RTCMediaElementImpl implements RTCVideoElement {
         
         private int videoWidth, videoHeight;
+        private boolean playsInline = true;
         
         public RTCVideoElementImpl() {
             super("video");
@@ -1443,6 +1512,19 @@ public class RTC implements AutoCloseable {
         
         public int getVideoHeight() {
             return videoHeight;
+        }
+
+        @Override
+        public boolean playsInline() {
+            return playsInline;
+        }
+
+        @Override
+        public void setPlaysInline(boolean playsInline) {
+            if (playsInline != this.playsInline) {
+                this.playsInline = playsInline;
+                web.execute("registry.get(${0}).playsInline = "+playsInline+";", new Object[]{getRefId()});
+            }
         }
 
        
@@ -1481,8 +1563,14 @@ public class RTC implements AutoCloseable {
         private boolean autoplay;
         private String id;
         
+        
         public RTCMediaElementImpl(String type) {
+            String playsInline = "";
+            if ("video".equals(type)) {
+                playsInline = "vid.playsInline=true;";
+            }
             init(Util.getUUID(), "(function(){var vid = document.createElement('"+type+"'); "
+                    + playsInline
                     //+ "vid.style.position='fixed'; "
                     //+ "vid.style.top='0'; "
                     //+ "vid.style.bottom='0', "
@@ -1984,9 +2072,12 @@ public class RTC implements AutoCloseable {
             addTrackParams.append(")");
             
             
-            String js = "var conn = registry.get(${0});var sender = conn.addTrack"+addTrackParams.toString()+"; callback.onSuccess(JSON.stringify(cn1.wrapRTCRtpSender(sender)));";
+            String js = "var conn = registry.get(${0});"
+                    + "var sender = conn.addTrack"+addTrackParams.toString()+"; "
+                    + "callback.onSuccess(JSON.stringify(cn1.wrapRTCRtpSender(sender)));";
             
             execute(js, params, (res,error) -> {
+                System.out.println("just got back from JS call to addTrack to a PeerConnection " + res);
                 try {
                     if (error != null) {
                         
@@ -1995,12 +2086,15 @@ public class RTC implements AutoCloseable {
                     }
                     
                     Map data = parseJSON(res.getValue());
+                   
+                    System.out.println("RTCRtpSender data: "+data);
                     sender.setRefId((String)data.get("refId"));
                     
                     if (senders == null) {
                         senders = new RTCRtpSenders();
                         senders.add(sender);
                     }
+                    System.out.println("Firing sender ready");
                     sender.fireReady();
                     
                 } catch (IOException ex) {

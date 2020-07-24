@@ -133,4 +133,12 @@ public class MediaStreamConstraints implements JSObject {
     }
     
     
+    public static boolean isAudioRequested(MediaStreamConstraints constraints) {
+        return (constraints.audio != null && constraints.audio) || constraints.audioConstraints != null;
+    }
+    
+    public static boolean isVideoRequested(MediaStreamConstraints constraints) {
+        return (constraints.video != null && constraints.video) || constraints.videoConstraints != null;
+    }
+    
 }

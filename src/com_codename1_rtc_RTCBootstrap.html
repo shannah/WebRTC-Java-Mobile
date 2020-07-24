@@ -6,6 +6,8 @@
             html, body {
                 width: 100%;
                 height: 100%;
+                overflow: hidden;
+                
             }
         </style>
         <script>  
@@ -81,6 +83,7 @@
             function wrapRTCRtpReceiver(receiver) {
                 //https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpReceiver
                 if (!receiver) return null;
+                console.log("in wrapRTCRtpReceiver ", receiver);
                 var out = {};
                 registry.retain(receiver);
                 out.refId = registry.id(receiver);
@@ -97,7 +100,7 @@
                 out.parameters = receiver.getParameters();
                
                 
-                
+                console.log("wrapRTCRtpReceiver out", out);
                 return out;
             }
             
@@ -105,6 +108,7 @@
                 if (!transceiver) {
                     return null;
                 }
+                console.log("In wrapRTCRtpTranceiver", transceiver);
                 var out = {};
                 registry.retain(transceiver);
                 out.refId = registry.id(transceiver);
@@ -115,18 +119,20 @@
                 
                 out.receiver = wrapRTCRtpReceiver(transceiver.receiver);
                 out.sender = wrapRTCRtpSender(transceiver.sender);
-                
+                console.log("wrapRTCRtpTransceiver out", out);
                 return out;
             }
             
             function wrapRTCRtpSender(sender) {
                 if (!sender) return null;
                 var out = {};
+                console.log("in wrapRTCRtpSender", sender);
                 registry.retain(sender);
                 out.refId = registry.id(sender);
                 out.dtmf = sender.dtmf;
                 out.rtcpTransport = sender.rtcpTransport;
                 out.track = wrapMediaStreamTrack(sender.track);
+                console.log("wrapRTCRtpSender out", out);
                 return out;
             }
             
@@ -154,6 +160,7 @@
                 if (!stream) {
                     return null;
                 }
+                console.log("in wrapMediaStream ", stream);
                 var out = {};
                 registry.retain(stream);
                 out.refId = registry.id(stream);
@@ -165,6 +172,7 @@
                 stream.getTracks().forEach(function(track, index, array) {
                     out.tracks.push(wrapMediaStreamTrack(track));
                 });
+                console.log("wrapMediaStream out ", out);
                 return out;
             }
             
@@ -172,6 +180,7 @@
                 if (!track) {
                     return null;
                 }
+                console.log("in wrapMediaStreamTrack", track);
                 var out = {};
                 registry.retain(track);
                 out.refId = registry.id(track);
@@ -179,7 +188,7 @@
                 out.enabled = track.enabled || false;
                 out.isolated = track.isolated;
                 out.kind = track.kind;
-                out.label = track.label;
+                out.label = track.label || '';
                 out.muted = track.muted || false;
                 out.readonly = track.readonly || false;
                 out.readyState = track.readyState;
@@ -187,6 +196,7 @@
                 out.settings = wrapMediaTrackSettings(track.kind, track.getSettings());
                 out.constraints = wrapMediaTrackConstraints(track.kind, track.getConstraints());
                 out.capabilities = wrapMediaTrackCapabilities(track.kind, track.getCapabilities());
+                console.log("wrapMediaStreamTrack out ", out);
                 return out;
             }
             
@@ -384,6 +394,7 @@
                                     return out;
                                 },
                                 track : function(el, e) {
+                                    console.log("in track event", el, e);
                                     return wrapMediaStreamTrack(e.track);
                                 },
                                 transceiver : function(el, e) {

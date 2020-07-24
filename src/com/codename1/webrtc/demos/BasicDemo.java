@@ -5,6 +5,7 @@
  */
 package com.codename1.webrtc.demos;
 
+import com.codename1.io.Log;
 import com.codename1.ui.Form;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.webrtc.AudioTrackConstraints;
@@ -33,11 +34,17 @@ public class BasicDemo extends Form implements AutoCloseable {
 
            
             rtc.getUserMedia(constraints).then(stream->{
+                System.out.println("Acquired stream from user media");
                 RTCVideoElement video = rtc.createVideo();
                 video.setAutoplay(true);
+                System.out.println("Setting srcObject to stream");
                 video.setSrcObject(stream);
-
+                System.out.println("Appending video to dom");
                 rtc.append(video);
+                System.out.println("Video successfully appended");
+            }).onCatch(error-> {
+                System.out.println("Failed to get user media: "+error.getMessage());
+                Log.e(error);
             });
             hi.add(BorderLayout.CENTER, rtc.getVideoComponent());
             hi.revalidate();

@@ -5,14 +5,12 @@
  */
 package com.codename1.webrtc;
 
+import com.codename1.system.NativeInterface;
+
 /**
  *
  * @author shannah
  */
-public interface RTCVideoElement extends RTCMediaElement {
-    public int getVideoWidth();
-    public int getVideoHeight();
-    public boolean playsInline();
-    public void setPlaysInline(boolean playsInline);
-    
+public interface WebRTCNative extends NativeInterface {
+    public void requestPermissions(String callbackId, boolean video, boolean audio);
 }
