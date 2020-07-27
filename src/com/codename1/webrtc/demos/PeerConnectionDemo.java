@@ -5,12 +5,16 @@
  */
 package com.codename1.webrtc.demos;
 
+import com.codename1.components.SpanLabel;
 import com.codename1.io.Log;
 import com.codename1.ui.Button;
+import com.codename1.ui.CN;
 import com.codename1.ui.ComboBox;
 import com.codename1.ui.Dialog;
+import com.codename1.ui.FontImage;
 import com.codename1.ui.Form;
 import com.codename1.ui.layouts.BorderLayout;
+import com.codename1.ui.layouts.BoxLayout;
 import com.codename1.ui.layouts.FlowLayout;
 import com.codename1.webrtc.Event;
 import com.codename1.webrtc.MediaStream;
@@ -65,6 +69,12 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     
     public PeerConnectionDemo() {
         super("Peer Connection Demo", new BorderLayout());
+        
+        String intro = "This sample was adapted from the \"Basic PeerConnection Demo\" on the WebRTC web site.";
+        Button viewSource = new Button("View Source");
+        FontImage.setMaterialIcon(viewSource, FontImage.MATERIAL_LINK);
+        viewSource.addActionListener(evt->CN.execute("https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/PeerConnectionDemo.java"));
+        add(BorderLayout.NORTH, BoxLayout.encloseY(new SpanLabel(intro), viewSource));
         
         add(BorderLayout.SOUTH, FlowLayout.encloseCenter(startButton, callButton, hangupButton));
         RTC.createRTC().ready(r->{

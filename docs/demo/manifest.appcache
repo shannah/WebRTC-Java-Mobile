@@ -1,0 +1,58 @@
+CACHE MANIFEST
+# This is a comment.
+# Cache manifest version 1.0.1595861926036
+# If you change the version number in this comment,
+# the cache manifest is no longer byte-for-byte
+# identical.
+# From https://developer.apple.com/library/content/documentation/iPhone/Conceptual/SafariJSDatabaseGuide/OfflineApplicationCache/OfflineApplicationCache.html#//apple_ref/doc/uid/TP40007256-CH7-SW2
+
+CACHE:
+.
+favicon.png?v=1.0.1595861926036
+icon.png?v=1.0.1595861926036
+index.html
+manifest.appcache
+manifest.json?v=1.0.1595861926036
+progress.gif
+style.css?v=1.0.1595861926036
+icon.png?v=1.0.1595861926036
+js/bootstrap.min.js?v=1.0.1595861926036
+js/fontmetrics.js?v=1.0.1595861926036
+js/jquery.min.js?v=1.0.1595861926036
+js/manup.js?v=1.0.1595861926036
+js/push.js?v=1.0.1595861926036
+js/upup.min.js?v=1.0.1595861926036
+css/bootstrap-theme.min.css?v=1.0.1595861926036
+css/bootstrap.min.css?v=1.0.1595861926036
+sw.js
+teavm/classes.js?v=1.0.1595861926036
+
+
+assets/material-design-font.ttf?v=1.0.1595861926036
+assets/cn1-version-numbers?v=1.0.1595861926036
+assets/iOS7Theme.res?v=1.0.1595861926036
+assets/android_holo_light.res?v=1.0.1595861926036
+assets/com_codename1_rtc_RTCBootstrap.html?v=1.0.1595861926036
+assets/CN1Resource.res?v=1.0.1595861926036
+assets/theme.res?v=1.0.1595861926036
+assets/overview.adoc?v=1.0.1595861926036
+includes/com_codename1_webrtc_WebRTCNative.js?v=1.0.1595861926036
+_icons/tiny.png
+_icons/square.png
+favicon.png?v=1.0.1595861926036
+icon.png?v=1.0.1595861926036
+_icons/square144.png
+_icons/widelogo.310x150.png
+_icons/apple-touch-icon-72x72-precomposed.png
+_icons/apple-touch-icon-57x57-precomposed.png
+_icons/apple-touch-icon-76x76-precomposed.png
+_icons/apple-touch-icon-60x60-precomposed.png
+_icons/apple-touch-icon-120x120-precomposed.png
+_icons/apple-touch-icon-152x152-precomposed.png
+_icons/apple-touch-icon-114x114-precomposed.png
+_icons/icon-512x512.png
+_icons/nice-highres.png
+_icons/niceicon.png
+
+NETWORK:
+*

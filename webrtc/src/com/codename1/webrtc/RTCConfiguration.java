@@ -15,7 +15,7 @@ import java.util.Map;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCConfiguration
  */
-public class RTCConfiguration implements JSObject {
+public class RTCConfiguration implements JSONStruct {
 
     /**
      * Specifies how to handle negotiation of candidates when the remote peer is not compatible with the SDP BUNDLE standard. This must be one of the values from the enum RTCBundlePolicy. If this value isn't included in the dictionary, "balanced" is assumed.

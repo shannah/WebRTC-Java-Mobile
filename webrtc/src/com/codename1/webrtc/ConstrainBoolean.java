@@ -18,7 +18,7 @@ import java.util.Map;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ConstrainBoolean
  */
-public class ConstrainBoolean implements JSObject {
+public class ConstrainBoolean implements JSONStruct {
 
     public ConstrainBoolean(Boolean fallback) {
         this.fallback = fallback;

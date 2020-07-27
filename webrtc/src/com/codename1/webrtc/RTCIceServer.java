@@ -13,7 +13,7 @@ import java.util.Map;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer
  */
-public class RTCIceServer implements JSObject {
+public class RTCIceServer implements JSONStruct {
 
     /**
      * The credential to use when logging into the server. This is only used if the RTCIceServer represents a TURN server.

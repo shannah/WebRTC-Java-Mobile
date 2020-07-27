@@ -23,7 +23,7 @@ import java.util.Map;
  *
  * @author shannah
  */
-public class MediaTrackConstraints implements JSObject {
+public class MediaTrackConstraints implements JSONStruct {
 
     public MediaTrackConstraints(MediaStreamConstraints parent) {
         this.parent = parent;
@@ -76,8 +76,8 @@ public class MediaTrackConstraints implements JSObject {
     }
 
     private static Object toJSONStruct(Object o) {
-        if (o instanceof JSObject) {
-            return ((JSObject) o).toJSONStruct();
+        if (o instanceof JSONStruct) {
+            return ((JSONStruct) o).toJSONStruct();
 
         }
         return null;

@@ -9,28 +9,44 @@ import com.codename1.io.Util;
 import com.codename1.webrtc.RTCStyle.CSSProperty;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
- *
+ * Encapsulates a set of CSS style properties that can be applied to {@link RTCElement} objects via its {@link RTCElement#applyStyle(com.codename1.webrtc.RTCStyle) }
+ * method.
+ * 
  * @author shannah
  */
 public class RTCStyle implements Iterable<CSSProperty> {
 
-    
+    /**
+     * Encapsulates a single CSS property.
+     */
     public static class CSSProperty {
         private String property, value;
         
+        /**
+         * Creates a new CSS property with name {@literal property} and value {@literal value}.
+         * 
+         * @param property The CSS property name
+         * @param value The CSS property value.
+         */
         CSSProperty(String property, String value) {
             this.property = property;
             this.value = value;
         }
         
+        /**
+         * Gets the CSS property name.
+         * @return 
+         */
         public String getProperty() {
             return property;
         }
         
+        /**
+         * Gets the CSS property value.
+         * @return 
+         */
         public String getValue() {
             return value;
         }
@@ -81,7 +97,11 @@ public class RTCStyle implements Iterable<CSSProperty> {
         return properties.iterator();
     }
     
-    
+    /**
+     * Creates a new style given a CSS string.
+     * @param css A css string.  May include one or more properties.  E.g. "color:black; font-size:14pt;"
+     * @return An RTCStyle encapsulating the provided string.
+     */
     public static RTCStyle createStyle(String css) {
         return new RTCStyle().add(css);
     }

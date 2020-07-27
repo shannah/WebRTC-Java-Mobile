@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A list of {@link RTCRtpSender} objects.
  * @author shannah
  */
 public class RTCRtpSenders extends RTCList<RTCRtpSender> {

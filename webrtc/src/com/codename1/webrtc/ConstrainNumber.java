@@ -21,7 +21,7 @@ import java.util.Map;
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ConstrainULong
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ULongRange
  */
-public class ConstrainNumber<T extends Number> extends NumberRange<T> implements JSObject {
+public class ConstrainNumber<T extends Number> extends NumberRange<T> implements JSONStruct {
 
     /**
      * @return the fallback

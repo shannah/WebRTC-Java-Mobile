@@ -21,7 +21,7 @@ import java.util.Map;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCOfferAnswerOptions
  */
-public class RTCOfferAnswerOptions implements JSObject {
+public class RTCOfferAnswerOptions implements JSONStruct {
 
     /**
      * For configurations of systems and codecs that are able to detect when the

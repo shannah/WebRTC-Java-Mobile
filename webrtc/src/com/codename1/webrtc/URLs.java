@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- *
+ * A list of URLs.
  * @author shannah
  */
-public class URLs extends RTCList<String> implements JSObject {
+public class URLs extends RTCList<String> implements JSONStruct {
 
     @Override
     public Object toJSONStruct() {

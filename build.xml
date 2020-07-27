@@ -615,10 +615,7 @@
         </java>
     </target>
 
-    <target name="pre-javadoc">
-        <property value="JavaSE.jar:lib/CLDC11.jar:lib/lib/impl/cls" name="javac.classpath"/>        
-    </target>
-    <target depends="pre-javadoc,init,-javadoc-build,-javadoc-browse" description="Build Javadoc." name="javadoc"/>
+    <target name="javadoc" depends="docs"/>
     
     <target name="cn1lib">
         <ant dir="webrtc" target="jar" useNativeBasedir="true"/>

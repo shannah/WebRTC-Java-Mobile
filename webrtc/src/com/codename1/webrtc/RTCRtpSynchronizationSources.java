@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A list of {@link RTCRtpSynchronizationSource} objects;
  * @author shannah
  */
 public class RTCRtpSynchronizationSources extends RTCList<RTCRtpSynchronizationSource> {

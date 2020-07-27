@@ -422,7 +422,7 @@ public interface RTCPeerConnection extends EventTarget {
      */
     public RTCPromise setRemoteDescription(RTCSessionDescription sessionDescription);
 
-    public static class RTCDataChannelInit implements JSObject {
+    public static class RTCDataChannelInit implements JSONStruct {
 
         /**
          * @return the ordered
@@ -866,7 +866,7 @@ public interface RTCPeerConnection extends EventTarget {
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCOfferOptions
      */
-    public static class RTCOfferOptions implements JSObject {
+    public static class RTCOfferOptions implements JSONStruct {
 
         /**
          * A Boolean which, when set to true, tells createOffer() to generate

@@ -12,6 +12,7 @@ import com.codename1.ui.CN;
 import com.codename1.ui.CheckBox;
 import com.codename1.ui.Component;
 import com.codename1.ui.Container;
+import com.codename1.ui.FontImage;
 import com.codename1.ui.Form;
 import com.codename1.ui.Label;
 import com.codename1.ui.TextArea;
@@ -32,6 +33,10 @@ import com.codename1.webrtc.VideoTrackConstraints;
 
 /**
  * This demo was adapted from https://webrtc.github.io/samples/src/content/getusermedia/resolution/
+ * 
+ * Source code for original Javscript sample: https://github.com/webrtc/samples/blob/gh-pages/src/content/getusermedia/resolution/js/main.js
+ * 
+ * 
  * @author shannah
  */
 public class ConstraintsDemo extends Form implements AutoCloseable {
@@ -200,6 +205,12 @@ public class ConstraintsDemo extends Form implements AutoCloseable {
     public ConstraintsDemo() {
         super("Constraints Demo", new BorderLayout());
         Container north = new Container(BoxLayout.y());
+        String intro = "This sample was adapted from the \"getUserMedia(): select resolution\" sample on the WebRTC web site.";
+        Button viewSource = new Button("View Source");
+        FontImage.setMaterialIcon(viewSource, FontImage.MATERIAL_LINK);
+        viewSource.addActionListener(evt->CN.execute("https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/ConstraintsDemo.java"));
+        north.add(BoxLayout.encloseY(new SpanLabel(intro), viewSource));
+        
         north.add(FlowLayout.encloseIn(new Label("WebRTC samples"), new Label("getUserMedia: select resolution")));
         north.add(FlowLayout.encloseIn(new Label("This example uses"), new Link("constraints", "https://w3c.github.io/mediacapture-main/getusermedia.html#media-track-constraints")));
         north.add(new SpanLabel("Click a button to call getUserMedia() with appropriate resolution."));

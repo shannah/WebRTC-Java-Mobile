@@ -12,7 +12,7 @@ import java.util.Date;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCCertificate
  */
-public interface RTCCertificate extends JSObject {
+public interface RTCCertificate extends JSONStruct {
     /**
      * Returns the expiration date of the certificate.
      * @return 

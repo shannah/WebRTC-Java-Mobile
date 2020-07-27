@@ -21,7 +21,7 @@ package com.codename1.webrtc;
  * 
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate
  */
-public interface RTCIceCandidate extends JSObject {
+public interface RTCIceCandidate extends JSONStruct {
 
     /**
      * A DOMString representing the transport address for the candidate that can be used for connectivity checks. The format of this address is a candidate-attribute as defined in RFC 5245. This string is empty ("") if the RTCIceCandidate is an "end of candidates" indicator.

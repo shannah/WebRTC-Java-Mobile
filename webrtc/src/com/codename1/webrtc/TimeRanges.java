@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A range of times.
  * @author shannah
  */
 public interface TimeRanges {

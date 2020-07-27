@@ -14,7 +14,7 @@ import java.util.Map;
  * to constrain the allowed values of certain constraints.
  * @author shannah
  */
-public class ConstrainObject<T> implements JSObject {
+public class ConstrainObject<T> implements JSONStruct {
 
     /**
      * @return the exact
@@ -81,8 +81,8 @@ public class ConstrainObject<T> implements JSObject {
     }
     
     private static Object toJSONStruct(Object o) {
-        if (o instanceof JSObject) {
-            return ((JSObject)o).toJSONStruct();
+        if (o instanceof JSONStruct) {
+            return ((JSONStruct)o).toJSONStruct();
             
         }
         return null;
@@ -92,14 +92,14 @@ public class ConstrainObject<T> implements JSObject {
      * A list of constraint objects.
      * @param <T> 
      */
-    public static class ConstrainValues<T> extends RTCList<T> implements JSObject {
+    public static class ConstrainValues<T> extends RTCList<T> implements JSONStruct {
 
         @Override
         public Object toJSONStruct() {
             if (size() == 1) {
                 for (T item : this) {
-                    if (item instanceof JSObject) {
-                        return ((JSObject)item).toJSONStruct();
+                    if (item instanceof JSONStruct) {
+                        return ((JSONStruct)item).toJSONStruct();
                     }
                 }
             } else if (size() == 0) {
@@ -107,8 +107,8 @@ public class ConstrainObject<T> implements JSObject {
             }
             ArrayList out = new ArrayList();
             for (T item : this) {
-                if (item instanceof JSObject) {
-                    out.add(((JSObject)item).toJSONStruct());
+                if (item instanceof JSONStruct) {
+                    out.add(((JSONStruct)item).toJSONStruct());
                 }
             }
             return out;

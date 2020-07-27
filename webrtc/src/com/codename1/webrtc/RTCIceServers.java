@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * A list of RTCIceServer objects
  * @author shannah
  */
-public class RTCIceServers extends RTCList<RTCIceServer> implements JSObject {
+public class RTCIceServers extends RTCList<RTCIceServer> implements JSONStruct {
 
     @Override
     public Object toJSONStruct() {

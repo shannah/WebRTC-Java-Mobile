@@ -9,7 +9,7 @@ package com.codename1.webrtc;
  *
  * @author shannah
  */
-public enum FacingMode implements JSObject {
+public enum FacingMode implements JSONStruct {
         User("user"),
         Environment("environment"),
         Left("left"),

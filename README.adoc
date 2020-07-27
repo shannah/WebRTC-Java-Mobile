@@ -1,5 +1,69 @@
-= Codename One RTC Demo
+= Codename One WebRTC Library
 
-Under construction.  This is a partial work is being used to develop Codename One Web RTC support.  When it is finished,
-it will be refactored into a cn1lib
+A https://webrtc.github.io/[WebRTC] implementation for https://www.codenameone.com[Codename One].
+
+== Project Status
+
+**Under development**
+
+The WebRTC API includes nearly 100 classes.  This project aims to provide Codename One (Java/Kotlin) implementations for all APIs.   The general process that we are that we are taking is as follows:
+
+1. Create Java interfaces for all WebRTC interfaces.  **Complete**
+2. Port https://webrtc.github.io/samples/[WebRTC samples] one by one, implementing functionalities required for the samples to work, and fixing bugs as they appear.  **In progress**
+
+**So far we have ported the following 3 samples:**
+
+. https://webrtc.github.io/samples/src/content/getusermedia/gum/[Basic getUserMedia demo].  https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/BasicDemo.java[View Ported Source]
+. https://webrtc.github.io/samples/src/content/getusermedia/resolution/[Choose camera resolution].  https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/ConstraintsDemo.java[View Ported Source]
+. https://webrtc.github.io/samples/src/content/peerconnection/pc1/[Basic PeerConnection Demo]. https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/PeerConnectionDemo.java[View Ported Source]
+
+
+== Platform Support
+
+Eventually we will support iOS, Android, Javascript, Mac Desktop, Windows Desktop, and Simulator.
+
+Currently (July 27, 2020) it works on:
+
+. Android
+. Simulator  (https://www.codenameone.com/blog/big-changes-jcef.html[requires CEF to be installed])
+. Javascript (Desktop and Android Chrome)
+
+== Installation
+
+. Copy webrtc.cn1lib into your project's "lib" directory.
+. Refresh Cn1libs
+
+== Demo
+
+. https://shannah.github.com/CN1WebRTC/demo[Javascript Build]  - Works in modern desktop browsers and also on Android Chrome
+. Android APK
+
+== Documentation
+
+. https://shannah.github.com/CN1WebRTC/javadoc/[JavaDocs]
+
+== Building From Source
+
+[source,bash]
+----
+git clone https://github.com/shannah/CN1WebRTC
+cd CN1WebRTC
+sh setup.sh
+----
+
+Open project in NetBeans
+
+== References
+
+. https://www.codenameone.com/[Codename One Web Site]
+. https://webrtc.org/[WebRTC WebSite]
+
+
+
+
+
+
+
+
+
 

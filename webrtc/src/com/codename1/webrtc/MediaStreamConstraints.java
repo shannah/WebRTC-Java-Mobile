@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author shannah
  */
-public class MediaStreamConstraints implements JSObject {
+public class MediaStreamConstraints implements JSONStruct {
 
     /**
      * a MediaTrackConstraints object providing the constraints which must be met by the audio track included in the returned MediaStream. If constraints are specified, an audio track is inherently requested.

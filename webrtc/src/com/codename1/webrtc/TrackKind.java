@@ -8,7 +8,8 @@ package com.codename1.webrtc;
 
 
 /**
- *
+ * Enum used by {@link MediaStreamTrack} for values of {@link MediaStreamTrack#getKind() }.
+ * 
  * @author shannah
  */
 public enum TrackKind {

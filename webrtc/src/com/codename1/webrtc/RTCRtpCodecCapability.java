@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * Used with {@link RTCRtpTransceiver#setCodecPreferences(com.codename1.webrtc.RTCRtpCodecCapability...) }
  * @author shannah
  */
 public interface RTCRtpCodecCapability {

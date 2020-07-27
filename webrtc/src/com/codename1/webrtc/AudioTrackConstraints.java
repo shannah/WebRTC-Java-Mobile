@@ -68,8 +68,8 @@ public class AudioTrackConstraints extends MediaTrackConstraints {
     }
     
     private static Object toJSONStruct(Object o) {
-        if (o instanceof JSObject) {
-            return ((JSObject)o).toJSONStruct();
+        if (o instanceof JSONStruct) {
+            return ((JSONStruct)o).toJSONStruct();
             
         }
         return null;

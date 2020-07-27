@@ -6,7 +6,7 @@
 package com.codename1.webrtc;
 
 /**
- *
+ * A list of {@link RTCRtpTransceiver} objects.
  * @author shannah
  */
 public class RTCRtpTransceivers extends RTCList<RTCRtpTransceiver> {
