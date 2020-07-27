@@ -30,13 +30,13 @@ Currently (July 27, 2020) it works on:
 
 == Installation
 
-. Copy webrtc.cn1lib into your project's "lib" directory.
+. Copy https://github.com/shannah/CN1WebRTC/blob/master/bin/webrtc.cn1lib[webrtc.cn1lib] into your project's "lib" directory.
 . Refresh Cn1libs
 
 == Demo
 
 . https://shannah.github.com/CN1WebRTC/demo[Javascript Build]  - Works in modern desktop browsers and also on Android Chrome
-. Android APK
+. https://github.com/shannah/CN1WebRTC/blob/master/bin/WebRTCDemo-release.apk[Android APK]
 
 == Documentation
 
