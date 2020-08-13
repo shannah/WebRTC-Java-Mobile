@@ -14,6 +14,7 @@ import com.codename1.ui.BrowserComponent;
 import com.codename1.ui.BrowserComponent.JSRef;
 import com.codename1.ui.CN;
 import com.codename1.ui.Component;
+import com.codename1.ui.events.ActionListener;
 
 import com.codename1.util.AsyncResource;
 import com.codename1.util.AsyncResult;
@@ -23,6 +24,8 @@ import com.codename1.util.SuccessCallback;
 import com.codename1.webrtc.MediaStream.ReadyState;
 import com.codename1.webrtc.RTCPeerConnection.RTCDataChannelInit;
 import com.codename1.webrtc.RTCStyle.CSSProperty;
+import com.codename1.webrtc.compat.cordova.EmbeddedCordovaApplication;
+import com.codename1.webrtc.compat.cordova.IOSRTCPlugin;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -98,6 +101,7 @@ public class RTC implements AutoCloseable {
     private Map<String,RefCounted> registry = new HashMap<>();
     private final AsyncResource<RTC> async = new AsyncResource<RTC>();
     private WebRTCNative webrtcNative;
+    private EmbeddedCordovaApplication cordovaApp;
     private static boolean audioPermission, videoPermission;
     private static Map<String,Runnable> callbacks = new HashMap<String,Runnable>();
     
@@ -216,6 +220,7 @@ public class RTC implements AutoCloseable {
     private void init(String htmlBody, String css) {
         try {
             webrtcNative = (WebRTCNative)NativeLookup.create(WebRTCNative.class);
+            
         } catch (Throwable t) {
             Log.e(t);
         }
@@ -226,7 +231,9 @@ public class RTC implements AutoCloseable {
             CN.setProperty("android.WebView.grantPermissionsFrom", androidGrantPermissionsAtOrigin);
         }
         web = new BrowserComponent();
-        web.addWebEventListener(BrowserComponent.onLoad, e->{
+        
+        
+        ActionListener bootstrapCallback = e->{
             
             web.addJSCallback("window.cn1Callback = function(data) {callback.onSuccess(JSON.stringify(data))}", (value) -> {
                 try {
@@ -262,9 +269,31 @@ public class RTC implements AutoCloseable {
                 }
             });
             async.complete(RTC.this);
-        });
+        };
+        if ("ios".equals(CN.getPlatformName()) && !CN.isSimulator()) {
+            // This is iOS
+            cordovaApp = new EmbeddedCordovaApplication(web) {
+                @Override
+                protected void onReady() {
+                    System.out.println("In cordovaApp.onReady()");
+                    bootstrapCallback.actionPerformed(null);
+                }
+                
+            };
+            IOSRTCPlugin plugin = new IOSRTCPlugin(web);
+            
+            cordovaApp.addPlugin("iosrtcPlugin", plugin);
+            plugin.pluginInitialize();
+            
+        } else {
+            web.addWebEventListener(BrowserComponent.onLoad, bootstrapCallback);
+        } 
         try {
-            String pageContent = Util.readToString(CN.getResourceAsStream("/com_codename1_rtc_RTCBootstrap.html"));
+            String path = "/com_codename1_rtc_RTCBootstrap.html";
+            if (cordovaApp != null) {
+                path = "/com_codename1_rtc_RTCBootstrap_ios.html";
+            }
+            String pageContent = Util.readToString(CN.getResourceAsStream(path));
             pageContent = StringUtil.replaceFirst(pageContent, "</body>", htmlBody+"</body>");
             pageContent = StringUtil.replaceFirst(pageContent, "</head>", "<style type='text/css'>\n"+css+"\n</style></head>");
             web.setPage(pageContent, "http://localhost/");
@@ -285,6 +314,9 @@ public class RTC implements AutoCloseable {
             if (ref instanceof AutoCloseable) {
                 ((AutoCloseable)ref).close();
             }
+        }
+        if (cordovaApp != null) {
+            cordovaApp.dispose();
         }
     }
     

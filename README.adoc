@@ -27,10 +27,16 @@ Currently (July 27, 2020) it works on:
 . Android
 . Simulator  (https://www.codenameone.com/blog/big-changes-jcef.html[requires CEF to be installed])
 . Javascript (Desktop and Android Chrome)
+. iOS (experimental.  Some demos not working yet.)
+
+== Dependencies
+
+. CN1JSON.cn1lib
 
 == Installation
 
 . Copy https://github.com/shannah/CN1WebRTC/blob/master/bin/webrtc.cn1lib[webrtc.cn1lib] into your project's "lib" directory.
+. Copy https://github.com/shannah/CN1WebRTC/blob/master/lib/CN1JSON.cn1lib[CN1JSON.cn1lib] into your project's "lib" directory.
 . Refresh Cn1libs
 
 == Demo
