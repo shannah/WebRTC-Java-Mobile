@@ -4,7 +4,7 @@ A https://webrtc.github.io/[WebRTC] implementation for https://www.codenameone.c
 
 == Project Status
 
-**Under development**
+Under development.  See https://github.com/codenameone/CodenameOne/issues/3226[this issue] to follow the progress.
 
 The WebRTC API includes nearly 100 classes.  This project aims to provide Codename One (Java/Kotlin) implementations for all APIs.   The general process that we are that we are taking is as follows:
 
