@@ -16,6 +16,7 @@ import static com.codename1.ui.ComponentSelector.$;
 import com.codename1.ui.FontImage;
 import com.codename1.ui.layouts.GridLayout;
 import com.codename1.webrtc.demos.BasicDemo;
+import com.codename1.webrtc.demos.ChangeCodecsDemo;
 import com.codename1.webrtc.demos.ConstraintsDemo;
 import com.codename1.webrtc.demos.InputOutputDemo;
 import com.codename1.webrtc.demos.PeerConnectionDemo;
@@ -102,7 +103,12 @@ public class WebRTCDemo {
         peerConnectionDemo.addActionListener(evt->{
             prepareDemo(new PeerConnectionDemo()).show();
         });
-        hi.addAll(basicDemo, constraintsDemo, peerConnectionDemo, inputsDemo);
+        
+        Button codecsDemo = new Button("Change Codecs Demo");
+        codecsDemo.addActionListener(evt->{
+            prepareDemo(new ChangeCodecsDemo()).show();
+        });
+        hi.addAll(basicDemo, constraintsDemo, peerConnectionDemo, inputsDemo, codecsDemo);
         
         
         hi.show();

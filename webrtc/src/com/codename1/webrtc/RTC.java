@@ -104,6 +104,7 @@ public class RTC implements AutoCloseable {
     private EmbeddedCordovaApplication cordovaApp;
     private static boolean audioPermission, videoPermission;
     private static Map<String,Runnable> callbacks = new HashMap<String,Runnable>();
+    private RTCRtpCapabilities senderAudioCapabilities, senderVideoCapabilities, receiverAudioCapabilities, receiverVideoCapabilities;
     
     /**
      * Internal callback function used by Native interface.  Do not use.
@@ -268,7 +269,26 @@ public class RTC implements AutoCloseable {
                     Log.e(ex);
                 }
             });
-            async.complete(RTC.this);
+            web.execute("callback.onSuccess(JSON.stringify({senderVideo: RTCRtpSender.getCapabilities('video'), "
+                    + "senderAudio: RTCRtpSender.getCapabilities('audio'),"
+                    + "receiverVideo: RTCRtpReceiver.getCapabilities('video'),"
+                    + "receiverAudio: RTCRtpReceiver.getCapabilities('audio')"
+                    + "}));", res->{
+                try {
+                    java.util.Map data = (java.util.Map)parseJSON(res.getValue());
+                    senderAudioCapabilities = new RTCRtpCapabilities((java.util.Map)data.get("senderAudio"));
+                    senderVideoCapabilities = new RTCRtpCapabilities((java.util.Map)data.get("senderVideo"));
+                    receiverAudioCapabilities = new RTCRtpCapabilities((java.util.Map)data.get("receiverAudio"));
+                    receiverVideoCapabilities = new RTCRtpCapabilities((java.util.Map)data.get("receiverVideo"));
+                } catch (Throwable t) {
+                    Log.e(t);
+                }
+                
+                
+                
+                async.complete(RTC.this);
+            });
+            
         };
         if ("ios".equals(CN.getPlatformName()) && !CN.isSimulator()) {
             // This is iOS
@@ -845,9 +865,37 @@ public class RTC implements AutoCloseable {
             return currentDirection == null || currentDirection == RTCRtpTransceiverDirection.Stopped;
         }
 
+        private String q(String val) {
+            if (val == null) {
+                return "null";
+            }
+            return "'" + val + "'";
+        }
+        
         @Override
         public void setCodecPreferences(RTCRtpCodecCapability... codecs) {
-            
+            StringBuilder sb = new StringBuilder();
+            sb.append("var codecs = [");
+            boolean first = true;
+            for (RTCRtpCodecCapability codec : codecs) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(", ");
+                }
+                sb.append("RTCRtpSender.getCapabilities('audio').codecs.find(c => c.mimeType==").append(q(codec.getMimeType()))
+                        .append(" && c.channels == ").append(codec.getChannels())
+                        .append(" && c.clockRate==").append(codec.getClockRate()).append(")")
+                        .append(" || RTCRtpSender.getCapabilities('video').codecs.find(c=> c.mimeType==").append(q(codec.getMimeType()))
+                        .append(" && c.clockRate==").append(codec.getClockRate()).append(" && ").append(q(codec.getSdpFmtpLine()))
+                        .append("==c.sdpFmtpLine)");
+            }
+            sb.append("]; t.setCodecPreferences(codecs);");
+            web.execute("var t = registry.get(${0}); if (t) {"
+                    + "try {"+ sb.toString()+" callback.onSuccess(null);} catch(e){callback.onError(e);}}"
+                            + " else callback.onError(new Error('Transceiver not found'));", new Object[]{getRefId()}, res->{
+                    
+                });
         }
 
         @Override
@@ -3215,6 +3263,38 @@ public class RTC implements AutoCloseable {
         return (ConstrainString)new ConstrainString().ideal(val);
     }
     
+    /**
+     * Gets the sender capabilities for the given media type.  
+     * @param type Either video or audio.
+     * @return The sender capabilities for the given media type.
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/getCapabilities
+     */
+    public RTCRtpCapabilities getSenderCapabilities(String type) {
+        switch (type) {
+            case "audio":
+                return senderAudioCapabilities;
+            case "video":
+                return senderVideoCapabilities;
+            default:
+                throw new IllegalArgumentException("Unrecognized rtp capability type.  Looking or audio or video but found "+type);
+        }
+    }
     
-    
+    /**
+     * 
+     * Gets the receiver capabilities for the given media type.  
+     * @param type Either video or audio.
+     * @return The receiver capabilities for the given media type.
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpReceiver/getCapabilities
+     */
+    public RTCRtpCapabilities getReceiverCapabilities(String type) {
+        switch (type) {
+            case "audio":
+                return receiverAudioCapabilities;
+            case "video":
+                return receiverVideoCapabilities;
+            default:
+                throw new IllegalArgumentException("Unrecognized rtp capability type.  Looking or audio or video but found "+type);
+        }
+    }
 }
