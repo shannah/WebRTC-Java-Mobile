@@ -254,7 +254,7 @@ public interface RTCPeerConnection extends EventTarget {
      * @param candidate
      * @return
      */
-    public RTCPromise addIceCandidate(RTCIceCandidate candidate);
+    public Promise addIceCandidate(RTCIceCandidate candidate);
 
     /**
      * The RTCPeerConnection method addTrack() adds a new media track to the set
@@ -283,7 +283,7 @@ public interface RTCPeerConnection extends EventTarget {
      *
      * @return
      */
-    public RTCPromise<RTCSessionDescription> createAnswer();
+    public Promise<RTCSessionDescription> createAnswer();
 
     /**
      * The createAnswer() method on the RTCPeerConnection interface creates an
@@ -298,7 +298,7 @@ public interface RTCPeerConnection extends EventTarget {
      * @param options
      * @return
      */
-    public RTCPromise<RTCSessionDescription> createAnswer(RTCAnswerOptions options);
+    public Promise<RTCSessionDescription> createAnswer(RTCAnswerOptions options);
 
     /**
      * The createDataChannel() method on the RTCPeerConnection interface creates
@@ -319,7 +319,7 @@ public interface RTCPeerConnection extends EventTarget {
      * @param options
      * @return
      */
-    public RTCPromise<RTCSessionDescription> createOffer(RTCOfferOptions options);
+    public Promise<RTCSessionDescription> createOffer(RTCOfferOptions options);
 
     /**
      * The RTCPeerConnection.getReceivers() method returns an array of
@@ -348,7 +348,7 @@ public interface RTCPeerConnection extends EventTarget {
      * @param selector
      * @return
      */
-    public RTCPromise<RTCStatsReport> getStats(MediaStreamTrack selector);
+    public Promise<RTCStatsReport> getStats(MediaStreamTrack selector);
 
     /**
      * The RTCPeerConnection.getStreamById() method returns the MediaStream with
@@ -409,7 +409,7 @@ public interface RTCPeerConnection extends EventTarget {
      * @param sessionDescription
      * @return
      */
-    public RTCPromise setLocalDescription(RTCSessionDescription sessionDescription);
+    public Promise setLocalDescription(RTCSessionDescription sessionDescription);
 
     /**
      * The RTCPeerConnection method setRemoteDescription() sets the specified
@@ -420,7 +420,7 @@ public interface RTCPeerConnection extends EventTarget {
      * @param sessionDescription
      * @return
      */
-    public RTCPromise setRemoteDescription(RTCSessionDescription sessionDescription);
+    public Promise setRemoteDescription(RTCSessionDescription sessionDescription);
 
     public static class RTCDataChannelInit implements JSONStruct {
 

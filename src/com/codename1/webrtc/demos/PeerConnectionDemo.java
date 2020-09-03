@@ -21,12 +21,12 @@ import com.codename1.webrtc.MediaStream;
 import com.codename1.webrtc.MediaStreamConstraints;
 import com.codename1.webrtc.MediaStreamTrack;
 import com.codename1.webrtc.MediaStreamTracks;
+import com.codename1.webrtc.Promise;
 import com.codename1.webrtc.RTC;
 import com.codename1.webrtc.RTCConfiguration;
 import com.codename1.webrtc.RTCPeerConnection;
 import com.codename1.webrtc.RTCPeerConnection.RTCOfferOptions;
 import com.codename1.webrtc.RTCPeerConnectionIceEvent;
-import com.codename1.webrtc.RTCPromise;
 import com.codename1.webrtc.RTCSessionDescription;
 import com.codename1.webrtc.RTCTrackEvent;
 import com.codename1.webrtc.RTCVideoElement;
@@ -121,14 +121,14 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         System.out.println("Requesting local stream");
         startButton.setEnabled(false);
         
-        rtc.getUserMedia(new MediaStreamConstraints().audio(true).video(true)).then(stream->{
+        rtc.getUserMedia(new MediaStreamConstraints().audio(true).video(true)).onSuccess(stream->{
             System.out.println("Received local stream");
             localVideo.setSrcObject(stream);
             localStream = stream;
             callButton.setEnabled(true);
-        }).onCatch(t->{
-            Log.e(t);
-            Dialog.show("Error", "getUserMedia() error: "+t.getMessage(), "OK", null);
+        }).onFail(t->{
+            Log.e((Throwable)t);
+            Dialog.show("Error", "getUserMedia() error: "+((Throwable)t).getMessage(), "OK", null);
         });
             
     }    
@@ -171,8 +171,12 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         
         
         System.out.println("pc1 createOffer start");
-        pc1.createOffer(offerOptions).then(offer->onCreateOfferSuccess(offer))
-                .onCatch(e-> onCreateSessionDescriptionError(e));
+        pc1.createOffer(offerOptions).onSuccess(offer->{
+            onCreateOfferSuccess(offer);
+        })
+        .onFail(e-> {
+            onCreateSessionDescriptionError((Throwable)e);
+        });
 
         
         
@@ -195,32 +199,28 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         System.out.println("offer from pc1\n"+desc.getSdp());
         System.out.println("pc1 setLocalDescription start");
         
-        RTCPromise p1 = pc1.setLocalDescription(desc).then(res->onSetLocalSuccess(pc1))
-                .onCatch(e->{
-                    Log.e((Throwable)e);
-                    onSetSessionDescriptionError();
-                });
+        Promise p1 = pc1.setLocalDescription(desc).onSuccess(res->onSetLocalSuccess(pc1))
+            .onFail(e->{
+                Log.e((Throwable)e);
+                onSetSessionDescriptionError();
+            });
             
         
         System.out.println("pc2 setRemoteDescription start");
         
-        RTCPromise p2 = pc2.setRemoteDescription(desc).then(res->onSetRemoteSuccess(pc2))
-                .onCatch(t->{
+        Promise p2 = pc2.setRemoteDescription(desc).onSuccess(res->onSetRemoteSuccess(pc2))
+                .onFail(t->{
                     Log.e((Throwable)t);
                     onSetSessionDescriptionError();
                 });
         
         
-        RTC.all(p1, p2).then(res->{
+        Promise.all(p1, p2).onSuccess(res->{
             System.out.println("pc2 createAnswer start");
             
-            pc2.createAnswer().then(answer->{
-                onCreateAnswerSuccess(answer);
-            }).onCatch(e->{
-                onCreateSessionDescriptionError(e);
-            });
+            pc2.createAnswer().onSuccess(answer->onCreateAnswerSuccess(answer))
+                    .onFail(e->onCreateSessionDescriptionError((Throwable)e));
                 
-           
         });
         
         
@@ -230,18 +230,17 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         System.out.println("Anwswer from pc2:\n"+desc.getSdp());
         System.out.println("pc2 setLocalDescription start");
 
-        pc2.setLocalDescription(desc).then(res -> {
-            onSetLocalSuccess(pc2);
-        }).onCatch(e->{
+        pc2.setLocalDescription(desc).onSuccess(res -> onSetLocalSuccess(pc2))
+                .onFail(e->{
             Log.e((Throwable)e);
             onSetSessionDescriptionError((Throwable)e);
+            
         });
         
         System.out.println("pc1 setRemoteDescription start");
         
-        pc1.setRemoteDescription(desc).then(res->{
-            onSetRemoteSuccess(pc1);
-        }).onCatch(e->{
+        pc1.setRemoteDescription(desc).onSuccess(res->onSetRemoteSuccess(pc1))
+                .onFail(e->{
             Log.e((Throwable)e);
             onSetSessionDescriptionError((Throwable)e);
         });
@@ -278,13 +277,13 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
             return;
         }
         
-        getOtherPc(pc).addIceCandidate(event.getCandidate()).then(res->{
-            onAddIceCandidateSuccess(pc);
-        }).onCatch(e->{
+        getOtherPc(pc).addIceCandidate(event.getCandidate()).onSuccess(res->onAddIceCandidateSuccess(pc))
+                .onFail(e->{
             Log.e((Throwable)e);
             onAddIceCandidateError(pc, (Throwable)e);
-        }).onFinally(e->{
+        }).onComplete(e->{
             System.out.println(getName(pc)+" ICE candidate:\n"+(event.getCandidate() != null ? event.getCandidate().getCandidate() : "(null"));
+            
         });
          
         

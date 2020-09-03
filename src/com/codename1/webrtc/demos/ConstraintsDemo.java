@@ -150,11 +150,11 @@ public class ConstraintsDemo extends Form implements AutoCloseable {
         clearErrorMessage();
         System.out.println("applying "+constraints.toJSONStruct());
         track.applyConstraints(constraints)
-                .then(res->{
+                .onSuccess(res->{
                     System.out.println("applyConstraint success");
                     displayVideoDimensions("applyConstraints");
                 })
-                .onCatch(err->{
+                .onFail(err->{
                     errorMessage("applyConstraints", ((Throwable)err).getMessage());
                 });
         
@@ -171,10 +171,10 @@ public class ConstraintsDemo extends Form implements AutoCloseable {
         }
         clearErrorMessage();
         videoblock.setVisible(false);
-        rtc.getUserMedia(constraints).then(stream->{
+        rtc.getUserMedia(constraints).onSuccess(stream->{
             gotStream(stream);
-        }).onCatch(err -> {
-            errorMessage("getUserMedia", err.getMessage());
+        }).onFail(err -> {
+            errorMessage("getUserMedia", ((Throwable)err).getMessage());
         });
         
         

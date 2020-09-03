@@ -595,15 +595,18 @@ public class RTC implements AutoCloseable {
         }
 
         @Override
-        public RTCPromise setParameters(RTCRtpSendParameters parameters) {
-            return setParameters(parameters, new RTCPromiseImpl());
+        public Promise setParameters(RTCRtpSendParameters parameters) {
+            return new Promise((resolve, reject) ->{
+                setParameters(parameters, resolve, reject);
+            });
+            
             
         }
         
-        private RTCPromise setParameters(RTCRtpSendParameters parameters, RTCPromiseImpl out) {
+        private void setParameters(RTCRtpSendParameters parameters, Functor resolve, Functor reject) {
             if (!ready) {
-                onReady.add(()->setParameters(parameters, out));
-                return out;
+                onReady.add(()->setParameters(parameters, resolve, reject));
+                return;
             }
             execute("var sender = registry.get(${0}); sender.setParameters("+Result.fromContent((Map)parameters.toJSONStruct()).toString()+").then(function() {"
                     + "  callback.onSuccess(JSON.stringify({"
@@ -614,7 +617,7 @@ public class RTC implements AutoCloseable {
                     + "  callback.onError(error);"
                     + "});", new Object[]{getRefId()}, (res, err)->{
                         if (err != null) {
-                            out.error(err);
+                            reject.call(err);
                             return;
                         }
                         
@@ -643,18 +646,18 @@ public class RTC implements AutoCloseable {
                             
                             this.parameters = parameters;
                             
-                            out.complete(null);
+                            resolve.call(null);
                                 
                         } catch (Throwable t) {
                             Log.e(t);
-                            out.error(t);
+                            reject.call(t);
                         }
                     });
-            return out;
+            
         }
 
         @Override
-        public RTCPromise replaceTrack(MediaStreamTrack newTrack) {
+        public Promise replaceTrack(MediaStreamTrack newTrack) {
             throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
         
@@ -721,7 +724,7 @@ public class RTC implements AutoCloseable {
         }
 
         @Override
-        public RTCPromise<RTCStatsReport> getStats() {
+        public Promise<RTCStatsReport> getStats() {
             throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -992,56 +995,9 @@ public class RTC implements AutoCloseable {
         
     }
     
-    /**
-     * Implementation of {@link RTCPromise}
-     * @param <T> 
-     */
-    private static class RTCPromiseImpl<T> extends AsyncResource<T> implements RTCPromise<T> {
-
-        @Override
-        public RTCPromise<T> then(SuccessCallback<T> onFulfilled, SuccessCallback<Throwable> onRejected) {
-            if (onFulfilled != null) this.ready(onFulfilled);
-            
-            if (onRejected != null) this.except(onRejected);
-            return this;
-        }
-        
-        
-
-        @Override
-        public RTCPromise<T> onCatch(SuccessCallback<Throwable> onRejected) {
-            this.except(onRejected);
-            return this;
-        }
-
-        @Override
-        public RTCPromise<T> onFinally(SuccessCallback onFinally) {
-            this.onResult((res, err) ->{
-                onFinally.onSucess(null);
-            });
-            return this;
-        }
-
-        @Override
-        public RTCPromise<T> then(SuccessCallback<T> onFulfilled) {
-            return then(onFulfilled, null);
-        }
-        
-        
-        
-    }
-    
    
-    /**
-     * Creates a new promise.
-     * @param <T> The type that the promise resolves to.
-     * @param type The type that the promise resolves to.
-     * @return The prommise.
-     */
-    public <T> RTCPromise<T> newPromise(Class<T> type) {
-        return new RTCPromiseImpl<T>();
-    }
-    
+   
+   
     /**
      * A utility class to help objects implement {@link RefCounted}
      */
@@ -1448,6 +1404,45 @@ public class RTC implements AutoCloseable {
         return out;
     }
     
+    private class MediaDeviceInfoImpl implements MediaDeviceInfo {
+        private String deviceId, groupId, label;
+        private Kind kind;
+        
+        MediaDeviceInfoImpl(Map vals) {
+            MapWrap w = new MapWrap(vals);
+            deviceId = w.getString("deviceId", "");
+            groupId = w.getString("groupid", "");
+            label = w.getString("label", "");
+            kind = Kind.fromString(w.getString("kind", ""));
+            
+        }
+        
+        @Override
+        public String getDeviceId() {
+            return deviceId;
+        }
+
+        @Override
+        public String getGroupId() {
+            return groupId;
+        }
+
+        @Override
+        public Kind getKind() {
+            return kind;
+        }
+
+        @Override
+        public String getLabel() {
+            return label;
+        }
+        
+        public String toString() {
+            return kind+": "+label+" deviceId="+deviceId+", groupId="+groupId;
+        }
+        
+    }
+    
     /**
      * Implementation of {@link MediaStreamTrack}
      */
@@ -1614,12 +1609,20 @@ public class RTC implements AutoCloseable {
             return remote;
         }
 
+        
+        
         @Override
-        public RTCPromise applyConstraints(MediaTrackConstraints constraints) {
+        public Promise applyConstraints(MediaTrackConstraints constraints) {
+            return new Promise((resolve, reject)->{
+                applyConstraints(constraints, resolve, reject);
+            });
+        }
+        
+        private void applyConstraints(MediaTrackConstraints constraints, Functor resolve, Functor reject) {
             if (stopping || readyState == ReadyState.Ended) {
                 throw new IllegalStateException("Track is already ended");
             }
-            RTCPromiseImpl out = new RTCPromiseImpl();
+           
             web.execute("var track = registry.get(${0});track.applyConstraints("+Result.fromContent((Map)constraints.toJSONStruct()).toString()+")"
                     + ".then(function(res){"
                     + "  callback.onSuccess(JSONStringify({settings:track.getSettings()}));"
@@ -1639,15 +1642,15 @@ public class RTC implements AutoCloseable {
                         return;
                     }
                     settings = newMediaTrackSettings(kind.toString(), (Map)data.get("settings"));
-                    out.complete(null);
+                    resolve.call(null);
                 }
 
                 @Override
                 public void onError(Object sender, Throwable err, int errorCode, String errorMessage) {
-                    out.error(err);
+                    reject.call(err);
                 }
                     });
-            return out;
+            
         }
 
         @Override
@@ -1699,7 +1702,7 @@ public class RTC implements AutoCloseable {
      * A promise that is used for {@link #getUserMedia(com.codename1.webrtc.MediaStreamConstraints) }.  It 
      * 
      */
-    private class MediaStreamPromise extends RTCPromiseImpl<MediaStream> {
+    private class MediaStreamRequest {
         /**
          * Whether native permissions have been requested yet.  The should only be requested
          * once if necessary.  If permissions aren't granted and this flag is already set,
@@ -1708,32 +1711,79 @@ public class RTC implements AutoCloseable {
         private boolean permissionRequested;
     }
     
+    public Promise<MediaDeviceInfo[]> enumerateDevices() {
+        return new Promise<MediaDeviceInfo[]>((resolve, reject) -> {
+            enumerateDevices(resolve, reject);
+        });
+    }
+        
+    private void enumerateDevices(Functor resolve, Functor reject) {
+        
+        web.execute("try {navigator.mediaDevices.enumerateDevices().then("
+                + "function(devices) {"
+                + "  var _devices = [];"
+                + "  for (var i=0; i<devices.length; i++) {"
+                + "    var device = devices[i];"
+                + "    var _device = {"
+                + "      deviceId : device.deviceId,"
+                + "      groupId : device.groupId,"
+                + "      kind : device.kind,"
+                + "      label : device.label"
+                + "    };"
+                + "    _devices.push(_device);"
+                + "  }"
+                + "  console.log('devices: ', _devices);"
+                + "  callback.onSuccess(JSON.stringify({devices:_devices}));"
+                + "}).catch(function(err) {"
+                + "  callback.onError(err);"
+                + "});"
+                + "} catch (e) {"
+                + "  callback.onError(e);"
+                + "}", res-> {
+                    System.out.println("Devices: "+res.getValue());
+                    List<MediaDeviceInfo> devices = new ArrayList<>();
+                    try {
+                        Map parsed = parseJSON(res.getValue());
+                        List<Map> rawDevices =(List<Map>)parsed.get("devices");
+                        for (Map rawDevice : rawDevices) {
+                            devices.add(new MediaDeviceInfoImpl(rawDevice));
+                        }
+                        resolve.call(devices.toArray(new MediaDeviceInfo[devices.size()]));
+                    } catch (IOException ex) {
+                        reject.call(ex);
+                    }
+                });
+        
+        
+    }
+    
     /**
      * Obtain access to the device camera and/or microphone.
      * @param constraints The constraints.
      * @return Promise that resolves to {@link MediaStream}.
      */
-    public RTCPromise<MediaStream> getUserMedia(MediaStreamConstraints constraints) {
-        MediaStreamPromise out = new MediaStreamPromise();
-        return getUserMedia(constraints, out);
+    public Promise<MediaStream> getUserMedia(MediaStreamConstraints constraints) {
+        MediaStreamRequest request = new MediaStreamRequest();
+        return new Promise<MediaStream>((resolve, reject)->{
+            getUserMedia(constraints, request, resolve, reject);
+        });
+        
     }
     
-    private RTCPromise<MediaStream> getUserMedia(MediaStreamConstraints constraints, MediaStreamPromise out) {
+    private void getUserMedia(MediaStreamConstraints constraints, MediaStreamRequest request, Functor resolve, Functor reject) {
         boolean requiresPermissions = !audioPermission && MediaStreamConstraints.isAudioRequested(constraints)
                 || !videoPermission && MediaStreamConstraints.isVideoRequested(constraints);
         
         if (requiresPermissions) {
-            if (out.permissionRequested) {
-                if (!out.isDone()) {
-                    out.error(new RuntimeException("Permission denied"));
-                }
-                return out;
+            if (request.permissionRequested) {
+                reject.call(new RuntimeException("Permission denied"));
+                return;
             }
-            out.permissionRequested = true;
+            request.permissionRequested = true;
             checkPermission(MediaStreamConstraints.isAudioRequested(constraints), MediaStreamConstraints.isVideoRequested(constraints), ()->{
-                getUserMedia(constraints, out);
+                getUserMedia(constraints, request, resolve, reject);
             });
-            return out;
+            return;
         }
         
         web.execute("try{navigator.mediaDevices.getUserMedia("+constraints.toJSON()+").then("
@@ -1787,7 +1837,7 @@ public class RTC implements AutoCloseable {
                             for (MediaStreamTrack track : stream.getAudioTracks()) {
                                 ((MediaStreamTrackImpl)track).constraints = constraints.getAudioConstraints();
                             }
-                            ((RTCPromiseImpl)out).complete(stream);
+                            resolve.call(stream);
                             
                         } catch (IOException ex) {
                             onError(this, ex, 0, ex.getMessage());
@@ -1797,12 +1847,12 @@ public class RTC implements AutoCloseable {
                     @Override
                     public void onError(Object sender, Throwable err, int errorCode, String errorMessage) {
                         
-                        ((RTCPromiseImpl)out).error(new AsyncResource.AsyncExecutionException(err));
+                        reject.call(err);
                     }
                 }
         );
         
-        return out;
+        
                 
     }
     
@@ -2196,25 +2246,39 @@ public class RTC implements AutoCloseable {
         }
 
         @Override
-        public RTCPromise play() {
-            RTCPromiseImpl out = (RTCPromiseImpl)newPromise(Object.class);
-            web.execute("registry.get(${0}).play().then(function(){callback.onSuccess(null)}, function(e){callback.onError(e);});", new Object[]{getRefId()}, new Callback<BrowserComponent.JSRef>() {
-                @Override
-                public void onSucess(BrowserComponent.JSRef value) {
-                    out.complete(null);
-                }
+        public Promise play() {
+            return new Promise((resolve, reject) -> {
+                web.execute("registry.get(${0}).play().then(function(){callback.onSuccess(null)}, function(e){callback.onError(e);});", new Object[]{getRefId()}, new Callback<BrowserComponent.JSRef>() {
+                    @Override
+                    public void onSucess(BrowserComponent.JSRef value) {
+                        resolve.call(null);
+                    }
 
-                @Override
-                public void onError(Object sender, Throwable err, int errorCode, String errorMessage) {
-                    out.error(new AsyncResource.AsyncExecutionException(err));
-                }
+                    @Override
+                    public void onError(Object sender, Throwable err, int errorCode, String errorMessage) {
+                        reject.call(err);
+                    }
+                });
+            
             });
-            return out;
+            
         }
 
         @Override
-        public void setSinkId(String sinkId) {
-            web.execute("registry.get(${0}).setSinkId(${1});", new Object[]{getRefId(), sinkId});
+        public Promise setSinkId(String sinkId) {
+            return new Promise((resolve, reject) -> {
+                web.execute("registry.get(${0}).setSinkId(${1}).then(function() {callback.onSuccess(null);}).catch(function(e){callback.onError(e)});", new Object[]{getRefId(), sinkId}, new Callback<BrowserComponent.JSRef>() {
+                    @Override
+                    public void onSucess(BrowserComponent.JSRef value) {
+                        resolve.call(null);
+                    }
+
+                    @Override
+                    public void onError(Object sender, Throwable err, int errorCode, String errorMessage) {
+                        reject.call(err);
+                    }
+                });
+            });
         }
         
 
@@ -2376,24 +2440,26 @@ public class RTC implements AutoCloseable {
         }
 
         @Override
-        public RTCPromise addIceCandidate(RTCIceCandidate candidate) {
-            RTCPromiseImpl out = (RTCPromiseImpl)newPromise(Object.class);
-            if (isClosed()) {
-                out.error(new IllegalStateException("Connection is closed"));
-                return out;
-            }
-            execute("registry.get(${0}).addIceCandidate("+candidate.toJSON()+").then(function(){"
-                    + "  callback.onSuccess(null);"
-                    + "}).catch(function(error){"
-                    + "  callback.onError(error);"
-                    + "});", new Object[]{getRefId()}, (jsref, error)->{
-                        if (error != null) {
-                            out.error(error);
-                        } else {
-                            out.complete(null);
-                        }
-                    });
-            return out;
+        public Promise addIceCandidate(RTCIceCandidate candidate) {
+            return new Promise((resolve, reject) -> {
+                if (isClosed()) {
+                    reject.call(new IllegalStateException("Connection is closed"));
+                    return;
+                }
+                execute("registry.get(${0}).addIceCandidate("+candidate.toJSON()+").then(function(){"
+                        + "  callback.onSuccess(null);"
+                        + "}).catch(function(error){"
+                        + "  callback.onError(error);"
+                        + "});", new Object[]{getRefId()}, (jsref, error)->{
+                            if (error != null) {
+                                reject.call(error);
+                            } else {
+                                resolve.call(null);
+                            }
+                        });
+            });
+           
+            
         }
 
         @Override
@@ -2483,33 +2549,33 @@ public class RTC implements AutoCloseable {
         
 
         @Override
-        public RTCPromise<RTCSessionDescription> createAnswer(RTCAnswerOptions options) {
-            RTCPromiseImpl<RTCSessionDescription> out = new RTCPromiseImpl<RTCSessionDescription>();
-            String paramString = "";
-            if (options != null) {
-                paramString = Result.fromContent((Map)options.toJSONStruct()).toString();
-            }
-            execute("var conn=registry.get(${0});conn.createAnswer("+paramString+").then(function(desc) {"
-                    + "  callback.onSuccess(JSON.stringify(cn1.wrapRTCSessionDescription(desc)));"
-                    + "}).catch(function(error){"
-                    + "  callback.onError(error);"
-                    + "});", new Object[]{getRefId()}, (res, error) -> {
-                        if (error != null) {
-                            Log.e(error);
-                            out.error(error);
-                        } else {
-                            try {
-                                Map data = parseJSON(res.getValue());
-                                RTCSessionDescription desc = new RTCSessionDescriptionImpl(data);
-                                out.complete(desc);
-                            } catch (IOException ex) {
-                                Log.e(ex);
-                                out.error(ex);
+        public Promise<RTCSessionDescription> createAnswer(RTCAnswerOptions options) {
+            return new Promise<RTCSessionDescription>((resolve, reject)->{
+                String paramString = "";
+                if (options != null) {
+                    paramString = Result.fromContent((Map)options.toJSONStruct()).toString();
+                }
+                execute("var conn=registry.get(${0});conn.createAnswer("+paramString+").then(function(desc) {"
+                        + "  callback.onSuccess(JSON.stringify(cn1.wrapRTCSessionDescription(desc)));"
+                        + "}).catch(function(error){"
+                        + "  callback.onError(error);"
+                        + "});", new Object[]{getRefId()}, (res, error) -> {
+                            if (error != null) {
+                                Log.e(error);
+                                reject.call(error);
+                            } else {
+                                try {
+                                    Map data = parseJSON(res.getValue());
+                                    RTCSessionDescription desc = new RTCSessionDescriptionImpl(data);
+                                    resolve.call(desc);
+                                } catch (IOException ex) {
+                                    Log.e(ex);
+                                    reject.call(ex);
+                                }
+
                             }
-                            
-                        }
-                    });
-            return out;
+                        });
+            });
         }
 
         @Override
@@ -2518,46 +2584,43 @@ public class RTC implements AutoCloseable {
         }
 
         @Override
-        public RTCPromise<RTCSessionDescription> createOffer(RTCOfferOptions options) {
-            RTCPromiseImpl<RTCSessionDescription> out = new RTCPromiseImpl<RTCSessionDescription>();
-            String paramString = "";
-            if (options != null) {
-                paramString = Result.fromContent((Map)options.toJSONStruct()).toString();
-            }
-            execute("var conn=registry.get(${0});conn.createOffer("+paramString+").then(function(desc) {"
-                    + "  console.log('offer created', desc);"
-                    + "  callback.onSuccess(JSON.stringify(cn1.wrapRTCSessionDescription(desc)));"
-                    + "}).catch(function(error){"
-                    + "  console.log('error creating offer', error);"
-                    + "  callback.onError(error);"
-                    + "});", new Object[]{getRefId()}, (res, error) -> {
-                        if (error != null) {
-                            Log.e(error);
-                            out.error(error);
-                        } else {
-                            try {
-                                Map data = parseJSON(res.getValue());
-                                RTCSessionDescription desc = new RTCSessionDescriptionImpl(data);
-                                out.complete(desc);
-                            } catch (IOException ex) {
-                                Log.e(ex);
-                                out.error(ex);
+        public Promise<RTCSessionDescription> createOffer(RTCOfferOptions options) {
+            return new Promise<RTCSessionDescription>((resolve, reject) -> {
+                String paramString = "";
+                if (options != null) {
+                    paramString = Result.fromContent((Map)options.toJSONStruct()).toString();
+                }
+                execute("var conn=registry.get(${0});conn.createOffer("+paramString+").then(function(desc) {"
+                        + "  console.log('offer created', desc);"
+                        + "  callback.onSuccess(JSON.stringify(cn1.wrapRTCSessionDescription(desc)));"
+                        + "}).catch(function(error){"
+                        + "  console.log('error creating offer', error);"
+                        + "  callback.onError(error);"
+                        + "});", new Object[]{getRefId()}, (res, error) -> {
+                            if (error != null) {
+                                Log.e(error);
+                                reject.call(error);
+                            } else {
+                                try {
+                                    Map data = parseJSON(res.getValue());
+                                    RTCSessionDescription desc = new RTCSessionDescriptionImpl(data);
+                                    resolve.call(desc);
+                                } catch (IOException ex) {
+                                    Log.e(ex);
+                                    reject.call(ex);
+                                }
+
                             }
-                            
-                        }
-                    });
-            return out;
+                        });
+            });
             
         }
 
         @Override
-        public RTCPromise<RTCSessionDescription> createAnswer() {
+        public Promise<RTCSessionDescription> createAnswer() {
             return createAnswer(null);
         }
-        
-       
 
-       
         @Override
         public RTCRtpReceivers getReceivers() {
             return receivers;
@@ -2569,7 +2632,7 @@ public class RTC implements AutoCloseable {
         }
 
         @Override
-        public RTCPromise<RTCStatsReport> getStats(MediaStreamTrack selector) {
+        public Promise<RTCStatsReport> getStats(MediaStreamTrack selector) {
             throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -2611,39 +2674,42 @@ public class RTC implements AutoCloseable {
         }
 
         @Override
-        public RTCPromise setLocalDescription(RTCSessionDescription sessionDescription) {
-            RTCPromiseImpl out = new RTCPromiseImpl();
-            execute("var conn = registry.get(${0}); conn.setLocalDescription("+sessionDescription.toJSON()+").then(function(res) {"
+        public Promise setLocalDescription(RTCSessionDescription sessionDescription) {
+            return new Promise((resolve, reject) -> {
+                execute("var conn = registry.get(${0}); conn.setLocalDescription("+sessionDescription.toJSON()+").then(function(res) {"
                     + "  callback.onSuccess(null);"
                     + "}).catch(function(error) {"
                     + "  callback.onError(error);"
                     + "});", new Object[]{getRefId()}, (res, error) -> {
                         if (error != null) {
-                            out.error(error);
+                            reject.call(error);
                         } else {
                             localDescription = sessionDescription;
-                            out.complete(null);
+                            resolve.call(null);
                         }
                     });
-            return out;
+            });
+
         }
 
         @Override
-        public RTCPromise setRemoteDescription(RTCSessionDescription sessionDescription) {
-            RTCPromiseImpl out = new RTCPromiseImpl();
-            execute("var conn = registry.get(${0}); conn.setRemoteDescription("+sessionDescription.toJSON()+").then(function(res) {"
+        public Promise setRemoteDescription(RTCSessionDescription sessionDescription) {
+            return new Promise((resolve, reject) -> {
+                execute("var conn = registry.get(${0}); conn.setRemoteDescription("+sessionDescription.toJSON()+").then(function(res) {"
                     + "  callback.onSuccess(null);"
                     + "}).catch(function(error) {"
                     + "  callback.onError(error);"
                     + "});", new Object[]{getRefId()}, (res, error) -> {
                         if (error != null) {
-                            out.error(error);
+                            reject.call(error);
                         } else {
                             remoteDescription = sessionDescription;
-                            out.complete(null);
+                            resolve.call(null);
                         }
                     });
-            return out;
+            
+            });
+            
         }
 
         @Override
@@ -3128,26 +3194,27 @@ public class RTC implements AutoCloseable {
         
     }
     
+    
     /**
-     * Wraps a set of promises and returns a new promise that will resolve after all of the 
-     * promises have resolved, or fails if any of the promises fails.
-     * @param promises
-     * @return 
+     * Convenience method for creating a {@link ConstrainString} with exact value.
+     * @param val The exact value to constrain to.
+     * @return The ConstrainString with provided exact value.
+     * @see ConstrainString#exact(java.lang.String) 
      */
-    public static RTCPromise all(RTCPromise... promises) {
-        AsyncResource[] asyncs = new AsyncResource[promises.length];
-        for (int i=0; i<promises.length; i++) {
-            asyncs[i] = (AsyncResource)promises[i];
-        }
-        RTCPromiseImpl out = new RTCPromiseImpl();
-        AsyncResource.all(asyncs).onResult((res, err)->{
-            if (err != null) {
-                out.error(err);
-            } else {
-                out.complete(null);
-            }
-        });
-        return out;
+    public static ConstrainString exact(String val) {
+        return new ConstrainString().exact(val);
     }
+    
+    /**
+     * Convenience method for creating a {@link ConstrainString} with ideal value.
+     * @param val The ideal value to constrain to.
+     * @return The ConstrainString with provided ideal value.
+     * @see ConstrainString#ideal(java.lang.String) 
+     */
+    public static ConstrainString ideal(String val) {
+        return (ConstrainString)new ConstrainString().ideal(val);
+    }
+    
+    
     
 }

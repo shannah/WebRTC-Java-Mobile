@@ -88,7 +88,7 @@ public interface MediaStreamTrack extends RefCounted, EventTarget {
      * @return 
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/applyConstraints
      */
-    public RTCPromise applyConstraints(MediaTrackConstraints constraints);
+    public Promise applyConstraints(MediaTrackConstraints constraints);
     
     /**
      * Returns a duplicate of the MediaStreamTrack.

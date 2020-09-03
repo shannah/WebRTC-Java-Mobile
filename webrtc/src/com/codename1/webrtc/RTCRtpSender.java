@@ -69,7 +69,7 @@ public interface RTCRtpSender extends RefCounted {
      * @see
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/setParameters
      */
-    public RTCPromise setParameters(RTCRtpSendParameters parameters);
+    public Promise setParameters(RTCRtpSendParameters parameters);
 
     /**
      * Attempts to replace the track currently being sent by the RTCRtpSender
@@ -82,5 +82,5 @@ public interface RTCRtpSender extends RefCounted {
      * @see
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/replaceTrack
      */
-    public RTCPromise replaceTrack(MediaStreamTrack newTrack);
+    public Promise replaceTrack(MediaStreamTrack newTrack);
 }

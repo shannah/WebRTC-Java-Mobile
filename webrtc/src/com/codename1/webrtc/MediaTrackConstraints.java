@@ -44,6 +44,11 @@ public class MediaTrackConstraints implements JSONStruct {
     public void setDeviceId(ConstrainString deviceId) {
         this.deviceId = deviceId;
     }
+    
+    public MediaTrackConstraints deviceId(ConstrainString deviceId) {
+        setDeviceId(deviceId);
+        return this;
+    }
 
     /**
      * @return the groupId

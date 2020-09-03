@@ -71,7 +71,7 @@ public class MediaStreamConstraints implements JSONStruct {
      */
     public void setAudio(Boolean audio) {
         this.audio = audio;
-        if (audio != null && !audio) {
+        if (audio != null) {
             audioConstraints = null;
         }
     }
@@ -90,7 +90,7 @@ public class MediaStreamConstraints implements JSONStruct {
      */
     public void setVideo(Boolean video) {
         this.video = video;
-        if (video != null && !video) {
+        if (video != null) {
             videoConstraints = null;
         }
     }

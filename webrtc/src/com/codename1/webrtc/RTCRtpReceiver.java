@@ -53,7 +53,7 @@ public interface RTCRtpReceiver extends RefCounted {
      * @see
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpReceiver/getStats
      */
-    public RTCPromise<RTCStatsReport> getStats();
+    public Promise<RTCStatsReport> getStats();
 
     /**
      * Returns an array including one RTCRtpSynchronizationSource instance for

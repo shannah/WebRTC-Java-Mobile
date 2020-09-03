@@ -29,6 +29,11 @@ public class ConstrainObject<T> implements JSONStruct {
     public void setExact(T exact) {
         this.exact = exact;
     }
+    
+    public ConstrainObject<T> exact(T exact) {
+        setExact(exact);
+        return this;
+    }
 
     /**
      * @return the ideal
@@ -42,6 +47,11 @@ public class ConstrainObject<T> implements JSONStruct {
      */
     public void setIdeal(T ideal) {
         this.ideal = ideal;
+    }
+    
+    public ConstrainObject<T> ideal(T ideal) {
+        setIdeal(ideal);
+        return this;
     }
 
     /**
@@ -65,11 +75,11 @@ public class ConstrainObject<T> implements JSONStruct {
         Map out = new HashMap();
         if (exact != null) {
             
-            out.put("exact", toJSONStruct(values));
+            out.put("exact", toJSONStruct(exact));
             return out;
         } else if (ideal != null) {
             
-            out.put("ideal", toJSONStruct(values));
+            out.put("ideal", toJSONStruct(ideal));
             return out;
         } else if (values != null) {
            return toJSONStruct(values);
@@ -85,7 +95,10 @@ public class ConstrainObject<T> implements JSONStruct {
             return ((JSONStruct)o).toJSONStruct();
             
         }
-        return null;
+        if (o == null) {
+            return null;
+        }
+        return String.valueOf(o);
     }
     
     /**

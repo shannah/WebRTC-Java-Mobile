@@ -17,6 +17,7 @@ import com.codename1.ui.FontImage;
 import com.codename1.ui.layouts.GridLayout;
 import com.codename1.webrtc.demos.BasicDemo;
 import com.codename1.webrtc.demos.ConstraintsDemo;
+import com.codename1.webrtc.demos.InputOutputDemo;
 import com.codename1.webrtc.demos.PeerConnectionDemo;
 
 /**
@@ -89,6 +90,11 @@ public class WebRTCDemo {
         constraintsDemo.addActionListener(evt->{
             prepareDemo(new ConstraintsDemo()).show();
         });
+        
+        Button inputsDemo = new Button("Select Devices Demo");
+        inputsDemo.addActionListener(evt->{
+            prepareDemo(new InputOutputDemo()).show();
+        });
         hi.add(new SpanLabel(intro));
         hi.add(GridLayout.encloseIn(3, github, webRTC, cn1));
         
@@ -96,7 +102,7 @@ public class WebRTCDemo {
         peerConnectionDemo.addActionListener(evt->{
             prepareDemo(new PeerConnectionDemo()).show();
         });
-        hi.addAll(basicDemo, constraintsDemo, peerConnectionDemo);
+        hi.addAll(basicDemo, constraintsDemo, peerConnectionDemo, inputsDemo);
         
         
         hi.show();

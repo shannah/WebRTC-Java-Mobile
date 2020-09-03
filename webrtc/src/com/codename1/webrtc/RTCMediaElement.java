@@ -43,8 +43,8 @@ public interface RTCMediaElement extends RTCElement, EventTarget {
     public void fastSeek(double time);
     public void load();
     public void pause();
-    public RTCPromise play();
-    public void setSinkId(String sinkId);
+    public Promise play();
+    public Promise setSinkId(String sinkId);
     
     
     public static enum NetworkState {

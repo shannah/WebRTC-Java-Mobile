@@ -44,12 +44,13 @@ public class BasicDemo extends Form implements AutoCloseable {
                     .stream();
 
            
-            rtc.getUserMedia(constraints).then(stream->{
+            rtc.getUserMedia(constraints).onSuccess(stream->{
                 RTCVideoElement video = rtc.createVideo();
                 video.setAutoplay(true);
                 video.setSrcObject(stream);
                 rtc.append(video);
-            }).onCatch(error-> {
+            }).onFail(t-> {
+                Throwable error = (Throwable)t;
                 System.out.println("Failed to get user media: "+error.getMessage());
                 Log.e(error);
             });
