@@ -141,8 +141,8 @@ public class Promise<T> {
                     p.promise.resolve.call(result);
                 }
 
-            } catch (RuntimeException ex) {
-                p.reject.call(ex);
+            } catch (Throwable ex) {
+                p.promise.reject.call(ex);
             }
         }
     }

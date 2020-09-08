@@ -17,7 +17,7 @@ import java.util.Map;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection
  */
-public interface RTCPeerConnection extends EventTarget {
+public interface RTCPeerConnection extends EventTarget, RefCounted {
 
     /**
      * The RTCPeerConnection.onconnectionstatechange property specifies an

@@ -19,6 +19,7 @@ import com.codename1.webrtc.demos.BasicDemo;
 import com.codename1.webrtc.demos.ChangeCodecsDemo;
 import com.codename1.webrtc.demos.ConstraintsDemo;
 import com.codename1.webrtc.demos.InputOutputDemo;
+import com.codename1.webrtc.demos.MungeSdpDemo;
 import com.codename1.webrtc.demos.PeerConnectionDemo;
 
 /**
@@ -108,7 +109,11 @@ public class WebRTCDemo {
         codecsDemo.addActionListener(evt->{
             prepareDemo(new ChangeCodecsDemo()).show();
         });
-        hi.addAll(basicDemo, constraintsDemo, peerConnectionDemo, inputsDemo, codecsDemo);
+        Button mungeSdpDemo = new Button("Munge SDP Demo");
+        mungeSdpDemo.addActionListener(evt->{
+            prepareDemo(new MungeSdpDemo()).show();
+        });
+        hi.addAll(basicDemo, constraintsDemo, peerConnectionDemo, inputsDemo, codecsDemo, mungeSdpDemo);
         
         
         hi.show();

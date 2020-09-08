@@ -5,6 +5,8 @@
  */
 package com.codename1.webrtc;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +27,11 @@ import java.util.Map;
  */
 public class MediaTrackConstraints implements JSONStruct {
 
+    private MediaStreamConstraints parent;
+    private ConstrainString deviceId;
+    private ConstrainString groupId;
+    private Map optional;
+    
     public MediaTrackConstraints(MediaStreamConstraints parent) {
         this.parent = parent;
     }
@@ -64,9 +71,14 @@ public class MediaTrackConstraints implements JSONStruct {
     public void setGroupId(ConstrainString groupId) {
         this.groupId = groupId;
     }
-    private MediaStreamConstraints parent;
-    private ConstrainString deviceId;
-    private ConstrainString groupId;
+    
+    
+    public MediaTrackConstraints optional(String key, Object val) {
+        if (optional == null) optional = new HashMap();
+        optional.put(key, val);
+        return this;
+    }
+    
 
     @Override
     public Object toJSONStruct() {
@@ -76,6 +88,9 @@ public class MediaTrackConstraints implements JSONStruct {
         }
         if (groupId != null) {
             out.put("groupId", toJSONStruct(groupId));
+        }
+        if (optional != null) {
+            out.put("optional", new ArrayList(Arrays.asList(optional)));
         }
         return out;
     }

@@ -249,8 +249,9 @@ public class RTC implements AutoCloseable {
                         Event evt;
                         if (eventType.equals("datachannel")) {
                             evt = new RTCDataChannelEventImpl(data);
+                        } else if (eventType.equals("message")) {
+                            evt = new MessageEventImpl(data);
                         } else if (eventType.equals("icecandidate")) {
-                            
                             evt = new RTCPeerConnectionIceEventImpl(eventType, data);
                         } else if (eventType.equals("icecandidateerror")) {
                             evt = new RTCPeerConnectionIceErrorEventImpl(((Number)data.get("errorCode")).intValue());
@@ -433,8 +434,19 @@ public class RTC implements AutoCloseable {
     /**
      * Implementation of {@link RTCDataChannelEvent}.
      */
-    private class RTCDataChannelEventImpl extends EventImpl implements RTCDataChannelEvent {
+    private class RTCDataChannelEventImpl extends EventImpl implements RTCDataChannelEvent, RefCounted {
         private RTCDataChannel channel;
+        private RefCountedSupport rcs = new RefCountedSupport(this) {
+            @Override
+            public void dealloc() {
+                if (channel != null) {
+                    channel.release();
+                    channel = null;
+                }
+                super.dealloc();
+            }
+            
+        };
         @Override
         public RTCDataChannel getChannel() {
             return channel;
@@ -446,9 +458,319 @@ public class RTC implements AutoCloseable {
          */
         RTCDataChannelEventImpl(Map data) {
             super("datachannel", data);
-            channel = new RTCDataChannelImpl(data);
+            
+            MapWrap w = new MapWrap(data);
+            if (w.has("refId")) {
+                rcs.setRefId(w.getString("refId", null));
+                rcs.retain();
+            }
+            if (w.has("channel")) {
+                Map channelData = (Map)w.get("channel");
+                
+                channel = (RTCDataChannelImpl)registry.get((String)channelData.get("refId"));
+                if (channel == null) {
+                    channel = new RTCDataChannelImpl(channelData);
+                } else {
+                    channel.retain();
+                }
+            }
+            
+        }
+
+        @Override
+        public void retain() {
+            rcs.retain();
+        }
+
+        @Override
+        public void release() {
+            rcs.release();
         }
         
+        
+        
+        
+    }
+    
+    private class MessageEventImpl extends EventImpl implements MessageEvent, RefCounted {
+        private String origin;
+        private String lastEventId;
+        private MessageEventSource source;
+        private MessagePorts ports;
+        private RefCountedSupport rcs = new RefCountedSupport(this) {
+            @Override
+            public void dealloc() {
+                if (ports != null) {
+                    ports.clear();
+                    ports = null;
+                }
+                super.dealloc();
+            }
+            
+        };
+        
+        MessageEventImpl(Map data) {
+            super("message", data);
+            
+            MapWrap w = new MapWrap(data);
+            if (!w.has("refId")) {
+                throw new IllegalArgumentException("Received MessageEvent without refId.  This is an internal error.  MessageEvents must be propagated with a refId");
+            }
+            rcs.setRefId(w.getString("refId", null));
+            rcs.retain();
+            origin = w.getString("origin", null);
+            lastEventId = w.getString("lastEventId", null);
+            if (w.has("source")) {
+                source = new MessageEventSourceImpl((Map)w.get("source", null));
+            }
+            
+            if (w.has("ports")) {
+                ports = new MessagePorts();
+                List<Map> portsList = (List<Map>)w.get("ports", null);
+                for (Map m : portsList) {
+                    MessagePortImpl port = (MessagePortImpl)registry.get((String)m.get("refId"));
+                    if (port == null) {
+                        port = new MessagePortImpl(m);
+                    } else {
+                        port.retain();
+                    }
+                    ports.add(port);
+                    port.release();  // because the MessagePorts retains it.
+                }
+            }
+        }
+
+        @Override
+        public String getOrigin() {
+            return origin;
+        }
+
+        @Override
+        public String getLastEventId() {
+            return lastEventId;
+        }
+
+        @Override
+        public MessageEventSource getSource() {
+            return source;
+        }
+
+        @Override
+        public MessagePorts getPorts() {
+            return ports;
+        }
+
+        @Override
+        public void retain() {
+            if (rcs != null) {
+                rcs.retain();
+            }
+        }
+
+        @Override
+        public void release() {
+            if (rcs != null) {
+                rcs.release();
+            }
+        }
+        
+    }
+    
+    private class MessageEventSourceImpl implements MessageEventSource {
+        MessageEventSourceImpl(Map data) {
+           
+        }
+    }
+    
+     /**
+      * Produce a string in double quotes with backslash sequences in all the
+      * right places. A backslash will be inserted within </, allowing JSON
+      * text to be delivered in HTML. In JSON text, a string cannot contain a
+      * control character or an unescaped quote or backslash.
+      * @param string A String
+      * @return  A String correctly formatted for insertion in a JSON text.
+      */
+     private static String quote(String string) {
+         if (string == null || string.length() == 0) {
+             return "\"\"";
+         }
+
+         char         b;
+         char         c = 0;
+         int          i;
+         int          len = string.length();
+         StringBuilder sb = new StringBuilder(len + 4);
+         String       t;
+
+         sb.append('"');
+         for (i = 0; i < len; i += 1) {
+             b = c;
+             c = string.charAt(i);
+             switch (c) {
+             case '\\':
+             case '"':
+                 sb.append('\\');
+                 sb.append(c);
+                 break;
+             case '/':
+                 if (b == '<') {
+                     sb.append('\\');
+                 }
+                 sb.append(c);
+                 break;
+             case '\b':
+                 sb.append("\\b");
+                 break;
+             case '\t':
+                 sb.append("\\t");
+                 break;
+             case '\n':
+                 sb.append("\\n");
+                 break;
+             case '\f':
+                 sb.append("\\f");
+                 break;
+             case '\r':
+                 sb.append("\\r");
+                 break;
+             default:
+                 if (c < ' ') {
+                     t = "000" + Integer.toHexString(c);
+                     sb.append("\\u" + t.substring(t.length() - 4));
+                 } else {
+                     sb.append(c);
+                 }
+             }
+         }
+         sb.append('"');
+         return sb.toString();
+     }
+    
+    private class MessagePortImpl extends RefCountedImpl implements MessagePort {
+        private EventSupport es = new EventSupport(this);
+        MessagePortImpl(Map data) {
+            MapWrap w = new MapWrap(data);
+            if (w.has("refId")) {
+                setRefId(w.getString("refId", null));
+            }
+            
+        }
+
+        @Override
+        public void postMessage(String message) {
+            web.execute(""
+                    + "var port = registry.get(${0});"
+                    + "port.postMessage(${1})", new Object[]{getRefId(), message});
+        }
+
+        @Override
+        public void postMessage(int message) {
+            web.execute(""
+                    + "var port = registry.get(${0});"
+                    + "port.postMessage(${1})", new Object[]{getRefId(), message});
+        }
+
+        @Override
+        public void postMessage(double message) {
+            web.execute(""
+                    + "var port = registry.get(${0});"
+                    + "port.postMessage(${1})", new Object[]{getRefId(), message});
+        }
+
+        @Override
+        public void postMessage(byte[] message) {
+            StringBuilder sb = new StringBuilder();
+            int len = message.length;
+            sb.append("[");
+            for (int i=0; i<len; i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                sb.append(message[i]);
+            }
+            sb.append("]");
+            web.execute(""
+                    + "var port = registry.get(${0});"
+                    + "port.postMessage("+sb+")", new Object[]{getRefId()});
+        }
+
+        @Override
+        public void postMessage(String[] message) {
+            StringBuilder sb = new StringBuilder();
+            int len = message.length;
+            sb.append("[");
+            for (int i=0; i<len; i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                sb.append(quote(message[i]));
+            }
+            sb.append("]");
+            web.execute(""
+                    + "var port = registry.get(${0});"
+                    + "port.postMessage("+sb+")", new Object[]{getRefId()});
+        }
+
+        @Override
+        public void postMessage(int[] message) {
+            StringBuilder sb = new StringBuilder();
+            int len = message.length;
+            sb.append("[");
+            for (int i=0; i<len; i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                sb.append(message[i]);
+            }
+            sb.append("]");
+            web.execute(""
+                    + "var port = registry.get(${0});"
+                    + "port.postMessage("+sb+")", new Object[]{getRefId()});
+        }
+
+        @Override
+        public void postMessage(double[] message) {
+            StringBuilder sb = new StringBuilder();
+            int len = message.length;
+            sb.append("[");
+            for (int i=0; i<len; i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                sb.append(message[i]);
+            }
+            sb.append("]");
+            web.execute(""
+                    + "var port = registry.get(${0});"
+                    + "port.postMessage("+sb+")", new Object[]{getRefId()});
+        }
+
+        @Override
+        public void start() {
+            web.execute("var port = registry.get(${0});"
+                    + "port.start();", new Object[]{getRefId()});
+        }
+
+        @Override
+        public void close() {
+            web.execute("var port = registry.get(${0});"
+                    + "port.close();", new Object[]{getRefId()});
+        }
+
+        @Override
+        public void addEventListener(String eventName, EventListener listener) {
+            es.addEventListener(eventName, listener);
+        }
+
+        @Override
+        public void removeEventListener(String eventName, EventListener listener) {
+            es.removeEventListener(eventName, listener);
+        }
+
+        @Override
+        public boolean dispatchEvent(Event evt) {
+            return es.dispatchEvent(evt);
+        }
     }
     
     /**
@@ -2104,8 +2426,14 @@ public class RTC implements AutoCloseable {
                     srcObject.release();
                 }
                 srcObject = (MediaStreamImpl)stream;
-                srcObject.retain();
-                web.execute("registry.get(${0}).srcObject = registry.get(${1});", new Object[]{getRefId(), srcObject.getRefId()});
+                if (srcObject != null) {
+                    srcObject.retain();
+                }
+                if (srcObject != null) {
+                    web.execute("registry.get(${0}).srcObject = registry.get(${1});", new Object[]{getRefId(), srcObject.getRefId()});
+                } else {
+                    web.execute("registry.get(${0}).srcObject = null;", new Object[]{getRefId()});
+                }
             }
         }
 
@@ -2494,14 +2822,24 @@ public class RTC implements AutoCloseable {
                     reject.call(new IllegalStateException("Connection is closed"));
                     return;
                 }
-                execute("registry.get(${0}).addIceCandidate("+candidate.toJSON()+").then(function(){"
+                if (candidate == null) {
+                    // The spec allows for nulls, but should just resolve silently.
+                    // This behaviour is copied from adapter-latest.js
+                    resolve.call(null);
+                    return;
+                }
+                String candidateString = candidate == null ? null : candidate.toJSON();
+                System.out.println("calling addIceCandidate("+candidateString+")");
+                execute("registry.get(${0}).addIceCandidate("+candidateString+").then(function(){"
                         + "  callback.onSuccess(null);"
                         + "}).catch(function(error){"
                         + "  callback.onError(error);"
                         + "});", new Object[]{getRefId()}, (jsref, error)->{
                             if (error != null) {
+                                System.out.println("Result of addIceCandidate("+candidateString+"):" + error);
                                 reject.call(error);
                             } else {
+                                System.out.println("Result of addIceCandidate("+candidateString+"): success");
                                 resolve.call(null);
                             }
                         });
@@ -2776,8 +3114,9 @@ public class RTC implements AutoCloseable {
         }
 
         public RTCPeerConnectionImpl(RTCConfiguration configuration) {
-            
-            init(Util.getUUID(), "new RTCPeerConnection("+Result.fromContent((Map)configuration.toJSONStruct()).toString()+")");
+            String strConfiguration = configuration == null ? null :
+                    Result.fromContent((Map)configuration.toJSONStruct()).toString();
+            init(Util.getUUID(), "new RTCPeerConnection("+strConfiguration+")");
             
             retain();
             addEventListener("connectionstatechange", evt-> {

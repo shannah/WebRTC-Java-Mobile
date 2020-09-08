@@ -216,7 +216,7 @@
                 props.forEach(function(prop, index, array) {
                     out[prop] = settings[prop];
                 });
-                console.log("Wrapping mediaTrack settings", settings, out);
+                
                 return out;
                 
             }
@@ -251,6 +251,38 @@
                 });
                 return out;
                 
+            }
+            
+            function wrapRTCDataChannel(channel) {
+                if (!channel) {
+                    return null;
+                }
+                registry.retain(channel);
+                return {
+                    refId : registry.id(channel),
+                    id : channel.id,
+                    binaryType : channel.binaryType,
+                    bufferedAmount : channel.bufferedAmount,
+                    bufferedAmountLowThreshold : channel.bufferedAmountLowThreshold,
+                    label : channel.label,
+                    maxPacketLifeTime : channel.maxPacketLifeTime,
+                    maxRetransmits : channel.maxRetransmits,
+                    negotiated : channel.negotiated,
+                    ordered : channel.ordered,
+                    protocol : channel.protocol,
+                    readyState : channel.readyState,
+                };
+            }
+            
+            function wrapMessagePort(port) {
+                if (!port) {
+                    return null;
+                }
+                registry.retain(port);
+                var out = {
+                    refId : registry.id(channel)
+                }
+                return out;
             }
             
             function wrapMediaTrackCapabilities(kind, capabilities) {
@@ -318,43 +350,12 @@
                         ['datachannel', {
                             //https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent
                              refId : function(el, e) {
-                                registry.retain(e.channel);
-                                return registry.id(e.channel);
+                                registry.retain(e);
+                                return registry.id(e);
                             },
-                            id : function(el, e) {
-                                return e.channel.id;
-                            },
-                            binaryType : function(el, e) {
-                                return e.channel.binaryType;
-                            },
-                            bufferedAmount : function(el, e) {
-                                return e.channel.bufferedAmount;
-                            },
-                            bufferedAmountLowThreshold : function(el, e) {
-                                return e.channel.bufferedAmountLowThreshold;
-                            },
-                            label : function(el, e) {
-                                return e.channel.label;
-                            },
-                            maxPacketLifeTime : function(el, e) {
-                                return e.channel.maxPacketLifeTime;
-                            },
-                            maxRetransmits : function(el, e) {
-                                return e.channel.maxRetransmits;
-                            },
-                            negotiated : function(el, e) {
-                                return e.channel.negotiated;
-                            },
-                            ordered : function(el, e) {
-                                return e.channel.ordered;
-                            },
-                            protocol : function(el, e) {
-                                return e.channel.protocol;
-                            },
-                            readyState : function(el, e) {
-                                return e.channel.readyState;
+                            channel : function(el, e) {
+                                return wrapRTCDataChannel(e.channel);
                             }
-                            
                         }], 
                         ['icecandidate', {
                                 //https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceEvent
@@ -407,7 +408,30 @@
                         });
                     
                 } else if (o instanceof RTCDataChannel) {
-                    ['message', 'open', 'close'].forEach(function(type, index, array) {
+                    [['message', {
+                        refId : function(el, e) {
+                            registry.retain(e);
+                            return registry.id(e);
+                        },
+                        data : function(el, e) {
+                            return e.data;
+                        },
+                        origin : function(el, e) {
+                            return null;
+                        },
+                        ports : function(el, e) {
+                            var ports = [];
+                            e.ports.forEach(function(port) {
+                               ports.push(wrapMessagePort(port)); 
+                            });
+                            return ports;
+                        }
+                        
+                    }], 'open', 'close'].forEach(function(type, index, array) {
+                        addEventListener(o, type);
+                    });
+                } else if (o instanceof MessagePort) {
+                    ['message', 'messageerror'].forEach(function(type) {
                         addEventListener(o, type);
                     });
                 }
