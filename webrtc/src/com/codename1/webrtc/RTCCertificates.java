@@ -6,6 +6,7 @@
 package com.codename1.webrtc;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * A list of RTCCertificate objects.
@@ -13,6 +14,8 @@ import java.util.ArrayList;
  */
 public class RTCCertificates extends RTCList<RTCCertificate> implements JSONStruct {
 
+    
+    
     @Override
     public Object toJSONStruct() {
         ArrayList out = new ArrayList();

@@ -11,4 +11,8 @@ package com.codename1.webrtc;
  */
 public interface RTCPeerConnectionIceErrorEvent extends Event {
     public int getErrorCode();
+    public String getAddress();
+    public String getErrorText();
+    public int getPort();
+    public String getURL();
 }

@@ -24,7 +24,8 @@ public enum RTCIceCredentialType {
      * The RTCIceServer requires a username and password to authenticate prior
      * to using the described ICE server.
      */
-    Password("password");
+    Password("password")
+    ;
 
     private String string;
 
@@ -34,6 +35,17 @@ public enum RTCIceCredentialType {
 
     public String getStringValue() {
         return string;
+    }
+    
+    public static RTCIceCredentialType credentialTypeForString(String val) {
+        if ("oauth".equals(val)) {
+            return Oauth;
+        }
+        if ("password".equals(val)) {
+            return Password;
+        }
+        throw new IllegalArgumentException("Unknown credential type "+val);
+        
     }
 
 }

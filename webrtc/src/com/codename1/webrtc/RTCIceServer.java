@@ -6,6 +6,7 @@
 package com.codename1.webrtc;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,6 +15,24 @@ import java.util.Map;
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer
  */
 public class RTCIceServer implements JSONStruct {
+    
+    public RTCIceServer() {
+        
+    }
+    
+    public RTCIceServer(Map m) {
+        MapWrap w = new MapWrap(m);
+        credential = w.getString("credential", null);
+        if (w.has("credentialType")) {
+            credentialType = RTCIceCredentialType.credentialTypeForString((String)w.get("credentialType", null));
+        }
+        if (w.has("urls")) {
+            urls = new URLs((List)w.get("urls", null));
+        }
+        username = w.getString("username", null);
+        
+        
+    }
 
     /**
      * The credential to use when logging into the server. This is only used if the RTCIceServer represents a TURN server.

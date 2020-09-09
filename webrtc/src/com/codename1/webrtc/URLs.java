@@ -7,6 +7,7 @@ package com.codename1.webrtc;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * A list of URLs.
@@ -14,6 +15,20 @@ import java.util.Iterator;
  */
 public class URLs extends RTCList<String> implements JSONStruct {
 
+    public URLs() {
+        
+    }
+    
+    public URLs(Iterable urls) {
+        for (Object o : urls) {
+            if (o instanceof String) {
+                add((String)o);
+            } else {
+                add(String.valueOf(o));
+            }
+        }
+    }
+    
     @Override
     public Object toJSONStruct() {
         ArrayList out = new ArrayList();

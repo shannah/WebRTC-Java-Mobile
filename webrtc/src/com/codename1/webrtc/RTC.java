@@ -254,7 +254,7 @@ public class RTC implements AutoCloseable {
                         } else if (eventType.equals("icecandidate")) {
                             evt = new RTCPeerConnectionIceEventImpl(eventType, data);
                         } else if (eventType.equals("icecandidateerror")) {
-                            evt = new RTCPeerConnectionIceErrorEventImpl(((Number)data.get("errorCode")).intValue());
+                            evt = new RTCPeerConnectionIceErrorEventImpl(data);
                         } else if (eventType.equals("track")) {
                             evt = new RTCTrackEventImpl(data);
                         } else {
@@ -803,15 +803,52 @@ public class RTC implements AutoCloseable {
      * Implementation of {@link RTCPeerConnectionIceErrorEvent} which is fired with the "icecandidateerror" event.
      */
     private class RTCPeerConnectionIceErrorEventImpl extends EventImpl implements RTCPeerConnectionIceErrorEvent {
+
+        /**
+         * @return the address
+         */
+        public String getAddress() {
+            return address;
+        }
+
+        /**
+         * @return the errorText
+         */
+        public String getErrorText() {
+            return errorText;
+        }
+
+        /**
+         * @return the port
+         */
+        public int getPort() {
+            return port;
+        }
+
+        /**
+         * @return the url
+         */
+        public String getURL() {
+            return url;
+        }
         private int errorCode;
+        private String address;
+        private String errorText;
+        private int port;
+        private String url;
 
         /**
          * Creates new event
          * @param errorCode The error code.
          */
-        public RTCPeerConnectionIceErrorEventImpl(int errorCode) {
+        public RTCPeerConnectionIceErrorEventImpl(Map data) {
             super("icecandidateerror");
-            this.errorCode = errorCode;
+            MapWrap w = new MapWrap(data);
+            this.errorCode = w.getInt("errorCode", 0);
+            this.errorText = w.getString("errorText", "");
+            this.address = w.getString("address", "");
+            this.port = w.getInt("port", 0);
+            this.url = w.getString("url", "");
         }
 
         @Override
@@ -3408,7 +3445,8 @@ public class RTC implements AutoCloseable {
         private int port;
         private Integer relatedPort;
         private int priority;
-        private String protocol, relatedAddress;
+        private RTCIceProtocol protocol;
+        private String relatedAddress;
         private String sdpMid;
         private Integer sdpMLineIndex;
         private String tcpType;
@@ -3432,6 +3470,7 @@ public class RTC implements AutoCloseable {
             if (tcpType != null) out.put("tcpType", tcpType);
             if (type != null) out.put("type", type);
             if (usernameFragment != null) out.put("usernameFragment", usernameFragment);
+            if (protocol != null) out.put("protocol", protocol.stringValue());
             return out;
         }
 
@@ -3444,13 +3483,20 @@ public class RTC implements AutoCloseable {
             port = m.getInt("port", 0);
             relatedPort = m.getInt("relatedPort", null);
             priority = m.getInt("priority", 0);
-            protocol = (String)m.get("protocol", "");
+            if (m.has("protocol")) {
+                protocol = RTCIceProtocol.protocolFromString((String)m.get("protocol", ""));
+            }
             relatedAddress = (String)m.get("relatedAddress", null);
             sdpMid = (String)m.get("sdpMid", null);
             sdpMLineIndex = m.getInt("sdpMLineIndex", null);
             tcpType = (String)m.get("tcpType", null);
             type = (String)m.get("type", null);
             usernameFragment = (String)m.get("usernameFragment", null);
+        }
+
+        @Override
+        public String toString() {
+            return toJSON();
         }
         
         
@@ -3526,6 +3572,12 @@ public class RTC implements AutoCloseable {
             return Result.fromContent((Map)toJSONStruct()).toString();
         }
 
+        @Override
+        public RTCIceProtocol getProtocol() {
+            return protocol;
+        }
+
+        
         
         
     }

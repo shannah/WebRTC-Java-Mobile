@@ -65,6 +65,14 @@ public interface RTCIceCandidate extends JSONStruct {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate/priority
      */
     public long getPriority();
+    
+    
+    /**
+     * A string indicating whether the candidate's protocol is "tcp" or "udp". The string is one of those in the enumerated type RTCIceProtocol.
+     */
+    public RTCIceProtocol getProtocol();
+        
+    
 
     /**
      * If the candidate is derived from another candidate, relatedAddress is a DOMString containing that host candidate's IP address. For host candidates, this value is null.

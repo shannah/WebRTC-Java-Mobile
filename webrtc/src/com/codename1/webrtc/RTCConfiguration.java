@@ -16,6 +16,72 @@ import java.util.Map;
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCConfiguration
  */
 public class RTCConfiguration implements JSONStruct {
+    
+    public RTCConfiguration() {
+        
+    }
+    
+    public RTCConfiguration(Map config) {
+        MapWrap w = new MapWrap(config);
+        if (w.has("bundlePolicy")) {
+            bundlePolicy = RTCBundlePolicy.policyFromString(w.getString("bundlePolicy", null));
+        }
+        if (w.has("certificates")) {
+            Object certs = w.get("certificates");
+            if (certs instanceof RTCCertificates) {
+                certificates = (RTCCertificates)certs;
+            } else {
+                throw new IllegalArgumentException("Unsupported input for certificates.  Expecting RTCCertificate but found "+certs);
+            }
+        }
+        
+        if (w.has("iceCandidatePoolSize")) {
+            iceCandidatePoolSize = (int)w.getInt("iceCandidatePoolSize", null);
+        }
+        if (w.has("iceServers")) {
+            Object servers = w.get("iceServers", null);
+            if (servers instanceof RTCIceServers) {
+                iceServers = (RTCIceServers)servers;
+            } else if (servers instanceof Iterable) {
+                iceServers = new RTCIceServers((Iterable)servers);
+            } else {
+                throw new IllegalArgumentException("Unsupported input for iceServers.  Expecting RTCIceServers or Iterable, but found "+servers);
+            }
+        }
+        
+        if (w.has("iceTransportPolicy")) {
+            Object policy = w.get("iceTransportPolicy", null);
+            if (policy instanceof RTCIceTransportPolicy) {
+                iceTransportPolicy = (RTCIceTransportPolicy)policy;
+                        
+            } else if (policy instanceof String) {
+                iceTransportPolicy = RTCIceTransportPolicy.policyFromString((String)policy);
+            } else {
+                throw new IllegalArgumentException("Unsupported input for iceTransportPolicy.  Expecting RTCIceTransportPolicy or String, but found "+policy);
+            }
+        }
+        
+        peerIdentity = w.getString("peerIdentity", null);
+        
+        if (w.has("rtcpMuxPolicy")) {
+            Object policy = w.get("rtcpMuxPolicy", null);
+            if (policy instanceof RTCRtcpMuxPolicy) {
+                rtcpMuxPolicy = (RTCRtcpMuxPolicy)policy;
+            } else if (policy instanceof String) {
+                rtcpMuxPolicy = RTCRtcpMuxPolicy.policyFromString((String)policy);
+            } else {
+                throw new IllegalArgumentException("Unsupported input for rctpMuxPolicy.  Expecting RTCRtcpMuxPolicy or String, but found "+policy);
+            }
+        }
+        
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(toJSONStruct());
+    }
+    
+    
 
     /**
      * Specifies how to handle negotiation of candidates when the remote peer is not compatible with the SDP BUNDLE standard. This must be one of the values from the enum RTCBundlePolicy. If this value isn't included in the dictionary, "balanced" is assumed.
@@ -188,6 +254,19 @@ public class RTCConfiguration implements JSONStruct {
         RTCBundlePolicy(String str) {
             string = str;
         }
+        
+        public static RTCBundlePolicy policyFromString(String val) {
+            if ("balanced".equals(val)) {
+                return Balanced;
+            }
+            if ("max-compat".equals(val)) {
+                return MaxCompat;
+            }
+            if ("max-bundle".equals(val)) {
+                return MaxBundle;
+            }
+            throw new IllegalArgumentException("Unknown bundle policy "+val);
+        }
     }
 
     /**
@@ -216,6 +295,19 @@ public class RTCConfiguration implements JSONStruct {
         public String getStringValue() {
             return string;
         }
+        
+        public static RTCIceTransportPolicy policyFromString(String val) {
+            if ("all".equals(val)) {
+                return All;
+            }
+            if ("public".equals(val)) {
+                return Public;
+            }
+            if ("relay".equals(val)) {
+                return Relay;
+            }
+            throw new IllegalArgumentException("Unknown transport policy "+val);
+        }
     }
 
     /**
@@ -235,6 +327,16 @@ public class RTCConfiguration implements JSONStruct {
 
         RTCRtcpMuxPolicy(String str) {
             string = str;
+        }
+        
+        public static RTCRtcpMuxPolicy policyFromString(String val) {
+            if ("negotiate".equals(val)) {
+                return Negotiate;
+            }
+            if ("require".equals(val)) {
+                return Require;
+            }
+            throw new IllegalArgumentException("Unknown rtcpMuxPolicy "+val);
         }
     }
 }
