@@ -21,6 +21,7 @@ import com.codename1.webrtc.demos.ConstraintsDemo;
 import com.codename1.webrtc.demos.InputOutputDemo;
 import com.codename1.webrtc.demos.MungeSdpDemo;
 import com.codename1.webrtc.demos.PeerConnectionDemo;
+import com.codename1.webrtc.demos.PeerConnectionStatesDemo;
 import com.codename1.webrtc.demos.TrickleIceDemo;
 
 /**
@@ -118,7 +119,20 @@ public class WebRTCDemo {
         trickleIceDemo.addActionListener(evt->{
             prepareDemo(new TrickleIceDemo()).show();
         });
-        hi.addAll(basicDemo, constraintsDemo, peerConnectionDemo, inputsDemo, codecsDemo, mungeSdpDemo, trickleIceDemo);
+        Button statesDemo = new Button("Peer Connection States Demo");
+        statesDemo.addActionListener(evt->{
+            prepareDemo(new PeerConnectionStatesDemo()).show();
+        });
+        hi.addAll(
+                basicDemo, 
+                constraintsDemo, 
+                peerConnectionDemo, 
+                inputsDemo, 
+                codecsDemo, 
+                mungeSdpDemo, 
+                trickleIceDemo, 
+                statesDemo
+        );
         
         
         hi.show();
