@@ -418,6 +418,7 @@ public class TrickleIceDemo extends Form implements AutoCloseable {
         c.add(tl.createConstraint(row, col++), pipe(candidate.getIp(), ""));
         c.add(tl.createConstraint(row, col++), candidate.getPort()+"");
         c.add(tl.createConstraint(row, col++), formatPriority(candidate.getPriority()));
+        revalidateWithAnimationSafety();
         
     }
     
@@ -432,6 +433,7 @@ public class TrickleIceDemo extends Form implements AutoCloseable {
             c.add(tl.createConstraint(0, col++), header);
         }
         numCandidateRows++;
+        revalidateWithAnimationSafety();
     }
     
    

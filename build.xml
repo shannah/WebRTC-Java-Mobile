@@ -354,7 +354,7 @@
             vendor="${codename1.vendor}"
             subtitle="${codename1.secondaryTitle}"
             
-            targetType="javascript"
+            targetType="debug_javascript_steve"
             automated="${automated}"
             />
     </target>    

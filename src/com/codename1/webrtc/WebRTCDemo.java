@@ -51,6 +51,7 @@ public class WebRTCDemo {
 
         // Pro only feature
         Log.bindCrashProtection(true);
+        CN.setEnableAsyncStackTraces(true);
 
         addNetworkErrorListener(err -> {
             // prevent the event from propagating

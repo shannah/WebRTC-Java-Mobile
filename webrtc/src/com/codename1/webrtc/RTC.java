@@ -233,6 +233,15 @@ public class RTC implements AutoCloseable {
         }
         web = new BrowserComponent();
         
+        // Javascript port breaks RTC stuff if iframe is removed from the document
+        // so we need to NOT remove iframe until we are actually done.
+        // This client property will piped to the Javascript native peer, and 
+        // will cause it to NOT be removed from the DOM even when the BrowserComponent
+        // is deinitialized.
+        // It will only be removed from the DOM when this flag is set back to true
+        // in the close() method.
+        web.putClientProperty("HTML5Peer.removeOnDeinitialize", false);
+        
         
         ActionListener bootstrapCallback = e->{
             
@@ -331,6 +340,12 @@ public class RTC implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
+        if (web != null) {
+            // For the javascript port, we had previously set this flag to false so that
+            // the iframe won't be removed from the DOM when the BrowserComponent is deinitialized.
+            // But now we need it to be removed since we're closing the rtc session.
+            web.putClientProperty("HTML5Peer.removeOnDeinitialize", true);
+        }
         for (RefCounted ref : registry.values()) {
             if (ref instanceof AutoCloseable) {
                 ((AutoCloseable)ref).close();
@@ -339,6 +354,7 @@ public class RTC implements AutoCloseable {
         if (cordovaApp != null) {
             cordovaApp.dispose();
         }
+        
     }
     
     /**
@@ -2935,7 +2951,7 @@ public class RTC implements AutoCloseable {
         @Override
         public void close() {
             
-            close(true);
+            close(false);
                     
         }
         

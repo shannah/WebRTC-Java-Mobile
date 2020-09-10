@@ -160,8 +160,9 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
         
         FontImage.setMaterialIcon(viewSource, FontImage.MATERIAL_LINK);
         viewSource.addActionListener(evt->CN.execute("https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/MungeSdpDemo.java"));
-
+        Log.p("About to create RTC");
         RTC.createRTC().ready(rtc->{
+            Log.p("Inside createRTC() ready callback");
             this.rtc = rtc;
             Component videoCom = rtc.getVideoComponent();
             videoCom.setPreferredH(CN.getDisplayHeight()/2);

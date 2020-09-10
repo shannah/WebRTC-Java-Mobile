@@ -311,10 +311,17 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     
     private void hangup() {
         System.out.println("Ending call");
-        pc1.close();
-        pc2.close();
-        pc1 = null;
-        pc2 = null;
+        if (pc1 != null) {
+            pc1.close();
+            pc1.release();
+            pc1 = null;
+        }
+        if (pc2 != null) {
+            pc2.close();
+            pc2.release();
+            pc2 = null;
+        }
+        
         hangupButton.setEnabled(false);
         callButton.setEnabled(true);
     }
