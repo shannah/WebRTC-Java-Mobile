@@ -64,7 +64,13 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
     private Button hangupButton = new Button("Hangup");
     
     private TextArea offerSdpTextarea = new TextArea();
+    {
+        offerSdpTextarea.setRows(10);
+    }
     private TextArea answerSdpTextarea = new TextArea();
+    {
+        answerSdpTextarea.setRows(10);
+    }
     
     private ComboBox audioSelect = new ComboBox();
     private ComboBox videoSelect = new ComboBox();
@@ -123,7 +129,7 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
         Container north = BoxLayout.encloseY(
                 selectSourceDiv,
                 FlowLayout.encloseIn(new SpanLabel(intro), viewSource),
-                Container.encloseIn(grid, getMediaButton, createPeerConnectionButton, createOfferButton, setOfferButton,
+                FlowLayout.encloseIn(getMediaButton, createPeerConnectionButton, createOfferButton, setOfferButton,
                         createAnswerButton, setAnswerButton, hangupButton)
                 
         );
@@ -131,9 +137,10 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
         Container mainContent = new Container(BoxLayout.y());
         mainContent.add(GridLayout.encloseIn(2, new Label("Local"), new Label("Remote")));
         Container rtcPlaceholder = new Container(new BorderLayout());
+        rtcPlaceholder.setPreferredH(CN.getDisplayHeight()/2);
         mainContent.add(rtcPlaceholder);
         mainContent.add(
-                GridLayout.encloseIn(2, 
+                GridLayout.encloseIn(CN.isTablet() ? 1 : 2, 
                         BoxLayout.encloseY(
                                 new Label("Offer SDP"), 
                                 offerSdpTextarea
@@ -146,6 +153,8 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
         );
         
         Container center = new Container(BoxLayout.y());
+        center.setScrollableY(true);
+        center.add(north);
         center.add(mainContent);
         
         Container instructions = new Container(BoxLayout.y());
@@ -153,7 +162,7 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
         instructions.add(new SpanLabel("The RTCPeerConnection objects localPeerConnection and remotePeerConnection are in global scope, so you can inspect them in the console as well."));
         center.add(instructions);
         add(BorderLayout.CENTER, center);
-        add(BorderLayout.NORTH, north);
+        //add(BorderLayout.NORTH, north);
         
                 
         

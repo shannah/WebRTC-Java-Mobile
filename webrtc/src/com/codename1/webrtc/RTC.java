@@ -305,7 +305,6 @@ public class RTC implements AutoCloseable {
             cordovaApp = new EmbeddedCordovaApplication(web) {
                 @Override
                 protected void onReady() {
-                    System.out.println("In cordovaApp.onReady()");
                     bootstrapCallback.actionPerformed(null);
                 }
                 
@@ -323,7 +322,9 @@ public class RTC implements AutoCloseable {
             if (cordovaApp != null) {
                 path = "/com_codename1_rtc_RTCBootstrap_ios.html";
             }
+            String jsContent = Util.readToString(CN.getResourceAsStream("/com_codename1_rtc_RTCBootstrap.js"));
             String pageContent = Util.readToString(CN.getResourceAsStream(path));
+            pageContent = StringUtil.replaceFirst(pageContent, "{{com_codename1_rtc_RTCBootstrap.js}}", jsContent);
             pageContent = StringUtil.replaceFirst(pageContent, "</body>", htmlBody+"</body>");
             pageContent = StringUtil.replaceFirst(pageContent, "</head>", "<style type='text/css'>\n"+css+"\n</style></head>");
             web.setPage(pageContent, "http://localhost/");
@@ -595,6 +596,49 @@ public class RTC implements AutoCloseable {
     private class MessageEventSourceImpl implements MessageEventSource {
         MessageEventSourceImpl(Map data) {
            
+        }
+    }
+    
+    private static String jsify(Object o) {
+        if (o == null) {
+            return "null";
+        }
+        if (o instanceof byte[]) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("new Uint8Array([");
+            byte[] l = (byte[])o;
+            int len = l.length;
+            for (int i=0; i<len; i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                sb.append(l[i]);
+            }
+            sb.append("])");
+            return sb.toString();
+        }
+        if (o instanceof Map) {
+            return Result.fromContent((Map)o).toString();
+        } else if (o instanceof List) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            List l = (List)o;
+            int len = l.size();
+            for (int i=0; i<len; i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                sb.append(jsify(l.get(i)));
+            }
+            sb.append("]");
+            return sb.toString();
+            
+        } else if (o instanceof String) {
+            return quote((String)o);
+        } else if (o instanceof Number || o instanceof Boolean) {
+            return String.valueOf(o);
+        } else {
+            return "[Object]";
         }
     }
     
@@ -1330,7 +1374,6 @@ public class RTC implements AutoCloseable {
          */
         RTCTrackEventImpl(Map data) {
             super("track", data);
-            System.out.println("Creating RTCTrackEventImpl with data "+data);
             ref.setRefId((String)data.get("refId"));
             ref.retain();
             streams = new MediaStreams();
@@ -2155,7 +2198,6 @@ public class RTC implements AutoCloseable {
                 + "    };"
                 + "    _devices.push(_device);"
                 + "  }"
-                + "  console.log('devices: ', _devices);"
                 + "  callback.onSuccess(JSON.stringify({devices:_devices}));"
                 + "}).catch(function(err) {"
                 + "  callback.onError(err);"
@@ -2163,7 +2205,6 @@ public class RTC implements AutoCloseable {
                 + "} catch (e) {"
                 + "  callback.onError(e);"
                 + "}", res-> {
-                    System.out.println("Devices: "+res.getValue());
                     List<MediaDeviceInfo> devices = new ArrayList<>();
                     try {
                         Map parsed = parseJSON(res.getValue());
@@ -2211,7 +2252,6 @@ public class RTC implements AutoCloseable {
         
         web.execute("try{navigator.mediaDevices.getUserMedia("+constraints.toJSON()+").then("
                 + "function(stream){"
-                + "  console.log('getUserMedia callback', stream);"
                 + "  registry.retain(stream);window.stream = stream;"
                 + "  var tracks = stream.getTracks();"
                 + "  var len = tracks.length;"
@@ -2228,7 +2268,6 @@ public class RTC implements AutoCloseable {
                 + "    track_.settings = track.getSettings();"
                 + "    tracks_.push(track_);"
                 + "  }"
-                + "  console.log('tracks', tracks_);"
                 + "  callback.onSuccess(JSON.stringify({"
                 + "    refId:registry.id(stream), "
                 + "    id: stream.id||'', "
@@ -2237,10 +2276,9 @@ public class RTC implements AutoCloseable {
                 + "    tracks: tracks_}));"
                 + "}).catch("
                 + "function(error){"
-                + "  console.log('getUserMedia error callback', error);"
                 + "  callback.onError(error.message, 0);"
                 + "})} catch (e)"
-                + "{console.log('exception in getUserMedia', e);callback.onError(e.message, 0);}", new Callback<BrowserComponent.JSRef>() {
+                + "{callback.onError(e.message, 0);}", new Callback<BrowserComponent.JSRef>() {
                     @Override
                     public void onSucess(BrowserComponent.JSRef value) {
                         
@@ -2882,17 +2920,15 @@ public class RTC implements AutoCloseable {
                     return;
                 }
                 String candidateString = candidate == null ? null : candidate.toJSON();
-                System.out.println("calling addIceCandidate("+candidateString+")");
+               
                 execute("registry.get(${0}).addIceCandidate("+candidateString+").then(function(){"
                         + "  callback.onSuccess(null);"
                         + "}).catch(function(error){"
                         + "  callback.onError(error);"
                         + "});", new Object[]{getRefId()}, (jsref, error)->{
                             if (error != null) {
-                                System.out.println("Result of addIceCandidate("+candidateString+"):" + error);
                                 reject.call(error);
                             } else {
-                                System.out.println("Result of addIceCandidate("+candidateString+"): success");
                                 resolve.call(null);
                             }
                         });
@@ -2921,7 +2957,6 @@ public class RTC implements AutoCloseable {
                     + "callback.onSuccess(JSON.stringify(cn1.wrapRTCRtpSender(sender)));";
             
             execute(js, params, (res,error) -> {
-                System.out.println("just got back from JS call to addTrack to a PeerConnection " + res);
                 try {
                     if (error != null) {
                         
@@ -2931,14 +2966,12 @@ public class RTC implements AutoCloseable {
                     
                     Map data = parseJSON(res.getValue());
                    
-                    System.out.println("RTCRtpSender data: "+data);
                     sender.setRefId((String)data.get("refId"));
                     
                     if (senders == null) {
                         senders = new RTCRtpSenders();
                         senders.add(sender);
                     }
-                    System.out.println("Firing sender ready");
                     sender.fireReady();
                     
                 } catch (IOException ex) {
@@ -3030,10 +3063,8 @@ public class RTC implements AutoCloseable {
                     paramString = Result.fromContent((Map)options.toJSONStruct()).toString();
                 }
                 execute("var conn=registry.get(${0});conn.createOffer("+paramString+").then(function(desc) {"
-                        + "  console.log('offer created', desc);"
                         + "  callback.onSuccess(JSON.stringify(cn1.wrapRTCSessionDescription(desc)));"
                         + "}).catch(function(error){"
-                        + "  console.log('error creating offer', error);"
                         + "  callback.onError(error);"
                         + "});", new Object[]{getRefId()}, (res, error) -> {
                             if (error != null) {
@@ -3330,22 +3361,19 @@ public class RTC implements AutoCloseable {
 
         @Override
         public void close() {
-            throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            web.execute("try{registry.get(${0}).close();}catch(e){}", new Object[]{getRefId()});
         }
 
         @Override
         public void send(byte[] bytes) {
+            String data = jsify(bytes)+".buffer";
             
-        }
-
-        @Override
-        public void send(Blob blob) {
-            throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            web.execute("try{registry.get(${0}).send("+data+");}catch(e){}", new Object[]{getRefId()});
         }
 
         @Override
         public void send(String string) {
-            throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            web.execute("try{registry.get(${0}).send(${1})}catch(e){}", new Object[]{getRefId(), string});
         }
 
         @Override

@@ -138,12 +138,6 @@ public interface RTCDataChannel extends EventTarget, RefCounted {
      */
     public void send(byte[] bytes);
     
-    /**
-     * The send() method of the RTCDataChannel interface sends data across the data channel to the remote peer.
-     * @param blob 
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/send
-     */
-    public void send(Blob blob);
     
     /**
      * The send() method of the RTCDataChannel interface sends data across the data channel to the remote peer.
