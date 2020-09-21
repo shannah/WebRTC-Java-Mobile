@@ -19,7 +19,27 @@ import java.util.Map;
  */
 public class CordovaCallback {
     
-    private Map response;
+    public class ResponseAction extends ActionEvent {
+        private Map response;
+        public ResponseAction(CordovaCallback callback, Map response) {
+            super(callback);
+            this.response = response;
+        }
+        
+        public Map getResponse() {
+            return response;
+        }
+        
+        public CordovaCallback getCallback() {
+            return (CordovaCallback)getSource();
+        }
+        
+        public boolean isError() {
+            return response != null && response.get("error") != null;
+        }
+    }
+    
+    
     
     private ActionListener listener;
 
@@ -32,21 +52,13 @@ public class CordovaCallback {
     
     
     public void sendResult(Map json){
-        this.response = json;
         if(listener != null){
             callSerially(()-> {
-                listener.actionPerformed(new ActionEvent(this)); 
+                listener.actionPerformed(new ResponseAction(this, json)); 
             });
         }
     }
 
-    public Map getResponse() {
-        return response;
-    }
-    
-    public boolean isError(){
-        return response != null && response.get("error") != null;
-    }
     
     
     

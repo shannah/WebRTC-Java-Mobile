@@ -8,6 +8,7 @@ package com.codename1.webrtc.compat.cordova;
 import ca.weblite.codename1.json.JSONArray;
 import com.codename1.ui.BrowserComponent;
 import com.codename1.util.Callback;
+import com.codename1.webrtc.compat.cordova.CordovaCallback.ResponseAction;
 import java.io.IOException;
 import java.util.List;
 
@@ -39,12 +40,13 @@ public class IOSRTCPlugin implements CordovaPlugin {
         }
         try {
             return cordova.execute(callbackId, action, jsonArgs, new CordovaCallback(evt->{
+                ResponseAction response = (ResponseAction)evt;
                 System.out.println("EmbeddedCordovaApplication#"+action+" callback "+jsonArgs);
                 CordovaCallback cdvCallback = (CordovaCallback)evt.getSource();
-                if (cdvCallback.isError()) {
-                    callback.onError(this, new IOException((String)cdvCallback.getResponse().get("error")), 0, (String)cdvCallback.getResponse().get("error"));
+                if (response.isError()) {
+                    callback.onError(this, new IOException((String)response.getResponse().get("error")), 0, (String)response.getResponse().get("error"));
                 } else {
-                    callback.onSucess(cdvCallback.getResponse());
+                    callback.onSucess(response.getResponse());
                 }
             }));
         } catch (IOException ex) {

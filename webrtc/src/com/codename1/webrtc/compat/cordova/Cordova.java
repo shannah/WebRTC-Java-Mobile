@@ -92,12 +92,7 @@ public class Cordova {
         CordovaCallbackManager.setMethodCallback(callbackId, callback);
         System.out.println("Cordova#execute#"+action);
         boolean executed = cordova.execute(callbackId, action, jsonArgs);        
-        if(executed){
-            if(callback.isError()){
-                throw new IOException((String)callback.getResponse().get("message"));
-                
-            }
-        }
+        
         return executed;
     }
     

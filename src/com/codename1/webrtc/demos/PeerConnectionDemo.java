@@ -139,7 +139,7 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     private void call() {
         callButton.setEnabled(false);
         hangupButton.setEnabled(true);
-        System.out.println("Starting call");
+        Log.p("[CALL] Starting call");
         startTime = new Date();
         MediaStreamTracks videoTracks = localStream.getVideoTracks();
         MediaStreamTracks audioTracks = localStream.getAudioTracks();
@@ -153,18 +153,35 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         pc1 = rtc.newRTCPeerConnection(configuration);
         System.out.println("Created local peer connection object pc1");
         pc1.addEventListener("icecandidate", evt->{
+            RTCPeerConnectionIceEvent pevt = (RTCPeerConnectionIceEvent)evt;
+            String candidate = pevt.getCandidate() == null ? null : pevt.getCandidate().getCandidate();
+            Log.p("[CALL] pc1.onicecandidate "+candidate);
             onIceCandidate(pc1, (RTCPeerConnectionIceEvent)evt);
         });
         pc2 = rtc.newRTCPeerConnection(configuration);
         System.out.println("Created remote peer connection object pc2");
         pc2.addEventListener("icecandidate", evt->{
+            RTCPeerConnectionIceEvent pevt = (RTCPeerConnectionIceEvent)evt;
+            String candidate = pevt.getCandidate() == null ? null : pevt.getCandidate().getCandidate();
+            Log.p("[CALL] pc2.onicecandidate "+candidate);
             onIceCandidate(pc2, (RTCPeerConnectionIceEvent)evt);
         });
-        pc1.addEventListener("iceconnectionstatechange", evt->onIceStateChange(pc1, evt));
-        pc2.addEventListener("iceconnectionstatechange", evt->onIceStateChange(pc2, evt));
-        pc2.addEventListener("track", evt->gotRemoteStream((RTCTrackEvent)evt));
+        pc1.addEventListener("iceconnectionstatechange", evt->{
+            Log.p("[CALL] pc1.oniceconnectionstatechange "+pc1.getIceConnectionState());
+            onIceStateChange(pc1, evt);
+        });
+        pc2.addEventListener("iceconnectionstatechange", evt->{
+            Log.p("[CALL] pc2.oniceconnectionstatechange "+pc2.getIceConnectionState());
+            onIceStateChange(pc2, evt);
+        });
+        pc2.addEventListener("track", evt->{
+            RTCTrackEvent revt = (RTCTrackEvent)evt;
+            Log.p("[CALL] pc2.ontrack " + revt.getTrack().getId());
+            gotRemoteStream((RTCTrackEvent)evt);
+        });
         
         for (MediaStreamTrack track : localStream.getTracks()) {
+            Log.p("[CALL] pc1.addTrack "+track.getId());
             pc1.addTrack(track, localStream);
         }
         System.out.println("Added local stream to pc1");
@@ -172,6 +189,7 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         
         System.out.println("pc1 createOffer start");
         pc1.createOffer(offerOptions).onSuccess(offer->{
+            Log.p("[CALL] createOffer.onSucces");
             onCreateOfferSuccess(offer);
         })
         .onFail(e-> {
@@ -199,8 +217,12 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         System.out.println("offer from pc1\n"+desc.getSdp());
         System.out.println("pc1 setLocalDescription start");
         
-        Promise p1 = pc1.setLocalDescription(desc).onSuccess(res->onSetLocalSuccess(pc1))
-            .onFail(e->{
+        Promise p1 = pc1.setLocalDescription(desc).onSuccess(res->{
+                Log.p("pc1.setLocalDescription.onSuccess");
+                onSetLocalSuccess(pc1);
+        
+        }).onFail(e->{
+                Log.p("pc1.setLocalDescription.onFail");
                 Log.e((Throwable)e);
                 onSetSessionDescriptionError();
             });
@@ -208,8 +230,12 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         
         System.out.println("pc2 setRemoteDescription start");
         
-        Promise p2 = pc2.setRemoteDescription(desc).onSuccess(res->onSetRemoteSuccess(pc2))
-                .onFail(t->{
+        Promise p2 = pc2.setRemoteDescription(desc).onSuccess(res->{
+            Log.p("pc2.setRemoteDescription.onSuccess");
+            onSetRemoteSuccess(pc2);
+            
+        }).onFail(t->{
+                    Log.p("pc2.setRemoteDescription.onFail");
                     Log.e((Throwable)t);
                     onSetSessionDescriptionError();
                 });

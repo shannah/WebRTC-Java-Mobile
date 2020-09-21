@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>Web RTC</title>
+        <meta name="viewport" content="initial-scale=1.0" />
         <style type="text/css">
             html, body {
                 width: 100%;
@@ -15,7 +16,7 @@
             window._debug_queue = [];
             
             function _debug(str, depth) {
-            	/*
+                /*
                 if (!depth) {
                     depth = 0;
                 }
@@ -336,6 +337,7 @@ var cordova = {
      * Called by native code when returning the result from an action.
      */
     callbackFromNative: function (callbackId, isSuccess, status, args, keepCallback) {
+        console.log("callbackFromNative, callbackId="+callbackId+", args: ", args);
         try {
             var callback = cordova.callbacks[callbackId];
             if (callback) {
@@ -2311,9 +2313,10 @@ require('cordova/init');
         <script>_debug("An interim debug statement");</script>
        <script>
            _debug("Debugging in iosrtc script tag");
-       cordova.define("cordova-plugin-iosrtc.Plugin", function(require, exports, module) {
-/*
- * cordova-plugin-iosrtc v6.0.12
+           cordova.define("cordova-plugin-iosrtc.Plugin", function(require, exports, module) {
+           
+               /*
+ * cordova-plugin-iosrtc v6.0.13
  * Cordova iOS plugin exposing the full WebRTC W3C JavaScript APIs
  * Copyright 2015-2017 eFace2Face, Inc. (https://eface2face.com)
  * Copyright 2015-2019 BasqueVoIPMafia (https://github.com/BasqueVoIPMafia)
@@ -2405,7 +2408,7 @@ EventTarget.prototype.dispatchEvent = function (event) {
  * Expose the EventTarget class.
  */
 module.exports = EventTarget;
-},{"yaeti":29}],3:[function(_dereq_,module,exports){
+},{"yaeti":30}],3:[function(_dereq_,module,exports){
 /**
  * Expose the MediaDeviceInfo class.
  */
@@ -2440,6 +2443,89 @@ function MediaDeviceInfo(data) {
 }
 
 },{}],4:[function(_dereq_,module,exports){
+/**
+ * Expose the MediaDevices class.
+ */
+module.exports = MediaDevices;
+
+/**
+ * Spec: https://w3c.github.io/mediacapture-main/#dom-mediadevices
+ */
+
+/**
+ * Dependencies.
+ */
+var
+    EventTarget = _dereq_('./EventTarget'),
+    getUserMedia = _dereq_('./getUserMedia'),
+    enumerateDevices = _dereq_('./enumerateDevices');
+
+function MediaDevices(data) {
+
+    //ondevicechange
+    //enumerateDevices
+    //getDisplayMedia
+    //getSupportedConstraints
+    //getUserMedia
+
+    var self = this;
+
+    // Make this an EventTarget.
+    EventTarget.call(self);
+
+    data = data || {};
+}
+
+MediaDevices.prototype = Object.create(EventTarget.prototype);
+MediaDevices.prototype.constructor = MediaDevices;
+
+MediaDevices.prototype.getUserMedia = function (constraints) {
+    return getUserMedia(constraints);
+};
+
+MediaDevices.prototype.enumerateDevices = function () {
+    return enumerateDevices();
+};
+
+MediaDevices.prototype.getSupportedConstraints = function () {
+    return {
+        // Supported
+        "height": true,
+        "width": true,
+        "deviceId": true,
+        "frameRate": true,
+        "sampleRate": true,
+        "aspectRatio": true,
+        // Not Supported
+        "autoGainControl": false,
+        "brightness": false,
+        "channelCount": false,
+        "colorTemperature": false,
+        "contrast": false,
+        "echoCancellation": false,
+        "exposureCompensation": false,
+        "exposureMode": false,
+        "exposureTime": false,
+        "facingMode": true,
+        "focusDistance": false,
+        "focusMode": false,
+        "groupId": false,
+        "iso": false,
+        "latency": false,
+        "noiseSuppression": false,
+        "pointsOfInterest": false,
+        "resizeMode": false,
+        "sampleSize": false,
+        "saturation": false,
+        "sharpness": false,
+        "torch": false,
+        "whiteBalanceMode": false,
+        "zoom": false
+    };
+};
+
+
+},{"./EventTarget":2,"./enumerateDevices":20,"./getUserMedia":21}],5:[function(_dereq_,module,exports){
 /**
  * Expose the MediaStream class.
  */
@@ -2481,7 +2567,8 @@ var originalMediaStreamTrack = MediaStreamTrack.originalMediaStreamTrack;
 /**
  * Expose the MediaStream class.
  */
-function MediaStream(arg, id) {
+function MediaStream(arg, id, connectionId) {
+    this._connectionId = connectionId || null;
     debug('new MediaStream(arg) | [arg:%o]', arg);
 
     // Detect native MediaStream usage
@@ -2525,11 +2612,17 @@ function MediaStream(arg, id) {
     EventTarget.call(stream);
 
     // Public atributes.
+    stream._connectionId = connectionId;
     stream._id = id || newMediaStreamId();
+    stream.__id = stream._id;
+    if (stream._id.indexOf(":") > 0) {
+        stream._id = stream._id.substring(0, stream._id.indexOf(":"))
+    }
     stream._active = true;
-
     // Init Stream by Id
-    exec(null, null, 'iosrtcPlugin', 'MediaStream_init', [stream.id]);
+    if (!stream._connectionId) {
+        exec(null, null, 'iosrtcPlugin', 'MediaStream_init', [stream.__id]);
+    }
 
     // Public but internal attributes.
     stream.connected = false;
@@ -2561,7 +2654,7 @@ function MediaStream(arg, id) {
     function onResultOK(data) {
         onEvent.call(stream, data);
     }
-    exec(onResultOK, null, 'iosrtcPlugin', 'MediaStream_setListener', [stream.id]);
+    exec(onResultOK, null, 'iosrtcPlugin', 'MediaStream_setListener', [stream.__id]);
 
     return stream;
 }
@@ -2608,13 +2701,14 @@ MediaStream.create = function (dataFromEvent) {
     debug('create() | [dataFromEvent:%o]', dataFromEvent);
 
     var trackId, track,
-        stream = new MediaStream([], dataFromEvent.id);
+        stream = new MediaStream([], dataFromEvent.id, dataFromEvent._connectionId);
 
     // We do not use addTrack to prevent false positive "ERROR: video track not added" and "ERROR: audio track not added"
     // cause the rtcMediaStream already has them internaly.
 
     for (trackId in dataFromEvent.audioTracks) {
         if (dataFromEvent.audioTracks.hasOwnProperty(trackId)) {
+                        dataFromEvent.audioTracks[trackId]._connectionId = dataFromEvent._connectionId;
             track = new MediaStreamTrack(dataFromEvent.audioTracks[trackId]);
 
             stream._audioTracks[track.id] = track;
@@ -2625,6 +2719,7 @@ MediaStream.create = function (dataFromEvent) {
 
     for (trackId in dataFromEvent.videoTracks) {
         if (dataFromEvent.videoTracks.hasOwnProperty(trackId)) {
+                        dataFromEvent.videoTracks[trackId]._connectionId = dataFromEvent._connectionId;
             track = new MediaStreamTrack(dataFromEvent.videoTracks[trackId]);
 
             stream._videoTracks[track.id] = track;
@@ -2721,7 +2816,7 @@ MediaStream.prototype.addTrack = function (track) {
 
     addListenerForTrackEnded.call(this, track);
 
-    exec(null, null, 'iosrtcPlugin', 'MediaStream_addTrack', [this.id, track.id]);
+    exec(null, null, 'iosrtcPlugin', 'MediaStream_addTrack', [this.__id, track._id]);
 
     this.dispatchEvent(new Event('update'));
 
@@ -2747,7 +2842,7 @@ MediaStream.prototype.removeTrack = function (track) {
         throw new Error('unknown kind attribute: ' + track.kind);
     }
 
-    exec(null, null, 'iosrtcPlugin', 'MediaStream_removeTrack', [this.id, track.id]);
+    exec(null, null, 'iosrtcPlugin', 'MediaStream_removeTrack', [this.__id, track._id]);
 
     this.dispatchEvent(new Event('update'));
 
@@ -2866,7 +2961,7 @@ function checkActive() {
         // Remove the stream from the dictionary.
         delete mediaStreams[self._blobId];
 
-        exec(null, null, 'iosrtcPlugin', 'MediaStream_release', [self.id]);
+        exec(null, null, 'iosrtcPlugin', 'MediaStream_release', [self.__id]);
     }
 }
 
@@ -2880,6 +2975,7 @@ function onEvent(data) {
 
     switch (type) {
         case 'addtrack':
+                        data.track._connectionId = this._connectionId;
             track = new MediaStreamTrack(data.track);
 
             if (track.kind === 'audio') {
@@ -2925,7 +3021,7 @@ function onEvent(data) {
     }
 }
 
-},{"./EventTarget":2,"./MediaStreamTrack":6,"cordova/exec":undefined,"debug":23}],5:[function(_dereq_,module,exports){
+},{"./EventTarget":2,"./MediaStreamTrack":7,"cordova/exec":undefined,"debug":24}],6:[function(_dereq_,module,exports){
 /**
  * Expose the MediaStreamRenderer class.
  */
@@ -2967,7 +3063,7 @@ function MediaStreamRenderer(element) {
     function onResultOK(data) {
         onEvent.call(self, data);
     }
-
+    console.log("About to call new_MediaStreamRenderer", element, this);
     exec(onResultOK, null, 'iosrtcPlugin', 'new_MediaStreamRenderer', [this.id]);
 
     this.refresh();
@@ -2989,16 +3085,19 @@ MediaStreamRenderer.prototype.render = function (stream) {
     var self = this;
 
     if (!(stream instanceof MediaStream.originalMediaStream)) {
+        debug('render() requires a MediaStream instance as argument');
         throw new Error('render() requires a MediaStream instance as argument');
     }
 
     self.stream = stream;
 
-    exec(null, null, 'iosrtcPlugin', 'MediaStreamRenderer_render', [self.id, stream.id]);
+    exec(null, null, 'iosrtcPlugin', 'MediaStreamRenderer_render', [self.id, stream.__id]);
 
     // Subscribe to 'update' event so we call native mediaStreamChanged() on it.
     stream.addEventListener('update', function () {
+        debug("In update event");
         if (self.stream !== stream) {
+            debug("In update event BUT not the same stream");
             return;
         }
 
@@ -3020,10 +3119,13 @@ MediaStreamRenderer.prototype.render = function (stream) {
     });
 
     if (stream.connected) {
+        debug("Stream is connected... emitting all entailed events");
         connected();
     // Otherwise subscribe to 'connected' event to emulate video elements events.
     } else {
+        debug("Stream not connected yet... subscribing to the connected event for the stream")
         stream.addEventListener('connected', function () {
+            debug("Received stream connected event");
             if (self.stream !== stream) {
                 return;
             }
@@ -3298,6 +3400,7 @@ function onEvent(data) {
     var type = data.type,
         event;
 
+        console.log("MediaStreamRenderer onEvent received", this, data);
     debug('onEvent() | [type:%s, data:%o]', type, data);
 
     switch (type) {
@@ -3327,7 +3430,7 @@ function getElementPositionAndSize() {
     };
 }
 
-},{"./EventTarget":2,"./MediaStream":4,"cordova/exec":undefined,"debug":23,"random-number":28}],6:[function(_dereq_,module,exports){
+},{"./EventTarget":2,"./MediaStream":5,"cordova/exec":undefined,"debug":24,"random-number":29}],7:[function(_dereq_,module,exports){
 /**
  * Expose the MediaStreamTrack class.
  */
@@ -3359,6 +3462,10 @@ function MediaStreamTrack(dataFromEvent) {
     }
 
     debug('new() | [dataFromEvent:%o]', dataFromEvent);
+    this._connectionId = null;
+    if (dataFromEvent._connectionId) {
+        this._connectionId = dataFromEvent._connectionId;
+    }
 
     var self = this;
 
@@ -3366,7 +3473,12 @@ function MediaStreamTrack(dataFromEvent) {
     EventTarget.call(this);
 
     // Public atributes.
-    this.id = dataFromEvent.id;  // NOTE: It's a string.
+    this._id = dataFromEvent.id;
+    this.id = this._id;
+    if (this.id.indexOf(":") >0) {
+        this.id = this.id.substring(0, this.id.indexOf(":"));
+    }
+    
     this.kind = dataFromEvent.kind;
     this.label = dataFromEvent.label;
     this.muted = false;  // TODO: No "muted" property in ObjC API.
@@ -3380,7 +3492,9 @@ function MediaStreamTrack(dataFromEvent) {
         onEvent.call(self, data);
     }
 
-    exec(onResultOK, null, 'iosrtcPlugin', 'MediaStreamTrack_setListener', [this.id]);
+    if (!this._connectionId) {
+        exec(onResultOK, null, 'iosrtcPlugin', 'MediaStreamTrack_setListener', [this._id]);
+    }
 }
 
 MediaStreamTrack.prototype = Object.create(EventTarget.prototype);
@@ -3398,7 +3512,7 @@ Object.defineProperty(MediaStreamTrack.prototype, 'enabled', {
         debug('enabled = %s', !!value);
 
         this._enabled = !!value;
-        exec(null, null, 'iosrtcPlugin', 'MediaStreamTrack_setEnabled', [this.id, this._enabled]);
+        exec(null, null, 'iosrtcPlugin', 'MediaStreamTrack_setEnabled', [this._id, this._enabled]);
     }
 });
 
@@ -3435,7 +3549,7 @@ MediaStreamTrack.prototype.stop = function () {
         return;
     }
 
-    exec(null, null, 'iosrtcPlugin', 'MediaStreamTrack_stop', [this.id]);
+    exec(null, null, 'iosrtcPlugin', 'MediaStreamTrack_stop', [this._id]);
 };
 
 
@@ -3485,7 +3599,7 @@ function onEvent(data) {
     }
 }
 
-},{"./EventTarget":2,"./MediaTrackCapabilities":7,"./MediaTrackSettings":8,"./enumerateDevices":19,"cordova/exec":undefined,"debug":23}],7:[function(_dereq_,module,exports){
+},{"./EventTarget":2,"./MediaTrackCapabilities":8,"./MediaTrackSettings":9,"./enumerateDevices":20,"cordova/exec":undefined,"debug":24}],8:[function(_dereq_,module,exports){
 /**
  * Expose the MediaTrackSettings class.
  */
@@ -3496,7 +3610,7 @@ function MediaTrackCapabilities(data) {
     data = data || {};
 }
 
-},{}],8:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 /**
  * Expose the MediaTrackSettings class.
  */
@@ -3507,7 +3621,7 @@ function MediaTrackSettings(data) {
     data = data || {};
 }
 
-},{}],9:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 /**
  * Expose the RTCDTMFSender class.
  */
@@ -3551,7 +3665,7 @@ function RTCDTMFSender(peerConnection, track) {
         onEvent.call(self, data);
     }
 
-    exec(onResultOK, null, 'iosrtcPlugin', 'RTCPeerConnection_createDTMFSender', [this.peerConnection.pcId, this.dsId, this._track.id]);
+    exec(onResultOK, null, 'iosrtcPlugin', 'RTCPeerConnection_createDTMFSender', [this.peerConnection.pcId, this.dsId, this._track._id]);
 
 }
 
@@ -3641,7 +3755,7 @@ function onEvent(data) {
     }
 }
 
-},{"./EventTarget":2,"cordova/exec":undefined,"debug":23,"random-number":28}],10:[function(_dereq_,module,exports){
+},{"./EventTarget":2,"cordova/exec":undefined,"debug":24,"random-number":29}],11:[function(_dereq_,module,exports){
 /**
  * Expose the RTCDataChannel class.
  */
@@ -3874,7 +3988,7 @@ function onEvent(data) {
     }
 }
 
-},{"./EventTarget":2,"cordova/exec":undefined,"debug":23,"random-number":28}],11:[function(_dereq_,module,exports){
+},{"./EventTarget":2,"cordova/exec":undefined,"debug":24,"random-number":29}],12:[function(_dereq_,module,exports){
 /**
  * Expose the RTCIceCandidate class.
  */
@@ -4063,7 +4177,7 @@ function RTCIceCandidate(data) {
         this.relatedPort = iceCandidateFields.remotePort || null;
     }
 }
-},{}],12:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Expose the RTCPeerConnection class.
@@ -4139,10 +4253,6 @@ function RTCPeerConnection(pcConfig, pcConstraints) {
     }
 
     exec(onResultOK, null, 'iosrtcPlugin', 'new_RTCPeerConnection', [this.pcId, this.pcConfig, pcConstraints]);
-    console.log("Adding ontrack event");
-    this.addEventListener('track', function(e) {
-    	console.log("Received track event", e, this);
-    });
 }
 
 RTCPeerConnection.prototype = Object.create(EventTarget.prototype);
@@ -4328,73 +4438,6 @@ RTCPeerConnection.prototype.setLocalDescription = function (desc) {
 
 RTCPeerConnection.prototype.setRemoteDescription = function (desc) {
 
-	var _this = this;
-
-      if (!this._ontrackpoly) {
-        this._ontrackpoly = function (e) {
-          // onaddstream does not fire when a track is added to an existing
-          // stream. But stream.onaddtrack is implemented so we use that.
-          e.stream.addEventListener('addtrack', function (te) {
-            var receiver = void 0;
-            if (window.RTCPeerConnection.prototype.getReceivers) {
-              receiver = _this.getReceivers().find(function (r) {
-                return r.track && r.track.id === te.track.id;
-              });
-            } else {
-              receiver = { track: te.track };
-            }
-            
-            var sender = _this.getSenders().find(function(s) {
-				return s.track && s.track.id == te.track.id;
-			});
-			if (!sender) {
-				sender = new RTCRtpSender({
-					track : receiver.track
-				});
-			}
-            
-
-            var event = new Event('track');
-            event.track = te.track;
-            event.receiver = receiver;
-            event.transceiver = new RTCRtpTransceiver({ 
-            	receiver: receiver,
-            	sender: sender
-            });
-            event.streams = [e.stream];
-            _this.dispatchEvent(event);
-          });
-          e.stream.getTracks().forEach(function (track) {
-            var receiver = void 0;
-            if (window.RTCPeerConnection.prototype.getReceivers) {
-              receiver = _this.getReceivers().find(function (r) {
-                return r.track && r.track.id === track.id;
-              });
-            } else {
-              receiver = { track: track };
-            }
-            var sender = _this.getSenders().find(function(s) {
-				return s.track && s.track.id == te.track.id;
-			});
-			if (!sender) {
-				sender = new RTCRtpSender({
-					track : receiver.track
-				});
-			}
-            var event = new Event('track');
-            event.track = track;
-            event.receiver = receiver;
-            event.transceiver = new RTCRtpTransceiver({ 
-            	receiver: receiver,
-            	sender: sender
-            });
-            event.streams = [e.stream];
-            _this.dispatchEvent(event);
-          });
-        };
-        this.addEventListener('addstream', this._ontrackpoly);
-      }
-      
     // Detect callback usage to assist 5.0.1 to 5.0.2 migration
     // TODO remove on 6.0.0
     Errors.detectDeprecatedCallbaksUsage('RTCPeerConnection.prototype.setRemoteDescription', arguments);
@@ -4579,23 +4622,16 @@ RTCPeerConnection.prototype.getTransceivers = function () {
     });
 
     this.getSenders().map(function (sender) {
-    	if (transceivers.length > 0) {
-    		transceivers.forEach(function(t) {
-    			t.sender(sender);
-    		});
-    	} else {
-    		transceivers.push(new RTCRtpTransceiver({
-				sender: sender
-			}));
-    	}
-        
+        transceivers.push(new RTCRtpTransceiver({
+            sender: sender
+        }));
     });
 
     return transceivers;
 };
 
+
 RTCPeerConnection.prototype.addTrack = function (track, stream) {
-	
     var id;
 
     if (isClosed.call(this)) {
@@ -4614,9 +4650,10 @@ RTCPeerConnection.prototype.addTrack = function (track, stream) {
 
         if (!this.localStreams[stream.id]) {
             this.localStreams[stream.id] = stream;
+                        exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addStream', [this.pcId, stream.__id]);
         }
 
-        exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addStream', [this.pcId, stream.id]);
+        
     }
 
     for (id in this.localStreams) {
@@ -4625,7 +4662,7 @@ RTCPeerConnection.prototype.addTrack = function (track, stream) {
             if (!stream || (stream && stream.id === id)) {
                 stream = this.localStreams[id];
                 stream.addTrack(track);
-                exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addTrack', [this.pcId, track.id, id]);
+                exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addTrack', [this.pcId, track._id, this.localStreams[id].__id]);
                 break;
             }
         }
@@ -4633,17 +4670,8 @@ RTCPeerConnection.prototype.addTrack = function (track, stream) {
 
     // No Stream matched add track without stream
     if (!stream) {
-        exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addTrack', [this.pcId, track.id, null]);
+        exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addTrack', [this.pcId, track._id, null]);
     }
-    var sender = this.getSenders().find(function(sender){
-    	if (sender.track === track) {
-    		return true;
-    	}
-    	return false;
-    });
-    
-    return sender;
-    
 };
 
 RTCPeerConnection.prototype.removeTrack = function (sender) {
@@ -4671,7 +4699,7 @@ RTCPeerConnection.prototype.removeTrack = function (sender) {
                 stream = this.localStreams[id];
                 stream.removeTrack(track);
 
-                exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_removeTrack', [this.pcId, track.id, stream.id]);
+                exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_removeTrack', [this.pcId, track._id, stream.__id]);
                 break;
             }
         }
@@ -4703,7 +4731,7 @@ RTCPeerConnection.prototype.addStream = function (stream) {
 
     this.localStreams[stream.id] = stream;
 
-    exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addStream', [this.pcId, stream.id]);
+    exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_addStream', [this.pcId, stream.__id]);
 };
 
 
@@ -4725,7 +4753,7 @@ RTCPeerConnection.prototype.removeStream = function (stream) {
 
     delete this.localStreams[stream.id];
 
-    exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_removeStream', [this.pcId, stream.id]);
+    exec(null, null, 'iosrtcPlugin', 'RTCPeerConnection_removeStream', [this.pcId, stream.__id]);
 };
 
 
@@ -4790,7 +4818,7 @@ RTCPeerConnection.prototype.getStats = function (selector) {
             reject(new global.DOMException(error));
         }
 
-        exec(onResultOK, onResultError, 'iosrtcPlugin', 'RTCPeerConnection_getStats', [self.pcId, selector ? selector.id : null]);
+        exec(onResultOK, onResultError, 'iosrtcPlugin', 'RTCPeerConnection_getStats', [self.pcId, selector ? selector._id : null]);
     });
 };
 
@@ -4856,7 +4884,7 @@ function onEvent(data) {
 
     Object.defineProperty(event, 'target', {value: self, enumerable: true});
 
-    debug('onEvent() | [type:%s, data:%o, target:%o]', type, data, this);
+    debug('onEvent() | [type:%s, data:%o]', type, data);
 
     switch (type) {
         case 'signalingstatechange':
@@ -4899,21 +4927,44 @@ function onEvent(data) {
             break;
 
         case 'track':
-            var track = new MediaStreamTrack(data.track),
-                stream = this.remoteStreams[data.streamId] || MediaStream.create(data.stream),
-                receiver = new RTCRtpReceiver({ track: track }),
-                transceiver = new RTCRtpTransceiver({ receiver: receiver });
-
-            event.track = track;
-            event.receiver = receiver;
-            event.transceiver = transceiver;
-            event.streams = [stream];
+        try {
+            data.track._connectionId = this.pcId;
+            event.track = new MediaStreamTrack(data.track);
+            event.receiver = new RTCRtpReceiver({ track: event.track });
+            event.transceiver = new RTCRtpTransceiver({ receiver: event.receiver });
+            event.streams = [];
+            var stream;
+            // Add stream only if available in case of Unified-Plan of track event without stream
+            if (data.stream && data.streamId) {
+                                data.stream._connectionId = this.pcId;
+                stream = this.remoteStreams[data.streamId] ||
+                    new MediaStream([], data.streamId, data._connectionId);
+                this.remoteStreams[data.streamId] = stream;
+                
+                event.streams.push(stream);
+            }
+            if (!stream) {
+                stream = this.remoteStreams[data.streamId] ||
+                new MediaStream([], null, data._connectionId);
+            }
+            if (stream) {
+                stream.addTrack(event.track);
+            }
+            
+        } catch (ex) {
+            console.log("An exception occurred while processing track event ", ex)
+        }
+           
             break;
 
         case 'addstream':
 
             // Append to the remote streams.
-            this.remoteStreams[data.streamId] = this.remoteStreams[data.streamId] || MediaStream.create(data.stream);
+                        if (data.stream) {
+                            data.stream._connectionId = this.pcId;
+                        }
+            this.remoteStreams[data.streamId] = this.remoteStreams[data.streamId] ||
+                new MediaStream([], data.id, data._connectionId);
 
             event.stream = this.remoteStreams[data.streamId];
 
@@ -4935,12 +4986,15 @@ function onEvent(data) {
             event.channel = dataChannel;
             break;
     }
-
+    if (type.indexOf('ice') < 0) {
+        console.log("Dispatching event to all listeners of ", this, event);
+    }
+    
     this.dispatchEvent(event);
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./Errors":1,"./EventTarget":2,"./MediaStream":4,"./MediaStreamTrack":6,"./RTCDTMFSender":9,"./RTCDataChannel":10,"./RTCIceCandidate":11,"./RTCRtpReceiver":13,"./RTCRtpSender":14,"./RTCRtpTransceiver":15,"./RTCSessionDescription":16,"./RTCStatsReport":17,"./RTCStatsResponse":18,"cordova/exec":undefined,"debug":23,"random-number":28}],13:[function(_dereq_,module,exports){
+},{"./Errors":1,"./EventTarget":2,"./MediaStream":5,"./MediaStreamTrack":7,"./RTCDTMFSender":10,"./RTCDataChannel":11,"./RTCIceCandidate":12,"./RTCRtpReceiver":14,"./RTCRtpSender":15,"./RTCRtpTransceiver":16,"./RTCSessionDescription":17,"./RTCStatsReport":18,"./RTCStatsResponse":19,"cordova/exec":undefined,"debug":24,"random-number":29}],14:[function(_dereq_,module,exports){
 /**
  * Expose the RTCRtpReceiver class.
  */
@@ -4953,7 +5007,7 @@ function RTCRtpReceiver(data) {
     this.track = data.track;
 }
 
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 /**
  * Expose the RTCRtpSender class.
  */
@@ -4974,7 +5028,7 @@ RTCRtpSender.prototype.setParameters = function (params) {
     Object.assign(this.params, params);
     return Promise.resolve(this.params);
 };
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 /**
  * Expose the RTCRtpTransceiver class.
  */
@@ -4993,7 +5047,7 @@ function RTCRtpTransceiver(data) {
 // https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpTransceiverDirection
 // https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpTransceiver/mid
 // https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpTransceiver/stop
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 /**
  * Expose the RTCSessionDescription class.
  */
@@ -5008,7 +5062,7 @@ function RTCSessionDescription(data) {
     this.sdp = data.sdp;
 }
 
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 /**
  * Expose the RTCStatsReport class.
  */
@@ -5030,7 +5084,7 @@ function RTCStatsReport(data) {
     };
 }
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 /**
  * Expose the RTCStatsResponse class.
  */
@@ -5052,7 +5106,7 @@ function RTCStatsResponse(data) {
     };
 }
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 /**
  * Expose the enumerateDevices function.
  */
@@ -5106,7 +5160,7 @@ function getMediaDeviceInfos(devices) {
     return mediaDeviceInfos;
 }
 
-},{"./Errors":1,"./MediaDeviceInfo":3,"cordova/exec":undefined,"debug":23}],20:[function(_dereq_,module,exports){
+},{"./Errors":1,"./MediaDeviceInfo":3,"cordova/exec":undefined,"debug":24}],21:[function(_dereq_,module,exports){
 /**
  * Expose the getUserMedia function.
  */
@@ -5436,6 +5490,7 @@ function getUserMedia(constraints) {
         // get aspectRatio (e.g 1.7777777777777777)
         // TODO ConstrainDouble min, max
         if (typeof constraints.video.aspectRatio === 'object') {
+            newConstraints.video.aspectRatio = {};
             if (isPositiveFloat(constraints.video.aspectRatio.min)) {
                 newConstraints.video.aspectRatio.min = parseFloat(constraints.video.aspectRatio.min, 10);
             }
@@ -5559,7 +5614,8 @@ function getUserMedia(constraints) {
         exec(onResultOK, onResultError, 'iosrtcPlugin', 'getUserMedia', [newConstraints]);
     });
 }
-},{"./Errors":1,"./MediaStream":4,"cordova/exec":undefined,"debug":23}],21:[function(_dereq_,module,exports){
+
+},{"./Errors":1,"./MediaStream":5,"cordova/exec":undefined,"debug":24}],22:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Variables.
@@ -5589,6 +5645,7 @@ var
     RTCPeerConnection      = _dereq_('./RTCPeerConnection'),
     RTCSessionDescription  = _dereq_('./RTCSessionDescription'),
     RTCIceCandidate        = _dereq_('./RTCIceCandidate'),
+    MediaDevices           = _dereq_('./MediaDevices'),
     MediaStream            = _dereq_('./MediaStream'),
     MediaStreamTrack       = _dereq_('./MediaStreamTrack'),
     videoElementsHandler   = _dereq_('./videoElementsHandler');
@@ -5605,6 +5662,7 @@ module.exports = {
     RTCPeerConnection:     RTCPeerConnection,
     RTCSessionDescription: RTCSessionDescription,
     RTCIceCandidate:       RTCIceCandidate,
+    MediaDevices:          MediaDevices,
     MediaStream:           MediaStream,
     MediaStreamTrack:      MediaStreamTrack,
 
@@ -5622,6 +5680,9 @@ module.exports = {
 
     // Checking permision (audio and camera)
     requestPermission: requestPermission,
+
+    // Expose a function to initAudioDevices if needed, sets the audio session active
+    initAudioDevices: initAudioDevices,
 
     // Expose a function to pollute window and naigator namespaces.
     registerGlobals:       registerGlobals,
@@ -5684,6 +5745,12 @@ function requestPermission(needMic, needCamera, callback) {
     exec(ok, error, 'iosrtcPlugin', "RTCRequestPermission", [needMic, needCamera]);
 }
 
+function initAudioDevices() {
+    debug('initAudioDevices()');
+
+    exec(null, null, 'iosrtcPlugin', "initAudioDevices", []);
+}
+
 function callbackifyMethod(originalMethod) {
     return function (arg) { // jshint ignore:line
         var success, failure,
@@ -5743,7 +5810,7 @@ function registerGlobals(doNotRestoreCallbacksSupport) {
     }
 
     if (!navigator.mediaDevices) {
-        navigator.mediaDevices = {};
+        navigator.mediaDevices = new MediaDevices();
     }
 
     // Restore Callback support
@@ -5770,7 +5837,7 @@ function dump() {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./MediaStream":4,"./MediaStreamTrack":6,"./RTCIceCandidate":11,"./RTCPeerConnection":12,"./RTCSessionDescription":16,"./enumerateDevices":19,"./getUserMedia":20,"./videoElementsHandler":22,"cordova/exec":undefined,"debug":23,"domready":25}],22:[function(_dereq_,module,exports){
+},{"./MediaDevices":4,"./MediaStream":5,"./MediaStreamTrack":7,"./RTCIceCandidate":12,"./RTCPeerConnection":13,"./RTCSessionDescription":17,"./enumerateDevices":20,"./getUserMedia":21,"./videoElementsHandler":23,"cordova/exec":undefined,"debug":24,"domready":26}],23:[function(_dereq_,module,exports){
 /**
  * Expose a function that must be called when the library is loaded.
  * And also a helper function.
@@ -5821,7 +5888,7 @@ var
                 releaseMediaStreamRenderer(video);
                 continue;
             }
-
+            console.log("About to handle video in videoObserver", video);
             handleVideo(video);
         }
     }),
@@ -5987,20 +6054,25 @@ function observeVideo(video) {
     // video.srcObject = null will trigger onemptied events.
 
     video.addEventListener('loadstart', function () {
-
+        debug("in loadstart event for video", video);
         var hasStream = video.srcObject || video.src;
 
         if (hasStream && !video._iosrtcMediaStreamRendererId) {
             // If this video element was NOT previously handling a MediaStreamRenderer, release it.
+            debug("in loadstart event > initializing");
             handleVideo(video);
         } else if (hasStream && video._iosrtcMediaStreamRendererId) {
+            debug("in loadstart event > already initialized", video.srcObject);
             // The video element has received a new srcObject.
             var stream = video.srcObject;
             if (stream && typeof stream.getBlobId === 'function') {
+                debug("in loadstart event > getBlobId===function", stream.getBlobId())
                 // Release previous renderer
                 releaseMediaStreamRenderer(video);
                 // Install new renderer
                 provideMediaStreamRenderer(video, stream.getBlobId());
+            } else {
+                debug("in loadstart event > stream is not blob id", stream);
             }
         }
     });
@@ -6031,7 +6103,7 @@ function observeVideo(video) {
 function handleVideo(video) {
     var
         stream;
-
+        console.log("In handleVideo", video, video.srcObject);
     // The app has set video.srcObject.
     if (video.srcObject) {
         stream = video.srcObject;
@@ -6043,7 +6115,7 @@ function handleVideo(video) {
 
                 return;
             }
-
+            console.log("Providing media stream renderer for video ", video, stream.getBlobId());
             provideMediaStreamRenderer(video, stream.getBlobId());
         }
     } else if (video.src) {
@@ -6093,13 +6165,13 @@ function provideMediaStreamRenderer(video, mediaStreamBlobId) {
     var
         mediaStream = mediaStreams[mediaStreamBlobId],
         mediaStreamRenderer = mediaStreamRenderers[video._iosrtcMediaStreamRendererId];
-
+        console.log("in provideMediaStreamRenderer: ", mediaStream, mediaStreamRenderer);
     if (!mediaStream) {
         releaseMediaStreamRenderer(video);
 
         return;
     }
-
+    
     if (mediaStreamRenderer) {
         mediaStreamRenderer.render(mediaStream);
     } else {
@@ -6108,6 +6180,7 @@ function provideMediaStreamRenderer(video, mediaStreamBlobId) {
 
         mediaStreamRenderers[mediaStreamRenderer.id] = mediaStreamRenderer;
         video._iosrtcMediaStreamRendererId = mediaStreamRenderer.id;
+        console.log("Assigning renderer to video: ", video, mediaStreamRenderer);
     }
 
     // Close the MediaStreamRenderer of this video if it emits "close" event.
@@ -6167,7 +6240,7 @@ function releaseMediaStreamRenderer(video) {
     delete video.readyState;
 }
 
-},{"./MediaStreamRenderer":5,"debug":23}],23:[function(_dereq_,module,exports){
+},{"./MediaStreamRenderer":6,"debug":24}],24:[function(_dereq_,module,exports){
 (function (process){
 /* eslint-env browser */
 
@@ -6435,7 +6508,7 @@ formatters.j = function (v) {
 };
 
 }).call(this,_dereq_('_process'))
-},{"./common":24,"_process":27}],24:[function(_dereq_,module,exports){
+},{"./common":25,"_process":28}],25:[function(_dereq_,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -6703,7 +6776,7 @@ function setup(env) {
 
 module.exports = setup;
 
-},{"ms":26}],25:[function(_dereq_,module,exports){
+},{"ms":27}],26:[function(_dereq_,module,exports){
 /*!
   * domready (c) Dustin Diaz 2014 - License MIT
   */
@@ -6735,7 +6808,7 @@ module.exports = setup;
 
 });
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 /**
  * Helpers.
  */
@@ -6899,7 +6972,7 @@ function plural(ms, msAbs, n, name) {
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
 }
 
-},{}],27:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7085,7 +7158,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 void function(root){
 
   function defaults(options){
@@ -7131,14 +7204,14 @@ void function(root){
   module.exports.defaults = defaults
 }(this)
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 module.exports =
 {
     EventTarget : _dereq_('./lib/EventTarget'),
     Event       : _dereq_('./lib/Event')
 };
 
-},{"./lib/Event":30,"./lib/EventTarget":31}],30:[function(_dereq_,module,exports){
+},{"./lib/Event":31,"./lib/EventTarget":32}],31:[function(_dereq_,module,exports){
 (function (global){
 /**
  * In browsers export the native Event interface.
@@ -7147,7 +7220,7 @@ module.exports =
 module.exports = global.Event;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],31:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 function yaetiEventTarget()
 {
     this._listeners = {};
@@ -7282,17 +7355,20 @@ yaetiEventTarget.prototype.dispatchEvent = function(event)
 
 module.exports = yaetiEventTarget;
 
-},{}]},{},[21])(21)
+},{}]},{},[22])(22)
 });
-
-});
+           
+           });
+           
+           
+       
 
        </script>
         
         <script>
         function webrtcAdapter() {
             (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.adapter = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-/*				
+/*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -7351,7 +7427,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
  *  tree.
  */
 function adapterFactory() {
-	_debug("adapterFactory");
+    _debug("adapterFactory");
   var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
       window = _ref.window;
 
@@ -7618,8 +7694,8 @@ function shimOnTrack(window) {
 }
 
 function shimGetSendersWithDtmf(window) {
-	_debug("in shimGetSendersWithDtmf debug");
-	console.log("In shimGetSendersWithDtmf");
+    _debug("in shimGetSendersWithDtmf debug");
+    console.log("In shimGetSendersWithDtmf");
   // Overrides addTrack/removeTrack, depends on shimAddTrackRemoveTrack.
   if ((typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object' && window.RTCPeerConnection && !('getSenders' in window.RTCPeerConnection.prototype) && 'createDTMFSender' in window.RTCPeerConnection.prototype) {
     var shimSenderWithDtmf = function shimSenderWithDtmf(pc, track) {
@@ -7648,7 +7724,7 @@ function shimGetSendersWithDtmf(window) {
       _debug("Shimming addTrack in shimGetSendersWithDtmf");
       var origAddTrack = window.RTCPeerConnection.prototype.addTrack;
       window.RTCPeerConnection.prototype.addTrack = function addTrack(track, stream) {
-      	console.log("shimGetSendersWithDtmf#addTrack");
+          console.log("shimGetSendersWithDtmf#addTrack");
         var sender = origAddTrack.apply(this, arguments);
         if (!sender) {
           sender = shimSenderWithDtmf(this, track);
@@ -7817,7 +7893,7 @@ function shimSenderReceiverGetStats(window) {
 
     var origAddTrack = window.RTCPeerConnection.prototype.addTrack;
     if (origAddTrack) {
-    	_debug("Setting prototype.addTrack in shimSenderReceiverGetStats");
+        _debug("Setting prototype.addTrack in shimSenderReceiverGetStats");
       window.RTCPeerConnection.prototype.addTrack = function addTrack() {
         var sender = origAddTrack.apply(this, arguments);
         sender._pc = this;
@@ -7989,14 +8065,14 @@ function shimAddTrackRemoveTrackWithNative(window) {
 }
 
 function shimAddTrackRemoveTrack(window) {
-	
+    
   if (!window.RTCPeerConnection) {
     return;
   }
   var browserDetails = utils.detectBrowser(window);
   // shim addTrack and removeTrack.
   if (window.RTCPeerConnection.prototype.addTrack && browserDetails.version >= 65) {
-  	
+      
     return shimAddTrackRemoveTrackWithNative(window);
   }
 
@@ -8048,9 +8124,9 @@ function shimAddTrackRemoveTrack(window) {
     delete this._reverseStreams[this._streams[stream.id] ? this._streams[stream.id].id : stream.id];
     delete this._streams[stream.id];
   };
-	_debug("Shimming addTrack in shimAddRemoveTrack");
+    _debug("Shimming addTrack in shimAddRemoveTrack");
   window.RTCPeerConnection.prototype.addTrack = function addTrack(track, stream) {
-	console.log("In shimAddTrackRemoveTrack > addTrack");
+    console.log("In shimAddTrackRemoveTrack > addTrack");
     var _this13 = this;
 
     if (this.signalingState === 'closed') {
@@ -9292,7 +9368,7 @@ function shimSenderGetStats(window) {
 
   var origAddTrack = window.RTCPeerConnection.prototype.addTrack;
   if (origAddTrack) {
-  	_debug("Shimming addTrack inshimSenderGetStats");
+      _debug("Shimming addTrack inshimSenderGetStats");
     window.RTCPeerConnection.prototype.addTrack = function addTrack() {
       var sender = origAddTrack.apply(this, arguments);
       sender._pc = this;
@@ -9661,9 +9737,9 @@ function shimLocalStreamsAPI(window) {
         return _addTrack.call(_this, track, stream);
       });
     };
-	_debug("Shimming addTrack in shimLocalStreamsAPI");
+    _debug("Shimming addTrack in shimLocalStreamsAPI");
     window.RTCPeerConnection.prototype.addTrack = function addTrack(track) {
-    	console.log("In addTrack from localStreams shim");
+        console.log("In addTrack from localStreams shim");
       var _this2 = this;
 
       for (var _len = arguments.length, streams = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -10681,7 +10757,7 @@ module.exports = function(window, edgeVersion) {
   };
   _debug("Setting RTCPeerConnection.prototype.addTrack");
   RTCPeerConnection.prototype.addTrack = function(track, stream) {
-  	console.log("In RTCPeerConnection.addTrack 10587")
+      console.log("In RTCPeerConnection.addTrack 10587")
     if (this._isClosed) {
       throw makeError('InvalidStateError',
           'Attempted to call addTrack on a closed peerconnection.');
@@ -12933,12 +13009,12 @@ if (typeof module === 'object') {
 });
         }
                                                                                                                                                                                         
-        function CN1InitializeRTC() {                                                                                                                                                                                
+        function CN1InitializeRTC() {
         //document.addEventListener('deviceready', function () {
             // Just for iOS devices.
             console.log('in deviceready webrtc callback');
             if (window.device.platform === 'iOS') {
-            	window.webkitRTCPeerConnection = cordova.plugins.iosrtc.RTCPeerConnection;
+                window.webkitRTCPeerConnection = cordova.plugins.iosrtc.RTCPeerConnection;
                 cordova.plugins.iosrtc.registerGlobals();
                 cordova.plugins.iosrtc.debug.enable('*', true);
                 //webrtcAdapter();
@@ -12971,7 +13047,7 @@ var appContainer = document.body;
 // Sample getUserMedia
 //
 
-// 
+//
 var localStream, localVideoEl;
 function TestGetUserMedia() {
   localVideoEl = document.createElement('video');
@@ -12994,7 +13070,7 @@ function TestGetUserMedia() {
       }
       // Test FrameRate
       frameRate:{ min: 15.0, max: 30.0 } // Note: Back camera may only support max 30 fps
-    }, 
+    },
     audio: {
       deviceId: {
         exact: 'Built-In Microphone'
@@ -13020,7 +13096,7 @@ function TestGetUserMedia() {
 
 //
 // Sample RTCPeerConnection
-// 
+//
 
 var pc1, pc2;
 
@@ -13092,29 +13168,29 @@ function TestRTCPeerConnection(localStream) {
 
   // Using 'track' event with existing MediaStream
   if (useTrackEvent) {
-  	/*
-  	pc2.addEventListener('addstream', function (e) {
+      /*
+      pc2.addEventListener('addstream', function (e) {
       console.log('pc2.addStream', e);
       //setPeerVideoStream(e.stream);
       e.stream.getTracks().forEach(function (track) {
-		var receiver = void 0;
-		if (window.RTCPeerConnection.prototype.getReceivers) {
-		  receiver = pc2.getReceivers().find(function (r) {
-			return r.track && r.track.id === track.id;
-		  });
-		} else {
-		  receiver = { track: track };
-		}
-		var event = new Event('track');
-		event.track = track;
-		event.receiver = receiver;
-		event.transceiver = { receiver: receiver };
-		event.streams = [e.stream];
-		pc2.dispatchEvent(event);
-	  });
+        var receiver = void 0;
+        if (window.RTCPeerConnection.prototype.getReceivers) {
+          receiver = pc2.getReceivers().find(function (r) {
+            return r.track && r.track.id === track.id;
+          });
+        } else {
+          receiver = { track: track };
+        }
+        var event = new Event('track');
+        event.track = track;
+        event.receiver = receiver;
+        event.transceiver = { receiver: receiver };
+        event.streams = [e.stream];
+        pc2.dispatchEvent(event);
+      });
       
     });
-  	*/
+      */
     setPeerVideoStream(new MediaStream());
     pc2.addEventListener('track', function (e) {
       console.log('pc2.track', e);
@@ -13127,21 +13203,21 @@ function TestRTCPeerConnection(localStream) {
       console.log('pc2.addStream', e);
       //setPeerVideoStream(e.stream);
       e.stream.getTracks().forEach(function (track) {
-		var receiver = void 0;
-		if (window.RTCPeerConnection.prototype.getReceivers) {
-		  receiver = pc2.getReceivers().find(function (r) {
-			return r.track && r.track.id === track.id;
-		  });
-		} else {
-		  receiver = { track: track };
-		}
-		var event = new Event('track');
-		event.track = track;
-		event.receiver = receiver;
-		event.transceiver = { receiver: receiver };
-		event.streams = [e.stream];
-		pc2.dispatchEvent(event);
-	  });
+        var receiver = void 0;
+        if (window.RTCPeerConnection.prototype.getReceivers) {
+          receiver = pc2.getReceivers().find(function (r) {
+            return r.track && r.track.id === track.id;
+          });
+        } else {
+          receiver = { track: track };
+        }
+        var event = new Event('track');
+        event.track = track;
+        event.receiver = receiver;
+        event.transceiver = { receiver: receiver };
+        event.streams = [e.stream];
+        pc2.dispatchEvent(event);
+      });
       
     });
   }
@@ -13149,7 +13225,7 @@ function TestRTCPeerConnection(localStream) {
   pc1.addEventListener('iceconnectionstatechange', function (e) {
     console.log('pc1.iceConnectionState', e, pc1.iceConnectionState);
 
-    if (pc1.iceConnectionState === 'completed') {      
+    if (pc1.iceConnectionState === 'completed') {
       console.log('pc1.getSenders', pc1.getSenders());
       console.log('pc2.getReceivers', pc2.getReceivers());
     }
@@ -13159,14 +13235,14 @@ function TestRTCPeerConnection(localStream) {
     console.log('pc1.iceGatheringStateChange', e);
   });
 
-	console.log("Adding negotiationneeded listener to pc1", pc1);
+    console.log("Adding negotiationneeded listener to pc1", pc1);
    var negotiating = false;
   pc1.addEventListener('negotiationneeded', function (e) {
     console.log('pipeline:pc1.negotiatioNeeded', e);
-	if (negotiating) {
-		return;
-	}
-	negotiating = true;
+    if (negotiating) {
+        return;
+    }
+    negotiating = true;
     return pc1.createOffer().then(function (d) {
       var desc = {
         type: d.type,
@@ -13221,7 +13297,7 @@ function TestRTCPeerConnectionLocal() {
 
   // Run sample
   TestGetUserMedia().then(function (localStream) {
-    TestRTCPeerConnection(localStream); 
+    TestRTCPeerConnection(localStream);
   });
 }
 
@@ -13229,4 +13305,5 @@ function TestRTCPeerConnectionLocal() {
         </script>
     </body>
 </html>
+
 

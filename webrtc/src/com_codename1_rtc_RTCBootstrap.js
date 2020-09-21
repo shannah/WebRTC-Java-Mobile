@@ -61,6 +61,7 @@ var f =function() {
                         data[key] = type_[1][key](o, e);
                     }
                 }
+                console.log("IN EVENT for ",type, e);
                 window.cn1Callback(data);
             }
         });
@@ -83,8 +84,11 @@ var f =function() {
                 out.contributingSources.push(wrapRTCRtpContributingSource(source));
             });
         }
-
-        out.parameters = receiver.getParameters();
+        try {
+            out.parameters = receiver.getParameters();
+        } catch (e) {
+            out.parameters = {};
+        }
 
 
         console.log("wrapRTCRtpReceiver out", out);
@@ -103,7 +107,6 @@ var f =function() {
         out.direction = transceiver.direction;
         out.mid = transceiver.mid;
         out.stopped = transceiver.stopped;
-
         out.receiver = wrapRTCRtpReceiver(transceiver.receiver);
         out.sender = wrapRTCRtpSender(transceiver.sender);
         console.log("wrapRTCRtpTransceiver out", out);
@@ -181,7 +184,11 @@ var f =function() {
         out.readyState = track.readyState;
         out.remote = track.remote || false;
         out.settings = wrapMediaTrackSettings(track.kind, track.getSettings());
-        out.constraints = wrapMediaTrackConstraints(track.kind, track.getConstraints());
+        try {
+            out.constraints = wrapMediaTrackConstraints(track.kind, track.getConstraints());
+        } catch (e) {
+            out.constraints = {};
+        }
         out.capabilities = wrapMediaTrackCapabilities(track.kind, track.getCapabilities());
         console.log("wrapMediaStreamTrack out ", out);
         return out;
@@ -232,7 +239,7 @@ var f =function() {
             return null;
         }
         var out = {};
-        ['candidate', 'component', 'foundation', 'ip', 'port', 'priority', 'protocol', 'relatedAddress', 'relatedPort', 'sdpMid', 
+        ['candidate', 'component', 'foundation', 'ip', 'port', 'priority', 'protocol', 'relatedAddress', 'relatedPort', 'sdpMid',
         'sdpMLineIndex', 'tcpType', 'type', 'usernameFragment'].forEach(function(prop, index, array) {
             out[prop] = candidate[prop];
         });
@@ -292,6 +299,7 @@ var f =function() {
     }
 
     function installEventListeners(o) {
+        console.log("INSTALLING EVENT LISTENERS FOR ", o);
         if (o instanceof MediaStream) {
             addEventListener(o, 'ended');
             var tracks = o.getTracks();
@@ -302,16 +310,16 @@ var f =function() {
 
             return;
         } else if (o instanceof HTMLMediaElement) {
-            ['abort', 'canplay', 'canplaythrough', 
-                ['durationchange', {'duration' : function(el){return el.duration;}}], 
-                'emptied', 'ended', 
-                ['error', {'message' : function(el){return el.error.message;}, 'code' : function(el){return el.error.code;}}], 
-                'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play', 'playing', 
-                'progress', 
-                ['ratechange', {'playbackRate' : function(el) {return el.playbackRate;}}], 
-                'seeked', 'seeking', 'stalled', 'suspend', 
-                ['timeupdate', {'currentTime' : function(el){return el.currentTime;}}], 
-                ['volumechange', {'volume' : function(el){return el.volume;}}], 
+            ['abort', 'canplay', 'canplaythrough',
+                ['durationchange', {'duration' : function(el){return el.duration;}}],
+                'emptied', 'ended',
+                ['error', {'message' : function(el){return el.error.message;}, 'code' : function(el){return el.error.code;}}],
+                'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play', 'playing',
+                'progress',
+                ['ratechange', {'playbackRate' : function(el) {return el.playbackRate;}}],
+                'seeked', 'seeking', 'stalled', 'suspend',
+                ['timeupdate', {'currentTime' : function(el){return el.currentTime;}}],
+                ['volumechange', {'volume' : function(el){return el.volume;}}],
                 'waiting']
                     .forEach(function(type, index, array) {
                     addEventListener(o, type);
@@ -320,8 +328,8 @@ var f =function() {
                 });
 
             if (o instanceof HTMLVideoElement) {
-                addEventListener(o, 
-                    ['resize', 
+                addEventListener(o,
+                    ['resize',
                         {'videoWidth' : function(el){return el.videoWidth;},
                             'videoHeight': function(el){return el.videoHeight;}
                         }
@@ -333,7 +341,8 @@ var f =function() {
                 addEventListener(o, type);
             });
         } else if (o instanceof RTCPeerConnection) {
-            [['connectionstatechange', {connectionState:function(el){return el.connectionState;}}], 
+            console.log("INSTALLING EVENT LISTENERS FOR RTCPeerConnection", o);
+            [['connectionstatechange', {connectionState:function(el){return el.connectionState;}}],
                 ['datachannel', {
                     //https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent
                      refId : function(el, e) {
@@ -343,7 +352,7 @@ var f =function() {
                     channel : function(el, e) {
                         return wrapRTCDataChannel(e.channel);
                     }
-                }], 
+                }],
                 ['icecandidate', {
                         //https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceEvent
                         candidate : function(el,e){
@@ -351,20 +360,20 @@ var f =function() {
                             return wrapRTCIceCandidate(e.candidate);
                         }
 
-                }], 
+                }],
                 ['icecandidateerror', {
                     errorCode : function(el,e){return e.errorCode;}
-                }], 
+                }],
                 ['iceconnectionstatechange', {
                         iceConnectionState : function(el,e) {return el.iceConnectionState;}
-                }], 
+                }],
                 ['icegatheringstatechange', {
                         iceGatheringState : function(el, e) {return el.iceGatheringState;}
-                }], 'isolationchange', 'identityresult', 
-                'negotiationneeded', 
+                }], 'isolationchange', 'identityresult',
+                'negotiationneeded',
                 ['signalingstatechange', {
                         signalingState : function(el, e) { return el.signalingState;}
-                }], 
+                }],
                 ['track', {
                         // https://developer.mozilla.org/en-US/docs/Web/API/RTCTrackEvent
                         refId : function(el,e) {
@@ -386,7 +395,14 @@ var f =function() {
                             return wrapMediaStreamTrack(e.track);
                         },
                         transceiver : function(el, e) {
-                            return wrapRTCRtpTransceiver(e.transceiver);
+                            console.log("Getting transceiver!!!!!!", el, e);
+                            var t = e.transceiver;
+                            if (!t.sender) {
+                                t.sender = {
+                                    track: e.track
+                                };
+                            }
+                            return wrapRTCRtpTransceiver(t);
                         }
 
 
@@ -409,7 +425,7 @@ var f =function() {
                 ports : function(el, e) {
                     var ports = [];
                     e.ports.forEach(function(port) {
-                       ports.push(wrapMessagePort(port)); 
+                       ports.push(wrapMessagePort(port));
                     });
                     return ports;
                 }
@@ -473,7 +489,7 @@ var f =function() {
 
                     }
                     return;
-                } 
+                }
             }
             throw new Error("Object "+o+" is not reference counted");
 
@@ -490,4 +506,4 @@ var f =function() {
 
     window.registry = new RTCRegistry();
 };
-f();  
+f();

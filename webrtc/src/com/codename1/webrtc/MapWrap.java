@@ -5,6 +5,7 @@
  */
 package com.codename1.webrtc;
 
+import com.codename1.io.Log;
 import java.util.Map;
 
 /**
@@ -35,6 +36,13 @@ class MapWrap {
             Object val = m.get(key);
             if (val == null) {
                 return defaultVal;
+            }
+            if (val instanceof String) {
+                try {
+                    val = Integer.parseInt((String)val);
+                } catch (Throwable t) {
+                    throw new IllegalArgumentException("Expected integer but found string "+val+", which could not be parsed as an int.");
+                }
             }
             if (!(val instanceof Number)) {
                 throw new IllegalArgumentException("Expected integer but found "+val);

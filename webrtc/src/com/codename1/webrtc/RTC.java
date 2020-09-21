@@ -1454,7 +1454,7 @@ public class RTC implements AutoCloseable {
      */
     private static Map parseJSON(String json) throws IOException {
         JSONParser p = new JSONParser();
-        p.setUseBoolean(true);
+        p.setUseBooleanInstance(true);
         p.setIncludeNullsInstance(true);
         
         return p.parseJSON(new StringReader(json));
@@ -2954,6 +2954,11 @@ public class RTC implements AutoCloseable {
             
             String js = "var conn = registry.get(${0});"
                     + "var sender = conn.addTrack"+addTrackParams.toString()+"; "
+                    + "if (!sender) {"
+                    // the iOS RTC shim returns null for addTrack sender for some reason.. maybe it's not ready? Not sure.
+                    + "  var track = registry.get(${1});"
+                    + "  sender = conn.getSenders().find(function(s){return s.track===track;});"
+                    + "}"
                     + "callback.onSuccess(JSON.stringify(cn1.wrapRTCRtpSender(sender)));";
             
             execute(js, params, (res,error) -> {
@@ -2974,7 +2979,10 @@ public class RTC implements AutoCloseable {
                     }
                     sender.fireReady();
                     
-                } catch (IOException ex) {
+                } catch (Throwable ex) {
+                    if (res != null) {
+                        Log.p("Error occurred parsing JSON from callback for addTrack.  JSON="+res.getValue());
+                    }
                     Log.e(ex);
                 }
             });
