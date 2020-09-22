@@ -1,3 +1,48 @@
 = Codename One WebRTC Library
 
-This library is an implementation of WebRTC for Codnename One
+This library is an implementation of https://webrtc.org[WebRTC] for https://www.codenameone.com[Codnename One].
+
+== Getting Started
+
+{@link com.codename1.webrtc.RTC} is the main access point for all WebRTC functionality.  Obtain a reference to this class using {@link com.codename1.webrtc.RTC#createRTC()}, as follows:
+
+[source,java]
+----
+RTC.createRTC().then(rtc->{
+    //  The RTC object is created.  You can now start working with it.
+});
+----
+
+== Accessing User Media:  AKA Camera and Microphone Access
+
+Use https://shannah.github.io/CN1WebRTC/javadoc/com/codename1/webrtc/RTC.html#getUserMedia-com.codename1.webrtc.MediaStreamConstraints-[getUserMedia()] on the {@link com.codename1.webrtc.RTC} object.
+
+E.g. (From https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/BasicDemo.java[Basic Demo])
+
+[source,java]
+----
+MediaStreamConstraints constraints = new MediaStreamConstraints()
+		.audio()
+		.echoCancellation(true)
+		.noiseSuppression(true)
+		.video(true)
+		.stream();
+
+
+rtc.getUserMedia(constraints).then(stream->{
+	RTCVideoElement video = rtc.createVideo();
+	video.setAutoplay(true);
+	video.setSrcObject(stream);
+	rtc.append(video);
+}).onCatch(error-> {
+	System.out.println("Failed to get user media: "+error.getMessage());
+	Log.e(error);
+});
+
+----
+
+== Using Peer Connections
+
+Use {@link com.codename1.webrtc.RTC#newRTCPeerConnection()}.  See https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/PeerConnectionDemo.java[PeerConnectionDemo].
+
+

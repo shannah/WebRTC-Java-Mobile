@@ -2111,6 +2111,7 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
    
    
     function unlockAudioClip(audio) {
+        return;
     	try {
 			
 			var testPlay = audio.play();
@@ -2241,38 +2242,38 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
                     });
                 }
 
-				
-				if (audioCtx == null) {
-					console.log("Creating audio context");
-					audioCtx = createAudioContext(SAMPLE_RATE);
-					audioInput = audioCtx.createMediaStreamSource(stream);
-					console.log("Audio context created");
-					if (audioCtx.createJavaScriptNode) {
-						audioNode = audioCtx.createJavaScriptNode(bufferSize,  audioInput.channelCount, audioCtx.destination.channelCount);
-					} else if (audioCtx.createScriptProcessor) {
-						audioNode = audioCtx.createScriptProcessor(bufferSize,  audioInput.channelCount, audioCtx.destination.channelCount);
-					} else {
-						console.log("Failed to create audio context");
-						recording = false;
-						onError("Failed to create audio context");
-						return;
-					}
 
-				}
-				
-				console.log("recording now");
-				 // Hook up the scriptNode to the mic
+                if (audioCtx == null) {
+                    console.log("Creating audio context");
+                    audioCtx = createAudioContext(SAMPLE_RATE);
+                    audioInput = audioCtx.createMediaStreamSource(stream);
+                    console.log("Audio context created");
+                    if (audioCtx.createJavaScriptNode) {
+                        audioNode = audioCtx.createJavaScriptNode(bufferSize,  audioInput.channelCount, audioCtx.destination.channelCount);
+                    } else if (audioCtx.createScriptProcessor) {
+                        audioNode = audioCtx.createScriptProcessor(bufferSize,  audioInput.channelCount, audioCtx.destination.channelCount);
+                    } else {
+                        console.log("Failed to create audio context");
+                        recording = false;
+                        onError("Failed to create audio context");
+                        return;
+                    }
 
-				
-				audioInput.connect(audioNode);
-				//do I need to move this
-				audioNode.connect(audioCtx.destination);
+                }
 
-				console.log("about to fire onRecord callback");
-				
-				setupAudioProcessing(audioNode, audioCtx, notAllowedCallback, blockRecordCallback);
-				
-				
+                console.log("recording now");
+                 // Hook up the scriptNode to the mic
+
+
+                audioInput.connect(audioNode);
+                //do I need to move this
+                audioNode.connect(audioCtx.destination);
+
+                console.log("about to fire onRecord callback");
+
+                setupAudioProcessing(audioNode, audioCtx, notAllowedCallback, blockRecordCallback);
+
+
 
                 
                 console.log("Finished resume()");
@@ -2332,252 +2333,185 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
         };
         
         function startSilentAudio() {
-        	if (unlockedSilentAudio) {
-				try {
-					//console.log("Unlocked silent audio play()")
-					var testPlay = unlockedSilentAudio.play();
-					if (testPlay && typeof Promise !== 'undefined' && (testPlay instanceof Promise || typeof testPlay.then === 'function')) {
-						testPlay.catch(function(err) {
-							//console.log("Failed to play unlocked silent audio");
-							unlockedSilentAudio = null;
-						});
-					} 
-				} catch (e) {
-					unlockedSilentAudio = null;
-				}
-				
-			}
+            if (unlockedSilentAudio) {
+                try {
+                    //console.log("Unlocked silent audio play()")
+                    var testPlay = unlockedSilentAudio.play();
+                    if (testPlay && typeof Promise !== 'undefined' && (testPlay instanceof Promise || typeof testPlay.then === 'function')) {
+                        testPlay.catch(function(err) {
+                            //console.log("Failed to play unlocked silent audio");
+                            unlockedSilentAudio = null;
+                        });
+                    } 
+                } catch (e) {
+                    unlockedSilentAudio = null;
+                }
+
+            }
         }
         
         
         function pause() {
 			
-        	console.log("In pause()", stream);
+            console.log("In pause()", stream);
             paused = true;
             recording = false;
-			if (healthCheckHandle) {
-				clearInterval(healthCheckHandle);
-				healthCheckHandle = null;
-			}		
+            if (healthCheckHandle) {
+                clearInterval(healthCheckHandle);
+                healthCheckHandle = null;
+            }		
             if (stream) {
 
                 stream.getTracks().forEach(function(track) {
-                	console.log("Disabling track", track);
-                     track.enabled = false;
+                    console.log("Disabling track", track);
+                    track.enabled = false;
                 });
+				
+                if (audioInput) {
+                    audioInput.disconnect();
+                    audioInput = null;
+                }
+                if (audioNode) {
 
-				
-				if (audioInput) {
-					audioInput.disconnect();
-					audioInput = null;
-				}
-				if (audioNode) {
-			
-					audioNode.disconnect();
-					audioNode = null;
-				}
-			
-				
-				if (audioCtx) {
-					
-					var thisCtx = audioCtx;
-					audioCtx.close().then(function() {
-						//console.log("Finished closing context ", thisCtx);
-					});
-					audioCtx = null;
-				}
-				
-                
-				startSilentAudio();
-                
-                
-				if (isIOS() && !isIPad()) {
-				
-					if (stream) {
-					
-						
-					
-					
-						stream.getTracks().forEach(function(track) {
-							//console.log("Stopping track", track);
-							track.stop();
-						});
-						if (stream.close) {
-							stream.close();
-						}
-						stream = null;
-					}
-				}
-                
-                
-                
-                //console.log("Finished with pause");
+                    audioNode.disconnect();
+                    audioNode = null;
+                }
+
+                if (audioCtx) {
+
+                    var thisCtx = audioCtx;
+                    audioCtx.close().then(function() {
+                            //console.log("Finished closing context ", thisCtx);
+                    });
+                    audioCtx = null;
+                }
+
+                startSilentAudio();
+
+                if (isIOS() && !isIPad()) {
+
+                    if (stream) {
+                        stream.getTracks().forEach(function(track) {
+                            //console.log("Stopping track", track);
+                            track.stop();
+                        });
+                        if (stream.close) {
+                            stream.close();
+                        }
+                        stream = null;
+                    }
+                }
             }
             
             
         }
 
         function setupAudioProcessing(audioNode, audioCtx, notAllowedCallback, blockRecordCallback) {
-        	var pipe = {success:false};
-        	var requestComplete = false;
-        	healthCheckHandle = setInterval(function() {
-        		if (!pipe.success) {
-        			pipe.success = false;
-        			console.log("No audio processed since last poll");
-        		}
-        		if (/*!pipe.success || */false && audioCtx && audioCtx.state === 'interrupted') {
-        			//clearInterval(healthCheckHandle);
-        			console.log("Stream interrupted.  Trying to resume");
-        			pause();
-        			var naCallback = function() {
-        				if (!window.confirm('Continue recording?')) {
-        					stop();
-        				} else {
-        					pause();
-        					record(naCallback, true);
-        				}
-        			};
-        			record(naCallback, true);
-        			//audioCtx.resume();
-        			//healthCheckHandle = null;
-        			//audioCtx.onaudioprocess = null;
-        			//console.log("Audio context was interrupted");
-        			/*
-        			var l = function(e) {
-						window.removeEventListener('pointerdown', l, true);
-						pause();
-						if (stream) {
-							stream.getTracks().forEach(function(track) {
-								console.log("Stopping track", track);
-								track.stop();
-							});
-							if (stream.close) {
-								stream.close();
-							}
-							stream = null;
-						}
-						record(notAllowedCallback, true);
-					};
-					*/
-					/*
-					window.alert('Please tap screen somewhere');
-					//window.addEventListener('pointerdown', l, true);
-					pause();
-					
-					if (stream) {
-						stream.getTracks().forEach(function(track) {
-							console.log("Stopping track", track);
-							track.stop();
-						});
-						if (stream.close) {
-							stream.close();
-						}
-						stream = null;
-					}*/
-					//record(notAllowedCallback, true);
-        		}
-        	}, 500);
-        	
-        	if (!blockRecordCallback) {
-        		onRecord(audioChannels, Math.floor(audioCtx.sampleRate));
-        	}
-        	
-			registerAudioProcessing(audioNode, audioCtx, pipe);
+            var pipe = {success:false};
+            var requestComplete = false;
+            healthCheckHandle = setInterval(function() {
+                if (!pipe.success) {
+                    pipe.success = false;
+                    console.log("No audio processed since last poll");
+                }
+                if (/*!pipe.success || */false && audioCtx && audioCtx.state === 'interrupted') {
+
+                    console.log("Stream interrupted.  Trying to resume");
+                    pause();
+                    var naCallback = function() {
+                        if (!window.confirm('Continue recording?')) {
+                            stop();
+                        } else {
+                            pause();
+                            record(naCallback, true);
+                        }
+                    };
+                    record(naCallback, true);
+
+                }
+            }, 500);
+
+            if (!blockRecordCallback) {
+                onRecord(audioChannels, Math.floor(audioCtx.sampleRate));
+            }
+
+            registerAudioProcessing(audioNode, audioCtx, pipe);
 			
         
         }
         
         function registerAudioProcessing(audioNode, audioCtx, pipe) {
-        	audioNode.onaudioprocess = function(e) {
-        		if (pipe && !pipe.success) {
-        			pipe.success = true;
-        		}
-				//if (!recording) {
-				//	return;
-				//}
-				//console.log("in onaudioprocess");
-				try {
-					var floatSamples = interleave(e);
-					//console.log("float samples "+floatSamples);
-					var sr = audioCtx.sampleRate;
-					if (ENABLE_SAMPLERATE) {
-						if (sr != SAMPLE_RATE && 'Samplerate' in window) {
-						   var resampler = new Samplerate({type: Samplerate.LINEAR});
+            audioNode.onaudioprocess = function(e) {
+                if (pipe && !pipe.success) {
+                    pipe.success = true;
+                }
+                try {
+                    var floatSamples = interleave(e);
+                    //console.log("float samples "+floatSamples);
+                    var sr = audioCtx.sampleRate;
+                    if (ENABLE_SAMPLERATE) {
+                        if (sr != SAMPLE_RATE && 'Samplerate' in window) {
+                           var resampler = new Samplerate({type: Samplerate.LINEAR});
 
-						   var result = resampler.process({
-							   channels: audioChannels,
-							 data: floatSamples, // buffer is a Float32Aray or a Int16Array
-							   ratio: parseFloat(SAMPLE_RATE)/parseFloat(sr),
-							 last: false
-						   });
+                           var result = resampler.process({
+                                   channels: audioChannels,
+                                 data: floatSamples, // buffer is a Float32Aray or a Int16Array
+                                   ratio: parseFloat(SAMPLE_RATE)/parseFloat(sr),
+                                 last: false
+                           });
 
-						   var converted = result.data; // same type as buffer above
-						   var used = result.used; // input samples effectively used
+                           var converted = result.data; // same type as buffer above
+                           var used = result.used; // input samples effectively used
 
-						   // Optional:
-						   //converter.setRatio(2.3);
-						   //converter.reset();
+                           // Optional:
+                           //converter.setRatio(2.3);
+                           //converter.reset();
 
-						   // Close:
-						   resampler.close();
-						   floatSamples = converted;
-						   sr = SAMPLE_RATE;
-					   }
-					}
-		
-					if (isEdge || isIE) {
-						// Not sure why this is necessary, but in Edge and IE,
-						// the length of typed arrays is zero by the time it is processed
-						// on the java audio processing thread.
-						// We need to convert it to a regular array
-						// so that the data gets retained.  Must be a bug in IE/Edge,
-						// but couldn't find it reported anywhere.
-						floatSamples = Array.from(floatSamples);
-					}
-					/*
-					// Test for empty buffer. 
-					// On iPad sometimes it would just start passing empty buffers
-					// here.
-					var empty = true;
-					var len = floatSamples.length;
-					for (var i=0; i<len; i++) {
-						if (floatSamples[i] != 0) {
-							empty = false;
-							break;
-						}
-					}
-					if (empty) {
-						console.log("Empty buffer ", audioCtx.sampleRate, audioCtx.state);
-					}
-					*/
-					onAudioProcess(Math.floor(sr), audioChannels, floatSamples);
-				} catch (e) {
-					onError(e+"");
+                           // Close:
+                           resampler.close();
+                           floatSamples = converted;
+                           sr = SAMPLE_RATE;
+                       }
+                    }
 
-				}
-	
-			};
+                    if (isEdge || isIE) {
+                        // Not sure why this is necessary, but in Edge and IE,
+                        // the length of typed arrays is zero by the time it is processed
+                        // on the java audio processing thread.
+                        // We need to convert it to a regular array
+                        // so that the data gets retained.  Must be a bug in IE/Edge,
+                        // but couldn't find it reported anywhere.
+                        floatSamples = Array.from(floatSamples);
+                    }
+                    
+                    onAudioProcess(Math.floor(sr), audioChannels, floatSamples);
+                } catch (e) {
+                        onError(e+"");
+
+                }
+
+            };
         }
         
         function promptAsync(msg) {
-        	return new Promise(function(resolve, reject) {
-        		var dialog = $('<div>Grant access to microphone? <button class="ok-btn">OK</button><button class="cancel-btn">Cancel</button></div>')
-        			.css({
-        				position:'fixed',
-        				top: '40%',
-        				width: '100px',
-        				'background-color' : 'white'
-        			})
-        			.appendTo($('body'));
-        		$('.ok-btn', dialog).on('click', function() {
-        			$(dialog).remove();
-        			resolve(true);
-        		});
-        		$('.cancel-btn', dialog).on('click', function() {
-        			$(dialog).remove();
-        			resolve(false);
-        		});
-        	});
+            return new Promise(function(resolve, reject) {
+                var dialog = $('<div>Grant access to microphone? <button class="ok-btn">OK</button><button class="cancel-btn">Cancel</button></div>')
+                    .css({
+                            position:'fixed',
+                            top: '40%',
+                            width: '100px',
+                            'background-color' : 'white'
+                    })
+                    .appendTo($('body'));
+                $('.ok-btn', dialog).on('click', function() {
+                    $(dialog).remove();
+                    resolve(true);
+                });
+                $('.cancel-btn', dialog).on('click', function() {
+                    $(dialog).remove();
+                    resolve(false);
+                });
+            });
         }
         
         
@@ -2592,42 +2526,36 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
         }
         
         function testPlayAudio() {
-        	return new Promise(function(resolve, reject) {
-        		try {
-        			var done = false;
-        			console.log("In testPlayAudio()");
-        			var testAudio = new Audio();
-        			if (!isIOS()) {
-        				testAudio.src = createSilentAudio(0.1);
-        			}
-        			
-	        		var testPlay = testAudio.play();
-        			if (testPlay && typeof Promise !== 'undefined' && (testPlay instanceof Promise || typeof testPlay.then === 'function')) {
-        				var caught = false;
-        				testPlay.catch(function(err) {
-        					caught = true;
-        					console.log("TestPlay result", err);
-        					if (err.name=='NotAllowedError' || err.name=='AbortError') {
-								resolve(false);
-							} else {
-								reject(err);
-							}
-        				})/*.then(function() {
-        					
-        					console.log("In testPlay.resolve");
-        					if (!caught) {
-        						resolve(true);
-        					}
-        				})*/;
-        			} else {
-        				console.log("Resolved");
-        				resolve(true);
-        			}
-        		} catch (err) {
-        			console.log("Caught ", err);
-        			reject(err);
-        		}
-        	});
+            return new Promise(function(resolve, reject) {
+                try {
+                    var done = false;
+                    console.log("In testPlayAudio()");
+                    var testAudio = new Audio();
+                    if (!isIOS()) {
+                        testAudio.src = createSilentAudio(0.1);
+                    }
+
+                    var testPlay = testAudio.play();
+                    if (testPlay && typeof Promise !== 'undefined' && (testPlay instanceof Promise || typeof testPlay.then === 'function')) {
+                        var caught = false;
+                        testPlay.catch(function(err) {
+                            caught = true;
+                            console.log("TestPlay result", err);
+                            if (err.name=='NotAllowedError' || err.name=='AbortError') {
+                                resolve(false);
+                            } else {
+                                reject(err);
+                            }
+                        });
+                    } else {
+                        console.log("Resolved");
+                        resolve(true);
+                    }
+                } catch (err) {
+                    console.log("Caught ", err);
+                    reject(err);
+                }
+            });
         }
         // A HACK for iOS is to continually play a silent audio clip when media is paused,
         // so that when we restart it up, we can just attach the record() to the onended event
@@ -2658,58 +2586,48 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
             	unlockedSilentAudio.pause();
             }
         	if ((isIOS() || isSafari) && !allowed && !unlockedSilentAudio) {
-        		// We need to be on even thread.
-        		console.log("Performing MEI check");
-        		testPlayAudio().then(function(canPlay) {
+                    // We need to be on even thread.
+                    console.log("Performing MEI check");
+                    testPlayAudio().then(function(canPlay) {
 
-        			failedMEICheck = !canPlay;
-        			if (!canPlay) console.log("Failed MEI check");
-        			if (failedMEICheck && unlockedSilentAudio) {
-						unlockedSilentAudio.pause();
-						unlockedSilentAudio = null;
-        			}
-        		});
-        		
-        		if (failedMEICheck) {
-        			failedMEICheck = false;
-        			//if (unlockedSilentAudio) {
-        			//	unlockedSilentAudioPlayQueue.push(function() {
-        			//		record(notAllowedCallback, blockRecordCallback, true);
-        			//	});
-        			//} else {
-        			notAllowedCallback();
-        			//}
-        			return;
-        		}
-        		
-        		if (!unlockedSilentAudio && isIOS()) {
-        			unlockedSilentAudio = new Audio();
-        			//unlockedSilentAudio.loop = true;
-        			unlockedSilentAudio.src = createSilentAudio(0.1);
-        			//unlockedSilentAudio.onerror = function(e) {
-        			//	console.log("Silent audio error", e);
-        			//};
-        			unlockedSilentAudio.addEventListener('playing', function() {
-        				///console.log("Unlocked silent audio is playing");
-        			}, true);
-        			
-        			unlockedSilentAudio.addEventListener('ended', function() {
-        				//console.log("Silend audio ended");
-        				if (unlockedSilentAudio) {
-        					unlockedSilentAudio.play();
-        					while (unlockedSilentAudioPlayQueue.length > 0) {
-        						var f = unlockedSilentAudioPlayQueue.pop();
-        						setTimeout(f,0);
+                        failedMEICheck = !canPlay;
+                        if (!canPlay) console.log("Failed MEI check");
+                        if (failedMEICheck && unlockedSilentAudio) {
+                            unlockedSilentAudio.pause();
+                            unlockedSilentAudio = null;
+                        }
+                    });
 
-        					}
-        				}
-        			}, true);
-        			
-        			document.addEventListener(visibilityChange, handleVisibilityChange, true);
-        			
-        			
-        		}
-        		
+                    if (failedMEICheck) {
+                        failedMEICheck = false;
+                        notAllowedCallback();
+                        return;
+                    }
+
+                    if (!unlockedSilentAudio && isIOS()) {
+                        unlockedSilentAudio = new Audio();
+                        unlockedSilentAudio.src = createSilentAudio(0.1);
+                        unlockedSilentAudio.addEventListener('playing', function() {
+                                ///console.log("Unlocked silent audio is playing");
+                        }, true);
+
+                        unlockedSilentAudio.addEventListener('ended', function() {
+                            //console.log("Silend audio ended");
+                            if (unlockedSilentAudio) {
+                                unlockedSilentAudio.play();
+                                while (unlockedSilentAudioPlayQueue.length > 0) {
+                                    var f = unlockedSilentAudioPlayQueue.pop();
+                                    setTimeout(f,0);
+
+                                }
+                            }
+                        }, true);
+
+                        document.addEventListener(visibilityChange, handleVisibilityChange, true);
+
+
+                    }
+
         		
         	}
             
@@ -2717,35 +2635,33 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
            
             if (stream && (!isIOS() || isIPad())) {
             	if (isIOS()) {
-            		// On iOS we cannot reuse the stream, and it is problematic
-            		// to create it new every time, so we workaround it by cloning
-            		// the stream and removing the tracks from the old stream.
-            		// Thanks Chad Phillips (https://webrtchacks.com/guide-to-safari-webrtc/)
-            		var tmp = stream.clone();
-            		var audioTracks = stream.getAudioTracks();
-            		for (var i=0, len = audioTracks.length; i < len; i++) {
-            			stream.removeTrack(audioTracks[i]);
-            		}
-            		stream = tmp;
+                    // On iOS we cannot reuse the stream, and it is problematic
+                    // to create it new every time, so we workaround it by cloning
+                    // the stream and removing the tracks from the old stream.
+                    // Thanks Chad Phillips (https://webrtchacks.com/guide-to-safari-webrtc/)
+                    var tmp = stream.clone();
+                    var audioTracks = stream.getAudioTracks();
+                    for (var i=0, len = audioTracks.length; i < len; i++) {
+                            stream.removeTrack(audioTracks[i]);
+                    }
+                    stream = tmp;
             	}
                 resume(notAllowedCallback, blockRecordCallback);
-                //onRecord(audioChannels, Math.floor(audioCtx.sampleRate));
-                
                 return;
             }
             
             if (stream) {
             	stream.getTracks().forEach(function(track) {
-					console.log("Disabling track", track);
-					track.stop();
-				});
-				if (stream.stop) {
-					stream.stop();
-				}
-				if (stream.close) {
-					stream.close();
-				}
-				stream = null;
+                    console.log("Disabling track", track);
+                    track.stop();
+                });
+                if (stream.stop) {
+                    stream.stop();
+                }
+                if (stream.close) {
+                    stream.close();
+                }
+                stream = null;
             }
             
             pendingGetUserMedia = true;
@@ -2759,21 +2675,21 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
             var supportedConstraints = {};
             if (!isIOS()) {
             	if (navigator.mediaDevices.getSupportedConstraints) {
-					supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-				}
-			
-				if (supportedConstraints.sampleSize) {
-					audioConstraints.sampleSize = {ideal: SAMPLE_SIZE};
-				}
-				if (supportedConstraints.sampleRate) {
-					audioConstraints.sampleRate = {ideal: SAMPLE_RATE};
-				}
-				if (supportedConstraints.audioChannels) {	
-					audioConstraints.channelCount = {ideal: audioChannels};
-				}
-				if (supportedConstraints.autoGainControl) {
-					audioConstraints.autoGainControl = true;  // For Android
-				}
+                    supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+                }
+
+                if (supportedConstraints.sampleSize) {
+                    audioConstraints.sampleSize = {ideal: SAMPLE_SIZE};
+                }
+                if (supportedConstraints.sampleRate) {
+                    audioConstraints.sampleRate = {ideal: SAMPLE_RATE};
+                }
+                if (supportedConstraints.audioChannels) {	
+                    audioConstraints.channelCount = {ideal: audioChannels};
+                }
+                if (supportedConstraints.autoGainControl) {
+                    audioConstraints.autoGainControl = true;  // For Android
+                }
             }
             //audioConstraints.autoGainControl=true;
             //IMPORTANT!!: On iPad you MUST create the audioCtx and audioNode
@@ -2788,8 +2704,8 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
             // 3. Microphone quality gets very poor and distored.
             // 4. Audio playback becomes soft.
             audioCtx = createAudioContext(SAMPLE_RATE);
-			audioNode = (audioCtx.createJavascriptNode||audioCtx.createScriptProcessor).call(audioCtx, bufferSize, audioChannels, audioChannels);
-			audioNode.connect(audioCtx.destination);
+            audioNode = (audioCtx.createJavascriptNode||audioCtx.createScriptProcessor).call(audioCtx, bufferSize, audioChannels, audioChannels);
+            audioNode.connect(audioCtx.destination);
                 
             console.log("About to do getUserMedia");
             navigator.mediaDevices.getUserMedia({
@@ -2806,61 +2722,39 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
                 
             }).then(function (_stream) {
             	if (!isIOS() && isSafari && !window.cn1MicrophoneAccessGranted) {
-            		// Unbelievable!!  The standard MEI tests fail in Safari on Mac.
-            		// I.e. It will pass the MEI check even if it should fail.
-            		// We fill force a fail on the MEI check the first time we request
-            		// microphone access on safari because if we don't, it won't pick up
-            		// any audio the first time around.
-            		failedMEICheck = true;
+                    // Unbelievable!!  The standard MEI tests fail in Safari on Mac.
+                    // I.e. It will pass the MEI check even if it should fail.
+                    // We fill force a fail on the MEI check the first time we request
+                    // microphone access on safari because if we don't, it won't pick up
+                    // any audio the first time around.
+                    failedMEICheck = true;
             	}
             	window.cn1MicrophoneAccessGranted = true;
             	console.log("In getUserMedia callback");
                 pendingGetUserMedia = false;
-				
-            	//if (isStopped) {
-            	//	return;
-            	//}
+
                 stream = _stream;
                 if (failedMEICheck) {
-                	failedMEICheck = false;
-                	console.log("Failed MEI Check, so we're going back to basics");
-                	pause();
-                	/*
-            		promptAsync('Start recording?').then(function(res) {
-        				if (res) {
-        					record(notAllowedCallback, blockRecordCallback, true);
-        				} else {
-        					onError("Record cancelled by user");
-        				}
-        			});
-        			*/
-        			//notAllowedCallback();
-        			//if (unlockedSilentAudio) {
-        			//	unlockedSilentAudioPlayQueue.push(function() {
-        			//		record(notAllowedCallback, blockRecordCallback, true);
-        			//	});
-        			//} else {
-        				notAllowedCallback();
-        			//}
-            		return;
+                    failedMEICheck = false;
+                    console.log("Failed MEI Check, so we're going back to basics");
+                    pause();
+                    notAllowedCallback();
+
+                    return;
             	}
                 if (paused) {
                     console.log("recorder paused before we got user media");
                     try {
-                            pause();
+                        pause();
                     } catch (ex) {
-                            console.log("pause() threw exception", ex);
+                        console.log("pause() threw exception", ex);
                     }
 					
                     onError("Record was paused");
                     return;
                 }
                 try {
-                    
-                    
-                    //audioCtx.onstatechange=function() {
-                    //	console.log("State changed on audio context to "+(audioCtx ? audioCtx.state:null), audioCtx);
-                    //};
+
                     if (origChannelCount < 0) {
                     	origChannelCount = audioCtx.destination.channelCount;
                     }
@@ -2875,26 +2769,9 @@ window.virtualKeyboardDetector = ( function( window, undefined ) {
                     }
                    
                     console.log("recording now");
-                     // Hook up the scriptNode to the mic
-					/*
-                    var gainNode = audioCtx.createGain();
-
-                    audioInput.connect(gainNode);
-					gainNode.connect(audioNode);
-					
-					gainNode.gain.value = 1.0;
-                    */
+                    
                     audioInput.connect(audioNode);
-                    //do I need to move this
-                    
-                    
-					console.log("getUserMedia - success");
-					
                     setupAudioProcessing(audioNode, audioCtx, notAllowedCallback, blockRecordCallback);
-                    
-                    
-                   
-                    
                     if (paused) {
                     	console.log("Already paused by the time we got permission");
                     	pause();
