@@ -58,7 +58,6 @@
 
 - (void)sendPluginResult:(CDVPluginResult*)result callbackId:(NSString*)callbackId
 {
-    CDV_EXEC_LOG(@"Exec(%@): Sending result. Status=%@", callbackId, result.status);
     // This occurs when there is are no win/fail callbacks for the call.
     if ([@"INVALID" isEqualToString:callbackId]) {
         return;
@@ -77,11 +76,6 @@
     debug = YES;
 #endif
 
-    //NSString* js = [NSString stringWithFormat:@"cordova.require('cordova/exec').nativeCallback('%@',%d,%@,%d, %d)", callbackId, status, argumentsAsJSON, keepCallback, debug];
-
-    //[self evalJsHelper:js];
-    //NSLog(@"Result %@", argumentsAsJSON);
-    //public static void sendResult(String callbackId, boolean isSuccess, int status, String args, boolean keepCallback){
     com_codename1_webrtc_compat_cordova_CordovaCallbackManager_sendResult___java_lang_String_boolean_int_java_lang_String_boolean(
         CN1_THREAD_GET_STATE_PASS_ARG 
         fromNSString(CN1_THREAD_GET_STATE_PASS_ARG callbackId),

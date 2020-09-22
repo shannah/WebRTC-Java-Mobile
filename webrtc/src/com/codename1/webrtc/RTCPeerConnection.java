@@ -95,6 +95,46 @@ public interface RTCPeerConnection extends EventTarget, RefCounted {
      * track has been added to the RTCPeerConnection.
      */
     public static final String EVENT_TRACK = "track";
+    
+    public RTCPeerConnection addTrackListener(RTCTrackEventListener l);
+    public RTCPeerConnection removeTrackListener(RTCTrackEventListener l);
+    public RTCPeerConnection ontrack(RTCTrackEventListener l);
+    
+    public RTCPeerConnection addSignalingStateChangeListener(RTCSignalingStateChangeEventListener l);
+    public RTCPeerConnection removeSignalingStateChangeListener(RTCSignalingStateChangeEventListener l);
+    public RTCPeerConnection onsignalingstatechange(RTCSignalingStateChangeEventListener l);
+    
+    public RTCPeerConnection addNegotiationNeededListener(RTCNegotiationNeededEventListener l);
+    public RTCPeerConnection removeNegotiationNeededListener(RTCNegotiationNeededEventListener l);
+    public RTCPeerConnection onnegotiationneeded(RTCNegotiationNeededEventListener l);
+    
+    public RTCPeerConnection addIdentityResultListener(RTCIdentityResultEventListener l);
+    public RTCPeerConnection removeIdentityResultListener(RTCIdentityResultEventListener l);
+    public RTCPeerConnection onidentityresult(RTCIdentityResultEventListener l);
+    
+    public RTCPeerConnection addIceGatheringStateChangeListener(RTCIceGatheringStateChangeEventListener l);
+    public RTCPeerConnection removeIceGatheringStateChangeListener(RTCIceGatheringStateChangeEventListener l);
+    public RTCPeerConnection onicegatheringstatechange(RTCIceGatheringStateChangeEventListener l);
+    
+    public RTCPeerConnection addIceConnectionStateChangeListener(RTCIceConnectionStateChangeEventListener l);
+    public RTCPeerConnection removeIceConnectionStateChangeListener(RTCIceConnectionStateChangeEventListener l);
+    public RTCPeerConnection oniceconnectionstatechange(RTCIceConnectionStateChangeEventListener l);
+    
+    public RTCPeerConnection addIceCandidateListener(RTCIceCandidateEventListener l);
+    public RTCPeerConnection removeIceCandidateListener(RTCIceCandidateEventListener l);
+    public RTCPeerConnection onicecandidate(RTCIceCandidateEventListener l);
+    
+    
+    public RTCPeerConnection addDataChannelListener(RTCDataChannelEventListener l);
+    public RTCPeerConnection removeDataChannelListener(RTCDataChannelEventListener l);
+    public RTCPeerConnection ondatachannel(RTCDataChannelEventListener l);
+    
+    public RTCPeerConnection addConnectionStateChangeListener(RTCConnectionStateChangeEventListener l);
+    public RTCPeerConnection removeConnectionStateChangeListener(RTCConnectionStateChangeEventListener l);
+    public RTCPeerConnection onconnectionstatechange(RTCConnectionStateChangeEventListener l);
+    
+    
+    
 
     /**
      * The read-only RTCPeerConnection property canTrickleIceCandidates returns

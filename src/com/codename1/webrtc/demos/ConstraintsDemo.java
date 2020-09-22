@@ -237,7 +237,7 @@ public class ConstraintsDemo extends Form implements AutoCloseable {
             video = rtc.createVideo();
             video.setAutoplay(true);
             rtc.append(video);
-            video.addEventListener("loadedmetadata", evt->{
+            video.onloadedmetadata(evt->{
                 displayVideoDimensions("loadedmetadata");
             });
             video.addEventListener("resize", evt->{

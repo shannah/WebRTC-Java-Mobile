@@ -10,10 +10,10 @@ package com.codename1.webrtc;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/EventListener
  */
-public interface EventListener {
+public interface EventListener<T extends Event> {
     /**
      * Triggered to handle an event.
      * @param evt 
      */
-    public void handleEvent(Event evt);
+    public void handleEvent(T evt);
 }

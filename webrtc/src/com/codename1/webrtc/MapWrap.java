@@ -28,7 +28,15 @@ class MapWrap {
     }
     
     public String getString(String key, String defaultVal) {
-        return String.valueOf(get(key, defaultVal));
+        Object o = get(key, defaultVal);
+        if (o == defaultVal) {
+            return (String)o;
+        }
+        if (o instanceof String) {
+            return (String)o;
+        }
+        return String.valueOf(o);
+        
     }
     
     public Integer getInt(String key, Integer defaultVal) {
@@ -54,7 +62,13 @@ class MapWrap {
     
     public Boolean getBoolean(String key, Boolean defaultVal) {
         if (has(key)) {
-            return ((Boolean)m.get(key)).booleanValue();
+            Object o = m.get(key);
+            if (o instanceof Boolean) {
+                return (Boolean)o;
+            } else if (o instanceof String) {
+                return "true".equals(o);
+            }
+            return defaultVal;
         }
         return defaultVal;
     }

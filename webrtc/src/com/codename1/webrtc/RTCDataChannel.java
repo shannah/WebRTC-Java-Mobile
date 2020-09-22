@@ -34,6 +34,8 @@ public interface RTCDataChannel extends EventTarget, RefCounted {
      */
     public static final String EVENT_CLOSE="close";
     
+    public static final String EVENT_CLOSING="closing";
+    
     /**
      * Sent to the onerror event handler when an error occurs on the data channel.
      * 
@@ -54,6 +56,26 @@ public interface RTCDataChannel extends EventTarget, RefCounted {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/open_event
      */
     public static final String EVENT_OPEN="open";
+    
+    public RTCDataChannel addOpenListener(OpenListener l);
+    public RTCDataChannel removeOpenListener(OpenListener l);
+    public RTCDataChannel onopen(OpenListener l);
+    
+    public RTCDataChannel addMessageListener(MessageListener l);
+    public RTCDataChannel removeMessageListener(MessageListener l);
+    public RTCDataChannel onmessage(MessageListener l);
+    
+    public RTCDataChannel addErrorListener(ErrorListener l);
+    public RTCDataChannel removeErrorListener(ErrorListener l);
+    public RTCDataChannel onerror(ErrorListener l);
+    
+    public RTCDataChannel addClosingListener(ClosingListener l);
+    public RTCDataChannel removeClosingListener(ClosingListener l);
+    public RTCDataChannel onclosing(ClosingListener l);
+    
+    public RTCDataChannel addCloseListener(CloseListener l);
+    public RTCDataChannel removeCloseListener(CloseListener l);
+    public RTCDataChannel onclose(CloseListener l);
     
     /**
      * The property binaryType on the RTCDataChannel interface is a DOMString which specifies the type of JavaScript object which should be used to represent binary data received on the RTCDataChannel. Values allowed by the WebSocket.binaryType property are also permitted here: "blob" if Blob objects are being used or "arraybuffer" if ArrayBuffer objects are being used. The default is "blob".
@@ -163,5 +185,11 @@ public interface RTCDataChannel extends EventTarget, RefCounted {
             return string.equals(readyStateStr);
         }
     }
+    
+    public static interface OpenListener extends EventListener<Event> {}
+    public static interface MessageListener extends EventListener<MessageEvent>{}
+    public static interface CloseListener extends EventListener<Event> {}
+    public static interface ClosingListener extends EventListener<Event> {}
+    public static interface BufferedAmountLowListener extends EventListener<Event> {}
     
 }

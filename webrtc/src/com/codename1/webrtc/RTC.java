@@ -266,6 +266,8 @@ public class RTC implements AutoCloseable {
                             evt = new RTCPeerConnectionIceErrorEventImpl(data);
                         } else if (eventType.equals("track")) {
                             evt = new RTCTrackEventImpl(data);
+                        } else if (eventType.equals("error")) {
+                            evt = new ErrorEventImpl(data);
                         } else {
                             evt = new EventImpl(eventType, data);
                         }
@@ -1329,6 +1331,39 @@ public class RTC implements AutoCloseable {
         }
     }
     
+    private class ErrorEventImpl extends EventImpl implements ErrorEvent {
+        ErrorEventImpl(Map data) {
+            super("error", data);
+        }
+
+        @Override
+        public String getMessage() {
+            if (getData().containsKey("message")) {
+                return String.valueOf(getData().get("message"));
+            }
+            return null;
+        }
+
+        @Override
+        public int getCode() {
+            if (getData().containsKey("code")) {
+                Object code = getData().get("code");
+                if (code instanceof Number) {
+                    return ((Number) code).intValue();
+                }
+                if (code instanceof String) {
+                    try {
+                        return Integer.parseInt((String)code);
+                    } catch (Throwable t) {
+                        return 0;
+                    }
+                }
+                
+            }
+            return 0;
+        }
+    }
+    
     /**
      * Implementation of {@link RTCTrackEvent}.
      */
@@ -1367,6 +1402,8 @@ public class RTC implements AutoCloseable {
             }
             
         };
+        
+        
         
         /**
          * Creates a new track event.
@@ -2283,14 +2320,14 @@ public class RTC implements AutoCloseable {
                     public void onSucess(BrowserComponent.JSRef value) {
                         
                         try {
-                            Map res = parseJSON(value.getValue());
+                            MapWrap res = new MapWrap(parseJSON(value.getValue()));
                             List<Map> tracks = (List)res.get("tracks");
                             
                             MediaStream stream = newMediaStream(
-                                    (String)res.get("refId"), 
-                                    (String)res.get("id"), 
-                                    (Boolean)res.get("active"), 
-                                    (Boolean)res.get("ended"),
+                                    (String)res.getString("refId", ""), 
+                                    (String)res.getString("id", ""), 
+                                    (Boolean)res.getBoolean("active", false), 
+                                    (Boolean)res.getBoolean("ended", false),
                                     tracks);
                             for (MediaStreamTrack track : stream.getVideoTracks()) {
                                 ((MediaStreamTrackImpl)track).constraints = constraints.getVideoConstraints();
@@ -2781,6 +2818,380 @@ public class RTC implements AutoCloseable {
                 web.execute("registry.get(${0}).muted="+muted, new Object[]{getRefId()});
             }
         }
+
+        @Override
+        public RTCMediaElement addAbortListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_ABORT, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeAbortListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_ABORT, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onabort(RTCMediaElementListener l) {
+            return addAbortListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addCanPlayListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_CANPLAY, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeCanPlayListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_CANPLAY, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement oncanplay(RTCMediaElementListener l) {
+            return addCanPlayListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addCanPlayThroughListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_CANPLAYTHROUGH, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeCanPlayThroughListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_CANPLAYTHROUGH, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement oncanplaythrough(RTCMediaElementListener l) {
+            return addCanPlayListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addDurationChangeListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_DURATIONCHANGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeDurationChangeListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_DURATIONCHANGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement ondurationchange(RTCMediaElementListener l) {
+            return addDurationChangeListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addEmptiedListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_EMPTIED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeEmptiedListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_EMPTIED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onemptied(RTCMediaElementListener l) {
+            return addEmptiedListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addEndedListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_ENDED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeEndedListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_ENDED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onended(RTCMediaElementListener l) {
+            return addEndedListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addErrorListener(ErrorListener l) {
+            addEventListener(EVENT_ERROR, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeErrorListener(ErrorListener l) {
+            removeEventListener(EVENT_ERROR, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onerror(ErrorListener l) {
+            return addErrorListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addLoadedDataListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_LOADEDDATA, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeLoadedDataListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_LOADEDDATA, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onloadeddata(RTCMediaElementListener l) {
+            return addLoadedDataListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addLoadedMetadataListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_LOADEDMETADATA, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeLoadedMetadataListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_LOADEDMETADATA, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onloadedmetadata(RTCMediaElementListener l) {
+            return addLoadedMetadataListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addLoadStartListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_LOADSTART, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeLoadStartListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_LOADSTART, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onloadstart(RTCMediaElementListener l) {
+            return addLoadStartListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addPauseListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_PAUSE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removePauseListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_PAUSE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onpause(RTCMediaElementListener l) {
+            return addPauseListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addPlayListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_PLAY, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removePlayListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_PLAY, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onplay(RTCMediaElementListener l) {
+            return addPlayListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addPlayingListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_PLAYING, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removePlayingListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_PLAYING, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onplaying(RTCMediaElementListener l) {
+            return addPlayingListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addProgressListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_PROGRESS, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeProgressListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_PROGRESS, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onprogress(RTCMediaElementListener l) {
+            return addProgressListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addRateChangeListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_RATECHANGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeRateChangeListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_RATECHANGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onratechange(RTCMediaElementListener l) {
+            return addRateChangeListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addSeekedListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_SEEKED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeSeekedListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_SEEKED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onseeked(RTCMediaElementListener l) {
+            return addSeekedListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addSeekingListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_SEEKING, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeSeekingListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_SEEKING, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onseeking(RTCMediaElementListener l) {
+            return addSeekingListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addStalledtListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_STALLED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeStalledListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_STALLED, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onstalled(RTCMediaElementListener l) {
+            return addStalledtListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addSuspendListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_SUSPEND, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeSuspendListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_SUSPEND, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onsuspend(RTCMediaElementListener l) {
+            return addSuspendListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addTimeUpdateListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_TIMEUPDATE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeTimeUpdateListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_TIMEUPDATE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement ontimeupdate(RTCMediaElementListener l) {
+            return addTimeUpdateListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addVolumeChangeListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_VOLUMECHANGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeVolumeChangeListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_VOLUMECHANGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onvolumechange(RTCMediaElementListener l) {
+            return addVolumeChangeListener(l);
+        }
+
+        @Override
+        public RTCMediaElement addWaitingListener(RTCMediaElementListener l) {
+            addEventListener(EVENT_WAITING, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement removeWaitingListener(RTCMediaElementListener l) {
+            removeEventListener(EVENT_WAITING, l);
+            return this;
+        }
+
+        @Override
+        public RTCMediaElement onwaiting(RTCMediaElementListener l) {
+            return addWaitingListener(l);
+        }
         
     }
     
@@ -2835,6 +3246,22 @@ public class RTC implements AutoCloseable {
         private RTCRtpReceivers receivers;
         private RTCRtpSenders senders;
         private EventSupport es = new EventSupport(this);
+
+        @Override
+        public RTCPeerConnection addTrackListener(RTCTrackEventListener l) {
+            addEventListener(EVENT_TRACK, l);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeTrackListener(RTCTrackEventListener l) {
+            removeEventListener(EVENT_TRACK, l);
+            return this;
+        }
+        
+        
+        
+        
         
         private boolean isClosed() {
             return connectionState == RTCPeerConnectionState.Closed;
@@ -3279,6 +3706,148 @@ public class RTC implements AutoCloseable {
             
             
         }
+
+        @Override
+        public RTCPeerConnection ontrack(RTCTrackEventListener rl) {
+            return addTrackListener(rl);
+        }
+
+        @Override
+        public RTCPeerConnection addSignalingStateChangeListener(RTCSignalingStateChangeEventListener rl) {
+            addEventListener(EVENT_SIGNALINGSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeSignalingStateChangeListener(RTCSignalingStateChangeEventListener rl) {
+            removeEventListener(EVENT_SIGNALINGSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection onsignalingstatechange(RTCSignalingStateChangeEventListener rl) {
+            return addSignalingStateChangeListener(rl);
+        }
+
+        @Override
+        public RTCPeerConnection addNegotiationNeededListener(RTCNegotiationNeededEventListener rl) {
+            addEventListener(EVENT_NEGOTIATIONNEEDED, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeNegotiationNeededListener(RTCNegotiationNeededEventListener rl) {
+            removeEventListener(EVENT_NEGOTIATIONNEEDED, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection onnegotiationneeded(RTCNegotiationNeededEventListener rl) {
+            return addNegotiationNeededListener(rl);
+        }
+
+        @Override
+        public RTCPeerConnection addIdentityResultListener(RTCIdentityResultEventListener rl) {
+            addEventListener(EVENT_IDENTITYRESULT, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeIdentityResultListener(RTCIdentityResultEventListener rl) {
+            removeEventListener(EVENT_IDENTITYRESULT, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection onidentityresult(RTCIdentityResultEventListener rl) {
+            return addIdentityResultListener(rl);
+        }
+
+        @Override
+        public RTCPeerConnection addIceGatheringStateChangeListener(RTCIceGatheringStateChangeEventListener rl) {
+            addEventListener(EVENT_ICEGATHERINGSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeIceGatheringStateChangeListener(RTCIceGatheringStateChangeEventListener rl) {
+            addEventListener(EVENT_ICEGATHERINGSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection onicegatheringstatechange(RTCIceGatheringStateChangeEventListener rl) {
+            return addIceGatheringStateChangeListener(rl);
+        }
+
+        @Override
+        public RTCPeerConnection addIceConnectionStateChangeListener(RTCIceConnectionStateChangeEventListener rl) {
+            addEventListener(EVENT_ICECONNECTIONSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeIceConnectionStateChangeListener(RTCIceConnectionStateChangeEventListener rl) {
+            removeEventListener(EVENT_ICECONNECTIONSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection oniceconnectionstatechange(RTCIceConnectionStateChangeEventListener rl) {
+            return addIceConnectionStateChangeListener(rl);
+        }
+
+        @Override
+        public RTCPeerConnection addIceCandidateListener(RTCIceCandidateEventListener rl) {
+            addEventListener(EVENT_ICECANDIDATE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeIceCandidateListener(RTCIceCandidateEventListener rl) {
+            removeEventListener(EVENT_ICECANDIDATE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection onicecandidate(RTCIceCandidateEventListener rl) {
+            return addIceCandidateListener(rl);
+            
+        }
+
+        @Override
+        public RTCPeerConnection addDataChannelListener(RTCDataChannelEventListener rl) {
+            addEventListener(EVENT_DATACHANNEL, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeDataChannelListener(RTCDataChannelEventListener rl) {
+            removeEventListener(EVENT_DATACHANNEL, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection ondatachannel(RTCDataChannelEventListener rl) {
+            return addDataChannelListener(rl);
+        }
+
+        @Override
+        public RTCPeerConnection addConnectionStateChangeListener(RTCConnectionStateChangeEventListener rl) {
+            addEventListener(EVENT_CONNECTIONSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeConnectionStateChangeListener(RTCConnectionStateChangeEventListener rl) {
+            removeEventListener(EVENT_CONNECTIONSTATECHANGE, rl);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection onconnectionstatechange(RTCConnectionStateChangeEventListener rl) {
+            return addConnectionStateChangeListener(rl);
+        }
         
         
         
@@ -3481,6 +4050,93 @@ public class RTC implements AutoCloseable {
                 
             });
             
+        }
+
+        @Override
+        public RTCDataChannel addOpenListener(OpenListener l) {
+            addEventListener(EVENT_OPEN, l);
+            return this;
+            
+        }
+
+        @Override
+        public RTCDataChannel removeOpenListener(OpenListener l) {
+            removeEventListener(EVENT_OPEN, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel onopen(OpenListener l) {
+            return addOpenListener(l);
+        }
+
+        @Override
+        public RTCDataChannel addMessageListener(MessageListener l) {
+            addEventListener(EVENT_MESSAGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel removeMessageListener(MessageListener l) {
+            removeEventListener(EVENT_MESSAGE, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel onmessage(MessageListener l) {
+            return addMessageListener(l);
+        }
+
+        @Override
+        public RTCDataChannel addErrorListener(ErrorListener l) {
+            addEventListener(EVENT_ERROR, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel removeErrorListener(ErrorListener l) {
+            removeEventListener(EVENT_ERROR, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel onerror(ErrorListener l) {
+            return addErrorListener(l);
+        }
+
+        @Override
+        public RTCDataChannel addClosingListener(ClosingListener l) {
+            addEventListener(EVENT_CLOSING, l);
+            return this;
+        }
+        
+
+        @Override
+        public RTCDataChannel removeClosingListener(ClosingListener l) {
+            removeEventListener(EVENT_CLOSING, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel onclosing(ClosingListener l) {
+            return addClosingListener(l);
+        }
+
+        @Override
+        public RTCDataChannel addCloseListener(CloseListener l) {
+            addEventListener(EVENT_CLOSE, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel removeCloseListener(CloseListener l) {
+            removeEventListener(EVENT_CLOSE, l);
+            return this;
+        }
+
+        @Override
+        public RTCDataChannel onclose(CloseListener l) {
+            return addCloseListener(l);
         }
         
         

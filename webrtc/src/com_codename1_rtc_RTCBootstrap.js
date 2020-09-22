@@ -61,7 +61,6 @@ var f =function() {
                         data[key] = type_[1][key](o, e);
                     }
                 }
-                console.log("IN EVENT for ",type, e);
                 window.cn1Callback(data);
             }
         });
@@ -89,9 +88,6 @@ var f =function() {
         } catch (e) {
             out.parameters = {};
         }
-
-
-        console.log("wrapRTCRtpReceiver out", out);
         return out;
     }
 
@@ -99,7 +95,6 @@ var f =function() {
         if (!transceiver) {
             return null;
         }
-        console.log("In wrapRTCRtpTranceiver", transceiver);
         var out = {};
         registry.retain(transceiver);
         out.refId = registry.id(transceiver);
@@ -109,20 +104,17 @@ var f =function() {
         out.stopped = transceiver.stopped;
         out.receiver = wrapRTCRtpReceiver(transceiver.receiver);
         out.sender = wrapRTCRtpSender(transceiver.sender);
-        console.log("wrapRTCRtpTransceiver out", out);
         return out;
     }
 
     function wrapRTCRtpSender(sender) {
         if (!sender) return null;
         var out = {};
-        console.log("in wrapRTCRtpSender", sender);
         registry.retain(sender);
         out.refId = registry.id(sender);
         out.dtmf = sender.dtmf;
         out.rtcpTransport = sender.rtcpTransport;
         out.track = wrapMediaStreamTrack(sender.track);
-        console.log("wrapRTCRtpSender out", out);
         return out;
     }
 
@@ -150,7 +142,6 @@ var f =function() {
         if (!stream) {
             return null;
         }
-        console.log("in wrapMediaStream ", stream);
         var out = {};
         registry.retain(stream);
         out.refId = registry.id(stream);
@@ -162,7 +153,6 @@ var f =function() {
         stream.getTracks().forEach(function(track, index, array) {
             out.tracks.push(wrapMediaStreamTrack(track));
         });
-        console.log("wrapMediaStream out ", out);
         return out;
     }
 
@@ -170,7 +160,6 @@ var f =function() {
         if (!track) {
             return null;
         }
-        console.log("in wrapMediaStreamTrack", track);
         var out = {};
         registry.retain(track);
         out.refId = registry.id(track);
@@ -190,7 +179,6 @@ var f =function() {
             out.constraints = {};
         }
         out.capabilities = wrapMediaTrackCapabilities(track.kind, track.getCapabilities());
-        console.log("wrapMediaStreamTrack out ", out);
         return out;
     }
 
@@ -299,7 +287,6 @@ var f =function() {
     }
 
     function installEventListeners(o) {
-        console.log("INSTALLING EVENT LISTENERS FOR ", o);
         if (o instanceof MediaStream) {
             addEventListener(o, 'ended');
             var tracks = o.getTracks();
@@ -341,7 +328,6 @@ var f =function() {
                 addEventListener(o, type);
             });
         } else if (o instanceof RTCPeerConnection) {
-            console.log("INSTALLING EVENT LISTENERS FOR RTCPeerConnection", o);
             [['connectionstatechange', {connectionState:function(el){return el.connectionState;}}],
                 ['datachannel', {
                     //https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent
@@ -356,7 +342,6 @@ var f =function() {
                 ['icecandidate', {
                         //https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceEvent
                         candidate : function(el,e){
-                            //console.log('getting candidate in icecandidate event', el, e);
                             return wrapRTCIceCandidate(e.candidate);
                         }
 
@@ -391,11 +376,9 @@ var f =function() {
                             return out;
                         },
                         track : function(el, e) {
-                            console.log("in track event", el, e);
                             return wrapMediaStreamTrack(e.track);
                         },
                         transceiver : function(el, e) {
-                            console.log("Getting transceiver!!!!!!", el, e);
                             var t = e.transceiver;
                             if (!t.sender) {
                                 t.sender = {
@@ -430,6 +413,13 @@ var f =function() {
                     return ports;
                 }
 
+            }],['error', {
+               message : function(el, e) {
+                   return e.message;
+               },
+               code : function(el, e) {
+                   return 0;
+               }
             }], 'open', 'close'].forEach(function(type, index, array) {
                 addEventListener(o, type);
             });

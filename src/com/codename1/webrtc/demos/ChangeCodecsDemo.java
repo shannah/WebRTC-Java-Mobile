@@ -122,10 +122,10 @@ public class ChangeCodecsDemo extends Form implements AutoCloseable {
             rtc.append(localVideo);
             rtc.append(remoteVideo);
             
-            localVideo.addEventListener("loadedmetadata", evt->{
+            localVideo.onloadedmetadata(evt->{
                 System.out.println("Local video videoWidth: "+localVideo.getVideoWidth()+"px,  videoHeight: "+localVideo.getVideoHeight()+"px");
             });
-            remoteVideo.addEventListener("loadedmetadata", evt->{
+            remoteVideo.onloadedmetadata(evt->{
                 System.out.println("Remote video size changed to "+remoteVideo.getVideoWidth()+"x"+remoteVideo.getVideoHeight());
                 if (startTime != null) {
                     long elapsedTime = System.currentTimeMillis() - startTime.getTime();
@@ -202,17 +202,17 @@ public class ChangeCodecsDemo extends Form implements AutoCloseable {
         RTCConfiguration configuration = new RTCConfiguration();
         pc1 = rtc.newRTCPeerConnection(configuration);
         System.out.println("Created local peer connection object pc1");
-        pc1.addEventListener("icecandidate", evt->{
-            onIceCandidate(pc1, (RTCPeerConnectionIceEvent)evt);
+        pc1.onicecandidate(evt->{
+            onIceCandidate(pc1, evt);
         });
         pc2 = rtc.newRTCPeerConnection(configuration);
         System.out.println("Created remote peer connection object pc2");
-        pc2.addEventListener("icecandidate", evt->{
-            onIceCandidate(pc2, (RTCPeerConnectionIceEvent)evt);
+        pc2.onicecandidate(evt->{
+            onIceCandidate(pc2, evt);
         });
-        pc1.addEventListener("iceconnectionstatechange", evt->onIceStateChange(pc1, evt));
-        pc2.addEventListener("iceconnectionstatechange", evt->onIceStateChange(pc2, evt));
-        pc2.addEventListener("track", evt->gotRemoteStream((RTCTrackEvent)evt));
+        pc1.oniceconnectionstatechange(evt->onIceStateChange(pc1, evt));
+        pc2.oniceconnectionstatechange(evt->onIceStateChange(pc2, evt));
+        pc2.ontrack(evt->gotRemoteStream(evt));
         
         for (MediaStreamTrack track : localStream.getTracks()) {
             pc1.addTrack(track, localStream);

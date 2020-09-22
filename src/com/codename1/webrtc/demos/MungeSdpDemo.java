@@ -47,9 +47,9 @@ import com.codename1.webrtc.RTCVideoElement;
 import java.util.Timer;
 
 /**
- * This sample was adapted from https://webrtc.github.io/samples/src/content/getusermedia/gum/
+ * This sample was adapted from https://webrtc.github.io/samples/src/content/peerconnection/munge-sdp/
  * 
- * The source for that sample is available at https://github.com/webrtc/samples/tree/gh-pages/src/content/getusermedia/gum
+ * The source for that sample is available at https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/munge-sdp/js/main.js
  * 
  * @author shannah
  */
@@ -270,18 +270,18 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
         
         Log.p("Created local peer connection object localPeerConnection");
         
-        localPeerConnection.addEventListener("icecandidate", e->onIceCandidate(localPeerConnection, e));
+        localPeerConnection.onicecandidate(e->onIceCandidate(localPeerConnection, e));
         RTCDataChannel sendChannel = localPeerConnection.createDataChannel("sendDataChannel", dataChannelOptions);
         sendChannel.retain();
-        sendChannel.addEventListener("open", e->onSendChannelStateChange());
-        sendChannel.addEventListener("close", e->onSendChannelStateChange());
-        sendChannel.addEventListener("error", e->onSendChannelStateChange());
+        sendChannel.onopen(e->onSendChannelStateChange())
+            .onclose(e->onSendChannelStateChange())
+            .onerror(e->onSendChannelStateChange());
         
         remotePeerConnection = rtc.newRTCPeerConnection(servers);
         Log.p("Created remote peer connection object remotePeerConnection");
-        remotePeerConnection.addEventListener("icecandidate", e->onIceCandidate(remotePeerConnection, e));
-        remotePeerConnection.addEventListener("track", e->gotRemoteStream(e));
-        remotePeerConnection.addEventListener("datachannel", e->receiveChannelCallback((RTCDataChannelEvent)e));
+        remotePeerConnection.onicecandidate(e->onIceCandidate(remotePeerConnection, e));
+        remotePeerConnection.ontrack(e->gotRemoteStream(e));
+        remotePeerConnection.ondatachannel(e->receiveChannelCallback(e));
         
         for (MediaStreamTrack track : localStream.getTracks()) {
             localPeerConnection.addTrack(track, localStream);
@@ -488,10 +488,10 @@ public class MungeSdpDemo extends Form implements AutoCloseable {
     private void receiveChannelCallback(RTCDataChannelEvent event) {
         Log.p("Receive Channel Callback");
         
-        receiveChannel = event.getChannel();
-        receiveChannel.addEventListener("message", evt->onReceiveMessageCallback((MessageEvent)evt));
-        receiveChannel.addEventListener("open", evt->onReceiveChannelStateChange());
-        receiveChannel.addEventListener("close", evt->onReceiveChannelStateChange());
+        receiveChannel = event.getChannel()
+            .onmessage(evt->onReceiveMessageCallback(evt))
+            .onopen(evt->onReceiveChannelStateChange())
+            .onclose(evt->onReceiveChannelStateChange());
         
     }
     

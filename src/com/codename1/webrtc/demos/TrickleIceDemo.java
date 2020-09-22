@@ -54,9 +54,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This sample was adapted from https://webrtc.github.io/samples/src/content/getusermedia/gum/
+ * This sample was adapted from https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/
  * 
- * The source for that sample is available at https://github.com/webrtc/samples/tree/gh-pages/src/content/getusermedia/gum
+ * The source for that sample is available at https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/trickle-ice/js/main.js
  * 
  * @author shannah
  */
@@ -259,12 +259,8 @@ public class TrickleIceDemo extends Form implements AutoCloseable {
         
         error.setText("");
         pc = rtc.newRTCPeerConnection(config);
-        pc.addEventListener("icecandidate", evt->{
-            iceCallback((RTCPeerConnectionIceEvent)evt);
-        });
-        pc.addEventListener("icegatheringstatechange", evt->{
-            gatheringStateChange(evt);
-        });
+        pc.onicecandidate(evt->iceCallback(evt));
+        pc.onicegatheringstatechange(evt->gatheringStateChange(evt));
         pc.addEventListener("icecandidateerror", evt->{
             iceCandidateError((RTCPeerConnectionIceErrorEvent)evt);
         });

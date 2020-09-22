@@ -34,8 +34,8 @@ import com.codename1.webrtc.RTCVideoElement;
 import java.util.Date;
 
 /**
- * This example is adapted from https://webrtc.github.io/samples/src/content/peerconnection/pc1/
- * https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/pc1/js/main.js
+ * This example is adapted from https://webrtc.github.io/samples/src/content/peerconnection/states/
+ * https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/states/js/main.js
  * @author shannah
  */
 public class PeerConnectionStatesDemo extends Form implements AutoCloseable {
@@ -120,10 +120,10 @@ public class PeerConnectionStatesDemo extends Form implements AutoCloseable {
             rtc.append(video1);
             rtc.append(video2);
             
-            video1.addEventListener("loadedmetadata", evt->{
+            video1.onloadedmetadata(evt->{
                 System.out.println("Local video videoWidth: "+video1.getVideoWidth()+"px,  videoHeight: "+video1.getVideoHeight()+"px");
             });
-            video2.addEventListener("loadedmetadata", evt->{
+            video2.onloadedmetadata(evt->{
                 System.out.println("Remote video size changed to "+video2.getVideoWidth()+"x"+video2.getVideoHeight());
                 if (startTime != null) {
                     long elapsedTime = System.currentTimeMillis() - startTime.getTime();
@@ -177,25 +177,25 @@ public class PeerConnectionStatesDemo extends Form implements AutoCloseable {
         pc1 = rtc.newRTCPeerConnection(servers);
         Log.p("Created local peer connection object pc1");
         pc1StateDiv.setText(pc1.getSignalingState()+"");
-        pc1.addEventListener("signalingstatechange", evt->stateCallback1());
+        pc1.onsignalingstatechange(evt->stateCallback1());
         
         pc1IceStateDiv.setText(pc1.getIceConnectionState()+"");
-        pc1.addEventListener("iceconnectionstatechange", evt->iceStateCallback1());
-        pc1.addEventListener("connectionstatechange", evt->connStateCallback1());
-        pc1.addEventListener("icecandidate", e->onIceCandidate(pc1, (RTCPeerConnectionIceEvent)e));
+        pc1.oniceconnectionstatechange(evt->iceStateCallback1())
+            .onconnectionstatechange(evt->connStateCallback1())
+            .onicecandidate(e->onIceCandidate(pc1, e));
 
         pc2 = rtc.newRTCPeerConnection(servers);
         Log.p("Created remote peer connection object pc2");
         pc2StateDiv.setText(pc2.getSignalingState()+"");
-        pc2.addEventListener("signalingstatechange", evt->stateCallback2());
+        pc2.onsignalingstatechange(evt->stateCallback2());
         
         pc2IceStateDiv.setText(pc2.getIceConnectionState()+"");
-        pc2.addEventListener("iceconnectionstatechange", evt->iceStateCallback2());
-        pc2.addEventListener("connectionstatechange", evt->connStateCallback2());
-        pc2.addEventListener("icecandidate", evt->{
-            onIceCandidate(pc2, (RTCPeerConnectionIceEvent)evt);
-        });
-        pc2.addEventListener("track", evt->gotRemoteStream((RTCTrackEvent)evt));
+        pc2.oniceconnectionstatechange(evt->iceStateCallback2())
+            .onconnectionstatechange(evt->connStateCallback2())
+            .onicecandidate(evt->{
+                onIceCandidate(pc2, evt);
+            });
+        pc2.ontrack(evt->gotRemoteStream(evt));
         for (MediaStreamTrack track : localStream.getTracks()) {
             pc1.addTrack(track, localStream);
         }

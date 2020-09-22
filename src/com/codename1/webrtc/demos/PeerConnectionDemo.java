@@ -90,10 +90,10 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
             rtc.append(localVideo);
             rtc.append(remoteVideo);
             
-            localVideo.addEventListener("loadedmetadata", evt->{
+            localVideo.onloadedmetadata(evt->{
                 System.out.println("Local video videoWidth: "+localVideo.getVideoWidth()+"px,  videoHeight: "+localVideo.getVideoHeight()+"px");
             });
-            remoteVideo.addEventListener("loadedmetadata", evt->{
+            remoteVideo.onloadedmetadata( evt->{
                 System.out.println("Remote video size changed to "+remoteVideo.getVideoWidth()+"x"+remoteVideo.getVideoHeight());
                 if (startTime != null) {
                     long elapsedTime = System.currentTimeMillis() - startTime.getTime();
@@ -139,7 +139,6 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     private void call() {
         callButton.setEnabled(false);
         hangupButton.setEnabled(true);
-        Log.p("[CALL] Starting call");
         startTime = new Date();
         MediaStreamTracks videoTracks = localStream.getVideoTracks();
         MediaStreamTracks audioTracks = localStream.getAudioTracks();
@@ -152,32 +151,29 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         RTCConfiguration configuration = new RTCConfiguration();
         pc1 = rtc.newRTCPeerConnection(configuration);
         System.out.println("Created local peer connection object pc1");
-        pc1.addEventListener("icecandidate", evt->{
-            RTCPeerConnectionIceEvent pevt = (RTCPeerConnectionIceEvent)evt;
+        pc1.onicecandidate(pevt->{
             String candidate = pevt.getCandidate() == null ? null : pevt.getCandidate().getCandidate();
             Log.p("[CALL] pc1.onicecandidate "+candidate);
-            onIceCandidate(pc1, (RTCPeerConnectionIceEvent)evt);
+            onIceCandidate(pc1, pevt);
         });
         pc2 = rtc.newRTCPeerConnection(configuration);
         System.out.println("Created remote peer connection object pc2");
-        pc2.addEventListener("icecandidate", evt->{
-            RTCPeerConnectionIceEvent pevt = (RTCPeerConnectionIceEvent)evt;
+        pc2.onicecandidate(pevt->{
             String candidate = pevt.getCandidate() == null ? null : pevt.getCandidate().getCandidate();
             Log.p("[CALL] pc2.onicecandidate "+candidate);
-            onIceCandidate(pc2, (RTCPeerConnectionIceEvent)evt);
+            onIceCandidate(pc2, pevt);
         });
-        pc1.addEventListener("iceconnectionstatechange", evt->{
+        pc1.oniceconnectionstatechange(evt->{
             Log.p("[CALL] pc1.oniceconnectionstatechange "+pc1.getIceConnectionState());
             onIceStateChange(pc1, evt);
         });
-        pc2.addEventListener("iceconnectionstatechange", evt->{
+        pc2.oniceconnectionstatechange(evt->{
             Log.p("[CALL] pc2.oniceconnectionstatechange "+pc2.getIceConnectionState());
             onIceStateChange(pc2, evt);
         });
-        pc2.addEventListener("track", evt->{
-            RTCTrackEvent revt = (RTCTrackEvent)evt;
+        pc2.ontrack(revt->{
             Log.p("[CALL] pc2.ontrack " + revt.getTrack().getId());
-            gotRemoteStream((RTCTrackEvent)evt);
+            gotRemoteStream(revt);
         });
         
         for (MediaStreamTrack track : localStream.getTracks()) {
@@ -318,7 +314,7 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
     private void onSetSessionDescriptionError(Throwable e) {
         System.out.println("Failed to set session description: "+e.getMessage());
     }
-
+    
     private void onAddIceCandidateSuccess(RTCPeerConnection pc) {
         System.out.println(getName(pc)+" addIceCandidate success");
     }

@@ -337,7 +337,6 @@ var cordova = {
      * Called by native code when returning the result from an action.
      */
     callbackFromNative: function (callbackId, isSuccess, status, args, keepCallback) {
-        console.log("callbackFromNative, callbackId="+callbackId+", args: ", args);
         try {
             var callback = cordova.callbacks[callbackId];
             if (callback) {
@@ -3063,7 +3062,6 @@ function MediaStreamRenderer(element) {
     function onResultOK(data) {
         onEvent.call(self, data);
     }
-    console.log("About to call new_MediaStreamRenderer", element, this);
     exec(onResultOK, null, 'iosrtcPlugin', 'new_MediaStreamRenderer', [this.id]);
 
     this.refresh();
@@ -3399,8 +3397,6 @@ MediaStreamRenderer.prototype.close = function () {
 function onEvent(data) {
     var type = data.type,
         event;
-
-        console.log("MediaStreamRenderer onEvent received", this, data);
     debug('onEvent() | [type:%s, data:%o]', type, data);
 
     switch (type) {
@@ -4986,9 +4982,6 @@ function onEvent(data) {
             event.channel = dataChannel;
             break;
     }
-    if (type.indexOf('ice') < 0) {
-        console.log("Dispatching event to all listeners of ", this, event);
-    }
     
     this.dispatchEvent(event);
 }
@@ -5888,7 +5881,6 @@ var
                 releaseMediaStreamRenderer(video);
                 continue;
             }
-            console.log("About to handle video in videoObserver", video);
             handleVideo(video);
         }
     }),
@@ -6103,7 +6095,6 @@ function observeVideo(video) {
 function handleVideo(video) {
     var
         stream;
-        console.log("In handleVideo", video, video.srcObject);
     // The app has set video.srcObject.
     if (video.srcObject) {
         stream = video.srcObject;
@@ -6115,7 +6106,6 @@ function handleVideo(video) {
 
                 return;
             }
-            console.log("Providing media stream renderer for video ", video, stream.getBlobId());
             provideMediaStreamRenderer(video, stream.getBlobId());
         }
     } else if (video.src) {
@@ -6165,7 +6155,6 @@ function provideMediaStreamRenderer(video, mediaStreamBlobId) {
     var
         mediaStream = mediaStreams[mediaStreamBlobId],
         mediaStreamRenderer = mediaStreamRenderers[video._iosrtcMediaStreamRendererId];
-        console.log("in provideMediaStreamRenderer: ", mediaStream, mediaStreamRenderer);
     if (!mediaStream) {
         releaseMediaStreamRenderer(video);
 
@@ -6180,7 +6169,6 @@ function provideMediaStreamRenderer(video, mediaStreamBlobId) {
 
         mediaStreamRenderers[mediaStreamRenderer.id] = mediaStreamRenderer;
         video._iosrtcMediaStreamRendererId = mediaStreamRenderer.id;
-        console.log("Assigning renderer to video: ", video, mediaStreamRenderer);
     }
 
     // Close the MediaStreamRenderer of this video if it emits "close" event.
@@ -6576,6 +6564,8 @@ function setup(env) {
         let prevTime;
 
         function debug(...args) {
+            if (!window.DEBUG) return; // DISABLING DEBUG
+            
             // Disabled?
             if (!debug.enabled) {
                 return;
@@ -7694,8 +7684,6 @@ function shimOnTrack(window) {
 }
 
 function shimGetSendersWithDtmf(window) {
-    _debug("in shimGetSendersWithDtmf debug");
-    console.log("In shimGetSendersWithDtmf");
   // Overrides addTrack/removeTrack, depends on shimAddTrackRemoveTrack.
   if ((typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object' && window.RTCPeerConnection && !('getSenders' in window.RTCPeerConnection.prototype) && 'createDTMFSender' in window.RTCPeerConnection.prototype) {
     var shimSenderWithDtmf = function shimSenderWithDtmf(pc, track) {
@@ -7721,16 +7709,13 @@ function shimGetSendersWithDtmf(window) {
         this._senders = this._senders || [];
         return this._senders.slice(); // return a copy of the internal state.
       };
-      _debug("Shimming addTrack in shimGetSendersWithDtmf");
       var origAddTrack = window.RTCPeerConnection.prototype.addTrack;
       window.RTCPeerConnection.prototype.addTrack = function addTrack(track, stream) {
-          console.log("shimGetSendersWithDtmf#addTrack");
         var sender = origAddTrack.apply(this, arguments);
         if (!sender) {
           sender = shimSenderWithDtmf(this, track);
           this._senders.push(sender);
         }
-        console.log("sender is ", sender);
         return sender;
       };
 
@@ -8126,7 +8111,6 @@ function shimAddTrackRemoveTrack(window) {
   };
     _debug("Shimming addTrack in shimAddRemoveTrack");
   window.RTCPeerConnection.prototype.addTrack = function addTrack(track, stream) {
-    console.log("In shimAddTrackRemoveTrack > addTrack");
     var _this13 = this;
 
     if (this.signalingState === 'closed') {
@@ -9739,7 +9723,6 @@ function shimLocalStreamsAPI(window) {
     };
     _debug("Shimming addTrack in shimLocalStreamsAPI");
     window.RTCPeerConnection.prototype.addTrack = function addTrack(track) {
-        console.log("In addTrack from localStreams shim");
       var _this2 = this;
 
       for (var _len = arguments.length, streams = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -10757,7 +10740,6 @@ module.exports = function(window, edgeVersion) {
   };
   _debug("Setting RTCPeerConnection.prototype.addTrack");
   RTCPeerConnection.prototype.addTrack = function(track, stream) {
-      console.log("In RTCPeerConnection.addTrack 10587")
     if (this._isClosed) {
       throw makeError('InvalidStateError',
           'Attempted to call addTrack on a closed peerconnection.');
@@ -13012,7 +12994,6 @@ if (typeof module === 'object') {
         function CN1InitializeRTC() {
         //document.addEventListener('deviceready', function () {
             // Just for iOS devices.
-            console.log('in deviceready webrtc callback');
             if (window.device.platform === 'iOS') {
                 window.webkitRTCPeerConnection = cordova.plugins.iosrtc.RTCPeerConnection;
                 cordova.plugins.iosrtc.registerGlobals();

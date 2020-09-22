@@ -11,23 +11,28 @@ The WebRTC API includes nearly 100 classes.  This project aims to provide Codena
 1. Create Java interfaces for all WebRTC interfaces.  **Complete**
 2. Port https://webrtc.github.io/samples/[WebRTC samples] one by one, implementing functionalities required for the samples to work, and fixing bugs as they appear.  **In progress**
 
-**So far we have ported the following 3 samples:**
+**So far we have ported the following samples:**
 
 . https://webrtc.github.io/samples/src/content/getusermedia/gum/[Basic getUserMedia demo].  https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/BasicDemo.java[View Ported Source]
 . https://webrtc.github.io/samples/src/content/getusermedia/resolution/[Choose camera resolution].  https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/ConstraintsDemo.java[View Ported Source]
 . https://webrtc.github.io/samples/src/content/peerconnection/pc1/[Basic PeerConnection Demo]. https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/PeerConnectionDemo.java[View Ported Source]
+. https://webrtc.github.io/samples/src/content/devices/input-output/[Select Devices Demo].  https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/InputOutputDemo.java[View Ported Source]
+. https://webrtc.github.io/samples/src/content/peerconnection/pc1/[Change Codecs Demo].  https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/ChangeCodecsDemo.java[View Ported Source]
+. https://webrtc.github.io/samples/src/content/peerconnection/munge-sdp/[Munge SDP Demo]. https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/MungeSdpDemo.java[View Ported Source]
+. https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/[Trickle-Ice Demo]. https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/TrickleIceDemo.java[View Ported Source]
+. https://webrtc.github.io/samples/src/content/peerconnection/states/[Peer Connection States Demo] . https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/PeerConnectionStatesDemo.java[View Ported Source]
 
 
 == Platform Support
 
 Eventually we will support iOS, Android, Javascript, Mac Desktop, Windows Desktop, and Simulator.
 
-Currently (July 27, 2020) it works on:
+Currently (September 27, 2020) it works on:
 
 . Android
 . Simulator  (https://www.codenameone.com/blog/big-changes-jcef.html[requires CEF to be installed])
 . Javascript (Desktop and Android Chrome)
-. iOS (experimental.  Some demos not working yet.)
+. iOS
 
 == Dependencies
 

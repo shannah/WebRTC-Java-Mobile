@@ -14,7 +14,7 @@ package com.codename1.webrtc;
  * @author shannah
  * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent
  */
-public interface RTCDataChannelEvent {
+public interface RTCDataChannelEvent extends Event {
 
     public RTCDataChannel getChannel();
 
