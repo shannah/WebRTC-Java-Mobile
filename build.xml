@@ -335,7 +335,7 @@
             vendor="${codename1.vendor}"
             subtitle="${codename1.secondaryTitle}"
             
-            targetType="android"
+            targetType="debug_android_steve"
             keystoreAlias="${codename1.android.keystoreAlias}"
             keystore="${codename1.android.keystore}"
             certPassword="${codename1.android.keystorePassword}"
