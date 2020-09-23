@@ -1,0 +1,446 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		656F7CD424D4654700165207 /* IosRtcPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 656F7CD224D4654700165207 /* IosRtcPlugin.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		656F7CEA24D4657E00165207 /* PluginUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CDA24D4657C00165207 /* PluginUtils.swift */; };
+		656F7CEB24D4657E00165207 /* PluginMediaStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CDB24D4657C00165207 /* PluginMediaStream.swift */; };
+		656F7CEC24D4657E00165207 /* PluginEnumerateDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CDC24D4657C00165207 /* PluginEnumerateDevices.swift */; };
+		656F7CED24D4657E00165207 /* iosrtcPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CDD24D4657C00165207 /* iosrtcPlugin.swift */; };
+		656F7CEE24D4657E00165207 /* PluginRTCPeerConnectionConstraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CDE24D4657D00165207 /* PluginRTCPeerConnectionConstraints.swift */; };
+		656F7CEF24D4657E00165207 /* PluginRTCDataChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CDF24D4657D00165207 /* PluginRTCDataChannel.swift */; };
+		656F7CF024D4657E00165207 /* PluginRTCPeerConnectionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE024D4657D00165207 /* PluginRTCPeerConnectionConfig.swift */; };
+		656F7CF124D4657E00165207 /* PluginMediaStreamTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE124D4657D00165207 /* PluginMediaStreamTrack.swift */; };
+		656F7CF224D4657E00165207 /* PluginRTCDTMFSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE224D4657D00165207 /* PluginRTCDTMFSender.swift */; };
+		656F7CF324D4657E00165207 /* PluginRTCAudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE324D4657D00165207 /* PluginRTCAudioController.swift */; };
+		656F7CF424D4657E00165207 /* PluginRTCPeerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE424D4657D00165207 /* PluginRTCPeerConnection.swift */; };
+		656F7CF524D4657E00165207 /* PluginRTCTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE524D4657D00165207 /* PluginRTCTypes.swift */; };
+		656F7CF624D4657E00165207 /* PluginGetUserMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE624D4657D00165207 /* PluginGetUserMedia.swift */; };
+		656F7CF824D4657E00165207 /* PluginRTCVideoCaptureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE824D4657D00165207 /* PluginRTCVideoCaptureController.swift */; };
+		656F7CF924D4657E00165207 /* PluginMediaStreamRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656F7CE924D4657E00165207 /* PluginMediaStreamRenderer.swift */; };
+		656F7CFC24D4660E00165207 /* WebRTC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 656F7CFB24D4660E00165207 /* WebRTC.framework */; };
+		656F7CFE24D470FD00165207 /* libCordova.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 656F7CFD24D470FD00165207 /* libCordova.a */; };
+		656F7D0424D4B2FE00165207 /* cordova-plugin-iosrtc-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 656F7D0324D4B2FE00165207 /* cordova-plugin-iosrtc-Bridging-Header.h */; };
+		656F7D0A24D9BC0C00165207 /* iosRtcPluginBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 656F7D0924D9BC0C00165207 /* iosRtcPluginBase.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		656F7CCF24D4654700165207 /* IosRtcPlugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = IosRtcPlugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		656F7CD224D4654700165207 /* IosRtcPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IosRtcPlugin.h; sourceTree = "<group>"; };
+		656F7CD324D4654700165207 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		656F7CDA24D4657C00165207 /* PluginUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginUtils.swift; sourceTree = "<group>"; };
+		656F7CDB24D4657C00165207 /* PluginMediaStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginMediaStream.swift; sourceTree = "<group>"; };
+		656F7CDC24D4657C00165207 /* PluginEnumerateDevices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginEnumerateDevices.swift; sourceTree = "<group>"; };
+		656F7CDD24D4657C00165207 /* iosrtcPlugin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = iosrtcPlugin.swift; sourceTree = "<group>"; };
+		656F7CDE24D4657D00165207 /* PluginRTCPeerConnectionConstraints.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCPeerConnectionConstraints.swift; sourceTree = "<group>"; };
+		656F7CDF24D4657D00165207 /* PluginRTCDataChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCDataChannel.swift; sourceTree = "<group>"; };
+		656F7CE024D4657D00165207 /* PluginRTCPeerConnectionConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCPeerConnectionConfig.swift; sourceTree = "<group>"; };
+		656F7CE124D4657D00165207 /* PluginMediaStreamTrack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginMediaStreamTrack.swift; sourceTree = "<group>"; };
+		656F7CE224D4657D00165207 /* PluginRTCDTMFSender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCDTMFSender.swift; sourceTree = "<group>"; };
+		656F7CE324D4657D00165207 /* PluginRTCAudioController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCAudioController.swift; sourceTree = "<group>"; };
+		656F7CE424D4657D00165207 /* PluginRTCPeerConnection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCPeerConnection.swift; sourceTree = "<group>"; };
+		656F7CE524D4657D00165207 /* PluginRTCTypes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCTypes.swift; sourceTree = "<group>"; };
+		656F7CE624D4657D00165207 /* PluginGetUserMedia.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginGetUserMedia.swift; sourceTree = "<group>"; };
+		656F7CE824D4657D00165207 /* PluginRTCVideoCaptureController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginRTCVideoCaptureController.swift; sourceTree = "<group>"; };
+		656F7CE924D4657E00165207 /* PluginMediaStreamRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginMediaStreamRenderer.swift; sourceTree = "<group>"; };
+		656F7CFB24D4660E00165207 /* WebRTC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebRTC.framework; path = IosRtcPlugin/WebRTC.framework; sourceTree = "<group>"; };
+		656F7CFD24D470FD00165207 /* libCordova.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCordova.a; path = IosRtcPlugin/libCordova.a; sourceTree = "<group>"; };
+		656F7D0324D4B2FE00165207 /* cordova-plugin-iosrtc-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "cordova-plugin-iosrtc-Bridging-Header.h"; sourceTree = "<group>"; };
+		656F7D0924D9BC0C00165207 /* iosRtcPluginBase.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iosRtcPluginBase.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		656F7CCC24D4654700165207 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				656F7CFE24D470FD00165207 /* libCordova.a in Frameworks */,
+				656F7CFC24D4660E00165207 /* WebRTC.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		656F7CC524D4654700165207 = {
+			isa = PBXGroup;
+			children = (
+				656F7CD124D4654700165207 /* IosRtcPlugin */,
+				656F7CD024D4654700165207 /* Products */,
+				656F7CFA24D4660E00165207 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		656F7CD024D4654700165207 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				656F7CCF24D4654700165207 /* IosRtcPlugin.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		656F7CD124D4654700165207 /* IosRtcPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				656F7D0324D4B2FE00165207 /* cordova-plugin-iosrtc-Bridging-Header.h */,
+				656F7CDD24D4657C00165207 /* iosrtcPlugin.swift */,
+				656F7CDC24D4657C00165207 /* PluginEnumerateDevices.swift */,
+				656F7CE624D4657D00165207 /* PluginGetUserMedia.swift */,
+				656F7CDB24D4657C00165207 /* PluginMediaStream.swift */,
+				656F7CE924D4657E00165207 /* PluginMediaStreamRenderer.swift */,
+				656F7CE124D4657D00165207 /* PluginMediaStreamTrack.swift */,
+				656F7CE324D4657D00165207 /* PluginRTCAudioController.swift */,
+				656F7CDF24D4657D00165207 /* PluginRTCDataChannel.swift */,
+				656F7CE224D4657D00165207 /* PluginRTCDTMFSender.swift */,
+				656F7CE424D4657D00165207 /* PluginRTCPeerConnection.swift */,
+				656F7CE024D4657D00165207 /* PluginRTCPeerConnectionConfig.swift */,
+				656F7CDE24D4657D00165207 /* PluginRTCPeerConnectionConstraints.swift */,
+				656F7CE524D4657D00165207 /* PluginRTCTypes.swift */,
+				656F7CE824D4657D00165207 /* PluginRTCVideoCaptureController.swift */,
+				656F7CDA24D4657C00165207 /* PluginUtils.swift */,
+				656F7CD224D4654700165207 /* IosRtcPlugin.h */,
+				656F7CD324D4654700165207 /* Info.plist */,
+				656F7D0924D9BC0C00165207 /* iosRtcPluginBase.m */,
+			);
+			path = IosRtcPlugin;
+			sourceTree = "<group>";
+		};
+		656F7CFA24D4660E00165207 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				656F7CFD24D470FD00165207 /* libCordova.a */,
+				656F7CFB24D4660E00165207 /* WebRTC.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		656F7CCA24D4654700165207 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				656F7CD424D4654700165207 /* IosRtcPlugin.h in Headers */,
+				656F7D0424D4B2FE00165207 /* cordova-plugin-iosrtc-Bridging-Header.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		656F7CCE24D4654700165207 /* IosRtcPlugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 656F7CD724D4654700165207 /* Build configuration list for PBXNativeTarget "IosRtcPlugin" */;
+			buildPhases = (
+				656F7CCA24D4654700165207 /* Headers */,
+				656F7CCB24D4654700165207 /* Sources */,
+				656F7CCC24D4654700165207 /* Frameworks */,
+				656F7CCD24D4654700165207 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IosRtcPlugin;
+			productName = IosRtcPlugin;
+			productReference = 656F7CCF24D4654700165207 /* IosRtcPlugin.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		656F7CC624D4654700165207 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1140;
+				ORGANIZATIONNAME = "Steve Hannah";
+				TargetAttributes = {
+					656F7CCE24D4654700165207 = {
+						CreatedOnToolsVersion = 11.4.1;
+						LastSwiftMigration = 1140;
+					};
+				};
+			};
+			buildConfigurationList = 656F7CC924D4654700165207 /* Build configuration list for PBXProject "IosRtcPlugin" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 656F7CC524D4654700165207;
+			productRefGroup = 656F7CD024D4654700165207 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				656F7CCE24D4654700165207 /* IosRtcPlugin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		656F7CCD24D4654700165207 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		656F7CCB24D4654700165207 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				656F7CF924D4657E00165207 /* PluginMediaStreamRenderer.swift in Sources */,
+				656F7CF524D4657E00165207 /* PluginRTCTypes.swift in Sources */,
+				656F7CF624D4657E00165207 /* PluginGetUserMedia.swift in Sources */,
+				656F7CF224D4657E00165207 /* PluginRTCDTMFSender.swift in Sources */,
+				656F7CED24D4657E00165207 /* iosrtcPlugin.swift in Sources */,
+				656F7CEE24D4657E00165207 /* PluginRTCPeerConnectionConstraints.swift in Sources */,
+				656F7CEF24D4657E00165207 /* PluginRTCDataChannel.swift in Sources */,
+				656F7CEA24D4657E00165207 /* PluginUtils.swift in Sources */,
+				656F7CF324D4657E00165207 /* PluginRTCAudioController.swift in Sources */,
+				656F7CEB24D4657E00165207 /* PluginMediaStream.swift in Sources */,
+				656F7CF424D4657E00165207 /* PluginRTCPeerConnection.swift in Sources */,
+				656F7D0A24D9BC0C00165207 /* iosRtcPluginBase.m in Sources */,
+				656F7CF024D4657E00165207 /* PluginRTCPeerConnectionConfig.swift in Sources */,
+				656F7CF824D4657E00165207 /* PluginRTCVideoCaptureController.swift in Sources */,
+				656F7CEC24D4657E00165207 /* PluginEnumerateDevices.swift in Sources */,
+				656F7CF124D4657E00165207 /* PluginMediaStreamTrack.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		656F7CD524D4654700165207 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		656F7CD624D4654700165207 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		656F7CD824D4654700165207 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = HRNMHC7527;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/IosRtcPlugin",
+				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/IosRtcPlugin/include";
+				INFOPLIST_FILE = IosRtcPlugin/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/IosRtcPlugin",
+				);
+				OTHER_SWIFT_FLAGS = "-Xcc -Wno-error=non-modular-include-in-framework-module";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.weblite.IosRtcPlugin;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				STRIP_SWIFT_SYMBOLS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		656F7CD924D4654700165207 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = HRNMHC7527;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/IosRtcPlugin",
+				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/IosRtcPlugin/include";
+				INFOPLIST_FILE = IosRtcPlugin/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/IosRtcPlugin",
+				);
+				OTHER_SWIFT_FLAGS = "-Xcc -Wno-error=non-modular-include-in-framework-module";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.weblite.IosRtcPlugin;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				STRIP_SWIFT_SYMBOLS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		656F7CC924D4654700165207 /* Build configuration list for PBXProject "IosRtcPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				656F7CD524D4654700165207 /* Debug */,
+				656F7CD624D4654700165207 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		656F7CD724D4654700165207 /* Build configuration list for PBXNativeTarget "IosRtcPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				656F7CD824D4654700165207 /* Debug */,
+				656F7CD924D4654700165207 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 656F7CC624D4654700165207 /* Project object */;
+}
