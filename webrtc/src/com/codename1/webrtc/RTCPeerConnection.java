@@ -96,9 +96,16 @@ public interface RTCPeerConnection extends EventTarget, RefCounted {
      */
     public static final String EVENT_TRACK = "track";
     
+    public static final String EVENT_REMOVETRACK = "removetrack";
+    
     public RTCPeerConnection addTrackListener(RTCTrackEventListener l);
     public RTCPeerConnection removeTrackListener(RTCTrackEventListener l);
     public RTCPeerConnection ontrack(RTCTrackEventListener l);
+    
+    public RTCPeerConnection addRemoveTrackListener(RTCTrackEventListener l);
+    public RTCPeerConnection removeRemoveTrackListener(RTCTrackEventListener l);
+    
+    public RTCPeerConnection onremovetrack(RTCTrackEventListener l);
     
     public RTCPeerConnection addSignalingStateChangeListener(RTCSignalingStateChangeEventListener l);
     public RTCPeerConnection removeSignalingStateChangeListener(RTCSignalingStateChangeEventListener l);

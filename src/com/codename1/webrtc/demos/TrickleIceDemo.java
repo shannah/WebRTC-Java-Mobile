@@ -511,7 +511,7 @@ public class TrickleIceDemo extends Form implements AutoCloseable {
         
         
         
-        RTC.createRTC().ready(rtc->{
+        RTC.createRTC().onSuccess(rtc->{
             this.rtc = rtc;
             onReady();
             revalidateWithAnimationSafety();

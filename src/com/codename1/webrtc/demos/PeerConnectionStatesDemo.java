@@ -107,7 +107,7 @@ public class PeerConnectionStatesDemo extends Form implements AutoCloseable {
         center.setScrollableY(true);
         
         add(BorderLayout.CENTER, center);
-        RTC.createRTC().ready(r->{
+        RTC.createRTC().onSuccess(r->{
             rtc = r;
             video1 = rtc.createVideo();
             video1.setAutoplay(true);

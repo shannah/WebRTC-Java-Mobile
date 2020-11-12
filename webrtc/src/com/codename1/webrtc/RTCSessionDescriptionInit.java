@@ -6,6 +6,7 @@
 package com.codename1.webrtc;
 
 import com.codename1.processing.Result;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -46,7 +47,7 @@ public class RTCSessionDescriptionInit implements RTCSessionDescription {
 
     @Override
     public Object toJSONStruct() {
-        Map out = new LinkedHashMap();
+        Map out = new HashMap();
         if (type != null) {
             out.put("type", type.stringValue());
         }

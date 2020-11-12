@@ -34,7 +34,7 @@ public class BasicDemo extends Form implements AutoCloseable {
         FontImage.setMaterialIcon(viewSource, FontImage.MATERIAL_LINK);
         viewSource.addActionListener(evt->CN.execute("https://github.com/shannah/CN1WebRTC/blob/master/src/com/codename1/webrtc/demos/BasicDemo.java"));
         hi.add(BorderLayout.NORTH, BoxLayout.encloseY(new SpanLabel(intro), viewSource));
-        RTC.createRTC().ready(rtc->{
+        RTC.createRTC().onSuccess(rtc->{
             this.rtc = rtc;
             MediaStreamConstraints constraints = new MediaStreamConstraints()
                     .audio()

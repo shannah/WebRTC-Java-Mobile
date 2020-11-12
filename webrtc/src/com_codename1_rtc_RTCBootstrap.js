@@ -48,22 +48,32 @@ var f =function() {
 
     function addEventListener(o, type_) {
         var type = Array.isArray(type_) ? type_[0] : type_;
-
-
-        o.addEventListener(type, function(e) {
-            if (window.cn1Callback) {
-                var data = {
-                    target: registry.id(o),
-                    type: type
-                };
-                if (Array.isArray(type_)) {
-                    for (key in type_[1]) {
-                        data[key] = type_[1][key](o, e);
+        var typeNames = [type];
+        if (type.indexOf(',') > 0) {
+            typeNames = type.split(',');
+        }
+        typeNames.forEach(function(type) {
+            o.addEventListener(type, function(e) {
+                if (window.cn1Callback) {
+                    var data = {
+                        target: registry.id(o),
+                        type: type
+                    };
+                    if (Array.isArray(type_)) {
+                        for (key in type_[1]) {
+                            data[key] = type_[1][key](o, e);
+                        }
                     }
+                    if (o instanceof RTCPeerConnection) {
+                        if (!data.connectionState) {
+                            data.connectionState = o.connectionState;
+                        }
+                    }
+                    window.cn1Callback(data);
                 }
-                window.cn1Callback(data);
-            }
+            });
         });
+        
     }
 
 
@@ -328,8 +338,13 @@ var f =function() {
                 addEventListener(o, type);
             });
         } else if (o instanceof RTCPeerConnection) {
-            [['connectionstatechange', {connectionState:function(el){return el.connectionState;}}],
-                ['datachannel', {
+            [
+                ['connectionstatechange', {
+                        connectionState:function(el){
+                            return el.connectionState;
+                        }
+                    }
+                ], ['datachannel', {
                     //https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent
                      refId : function(el, e) {
                         registry.retain(e);
@@ -359,7 +374,7 @@ var f =function() {
                 ['signalingstatechange', {
                         signalingState : function(el, e) { return el.signalingState;}
                 }],
-                ['track', {
+                ['track,removetrack', {
                         // https://developer.mozilla.org/en-US/docs/Web/API/RTCTrackEvent
                         refId : function(el,e) {
                             registry.retain(e);
@@ -474,8 +489,8 @@ var f =function() {
                 if (o._cn1.id) {
                     if (--o._cn1.count == 0) {
                         var id = o._cn1.id;
-                        delete o._cn1;
-                        delete registry[id];
+                        //delete o._cn1;
+                        //delete registry[id];
 
                     }
                     return;

@@ -77,7 +77,7 @@ public class PeerConnectionDemo extends Form implements AutoCloseable {
         add(BorderLayout.NORTH, BoxLayout.encloseY(new SpanLabel(intro), viewSource));
         
         add(BorderLayout.SOUTH, FlowLayout.encloseCenter(startButton, callButton, hangupButton));
-        RTC.createRTC().ready(r->{
+        RTC.createRTC().onSuccess(r->{
             rtc = r;
             localVideo = rtc.createVideo();
             localVideo.setAutoplay(true);

@@ -230,7 +230,7 @@ public class ConstraintsDemo extends Form implements AutoCloseable {
         add(BorderLayout.CENTER, center);
         
         
-        RTC.createRTC().ready(rtc_->{
+        RTC.createRTC().onSuccess(rtc_->{
             rtc = rtc_;
             videoblock = rtc.getVideoComponent();
             center.add(videoblock);

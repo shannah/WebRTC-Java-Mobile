@@ -18,10 +18,13 @@ import com.codename1.ui.layouts.GridLayout;
 import com.codename1.webrtc.demos.BasicDemo;
 import com.codename1.webrtc.demos.ChangeCodecsDemo;
 import com.codename1.webrtc.demos.ConstraintsDemo;
+import com.codename1.webrtc.demos.ImportStreamDemo;
 import com.codename1.webrtc.demos.InputOutputDemo;
 import com.codename1.webrtc.demos.MungeSdpDemo;
 import com.codename1.webrtc.demos.PeerConnectionDemo;
 import com.codename1.webrtc.demos.PeerConnectionStatesDemo;
+import com.codename1.webrtc.demos.RTCClientDemo;
+import com.codename1.webrtc.demos.RTCVideoContainerDemo;
 import com.codename1.webrtc.demos.TrickleIceDemo;
 
 /**
@@ -124,6 +127,20 @@ public class WebRTCDemo {
         statesDemo.addActionListener(evt->{
             prepareDemo(new PeerConnectionStatesDemo()).show();
         });
+        
+        Button importStreamDemo = new Button("ImportStream Demo");
+        importStreamDemo.addActionListener(evt->{
+            prepareDemo(new ImportStreamDemo()).show();
+        });
+        Button videoContainerDemo = new Button("RTCVideoContainer Demo");
+        videoContainerDemo.addActionListener(evt->{
+            prepareDemo(new RTCVideoContainerDemo()).show();
+        });
+        
+        Button clientDemo = new Button("Client Demo");
+        clientDemo.addActionListener(evt->{
+            prepareDemo(new RTCClientDemo()).show();
+        });
         hi.addAll(
                 basicDemo, 
                 constraintsDemo, 
@@ -132,7 +149,10 @@ public class WebRTCDemo {
                 codecsDemo, 
                 mungeSdpDemo, 
                 trickleIceDemo, 
-                statesDemo
+                statesDemo,
+                importStreamDemo,
+                videoContainerDemo,
+                clientDemo
         );
         
         

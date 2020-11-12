@@ -109,7 +109,7 @@ public class ChangeCodecsDemo extends Form implements AutoCloseable {
                 FlowLayout.encloseCenter(startButton, callButton, hangupButton),
                 FlowLayout.encloseIn(new Label("Codec preferences: "), codecPreferences)
         ));
-        RTC.createRTC().ready(r->{
+        RTC.createRTC().onSuccess(r->{
             rtc = r;
             localVideo = rtc.createVideo();
             localVideo.setAutoplay(true);

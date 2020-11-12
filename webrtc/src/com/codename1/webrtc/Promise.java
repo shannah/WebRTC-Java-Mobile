@@ -5,7 +5,10 @@
  */
 package com.codename1.webrtc;
 
+import com.codename1.io.Util;
 import com.codename1.ui.CN;
+import static com.codename1.ui.CN.invokeAndBlock;
+import com.codename1.util.AsyncResource;
 import com.codename1.util.SuccessCallback;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,7 +44,8 @@ public class Promise<T> {
     private State state = State.Pending;
     private Throwable error;
     private T value;
-    
+
+   
     private class PromiseHandler {
         private Promise promise;
         private Functor resolve;
@@ -374,5 +378,77 @@ public class Promise<T> {
         });
     }
     
+    /**
+     * Uses invokeAndBlock to wait for this promise to be either resolved or rejected.
+     * This will throw an exception of type {@link AsyncResource.AsyncExecutionException} if the 
+     * promise failed.  Otherwise it will return the resolved value.
+     * @return 
+     */
+    public T await() {
+        boolean[] complete = new boolean[1];
+        Object[] out = new Object[1];
+        Throwable[] ex = new Throwable[1];
+        this.onSuccess(res->{
+            synchronized(complete) {
+                out[0] = res;
+                complete[0] = true;
+                complete.notifyAll();
+            }
+        }).onFail(res->{
+            synchronized(complete) {
+                ex[0] = (Throwable)res;
+                complete[0] = true;
+                complete.notifyAll();
+                
+            }
+        });
+        
+        while (!complete[0]) {
+            invokeAndBlock(()->{
+                synchronized(complete) {
+                    Util.wait(complete, 500);
+                }
+            });
+        }
+        if (ex[0] != null) {
+            throw new AsyncResource.AsyncExecutionException((Throwable)ex[0]);
+        }
+        return (T)out[0];
+    }
+    
+    public static <V> Promise<V> resolve(V value) {
+        return new Promise<>((resolutionFunc, rejectionFunc) -> {
+            resolutionFunc.call(value);
+        });
+    }
+    
+    public static Promise reject(Throwable err) {
+        return new Promise((resolve, reject) -> {
+            reject(err);
+        });
+    }
+    
+    public static <V> Promise<V> promisify(AsyncResource<V> res) {
+        return new Promise<V>((resolutionFunc, rejectionFunc) -> {
+            res.onResult((r, err) -> {
+                if (err != null) {
+                    rejectionFunc.call(err);
+                } else {
+                    resolutionFunc.call(r);
+                }
+            });
+        });
+    }
+    
+    public AsyncResource<T> asAsyncResource() {
+        AsyncResource<T> out = new AsyncResource<T>();
+        this.onSuccess(res->{
+            out.complete(res);
+        });
+        this.onFail(err->{
+            out.error(err);
+        });
+        return out;
+    }
     
 }

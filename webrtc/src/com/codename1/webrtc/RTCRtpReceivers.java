@@ -10,5 +10,17 @@ package com.codename1.webrtc;
  * @author shannah
  */
 public class RTCRtpReceivers extends RTCList<RTCRtpReceiver> {
-    
+    public RTCRtpReceiver removeById(String id) {
+        RTCRtpReceiver found = null;
+        for (RTCRtpReceiver r : this) {
+            if (id.equals(r.getTrack().getId())) {
+                found = r;
+                break;
+            }
+        }
+        if (found != null) {
+            remove(found);
+        }
+        return found;
+    }
 }

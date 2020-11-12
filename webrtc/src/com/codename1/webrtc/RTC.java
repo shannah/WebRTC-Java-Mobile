@@ -105,6 +105,7 @@ public class RTC implements AutoCloseable {
     private static boolean audioPermission, videoPermission;
     private static Map<String,Runnable> callbacks = new HashMap<String,Runnable>();
     private RTCRtpCapabilities senderAudioCapabilities, senderVideoCapabilities, receiverAudioCapabilities, receiverVideoCapabilities;
+    private List<RTCElement> elements = new ArrayList<>();
     
     /**
      * Internal callback function used by Native interface.  Do not use.
@@ -123,6 +124,90 @@ public class RTC implements AutoCloseable {
                 callback.run();
             }
         });
+    }
+    
+    public static RTC getRTC(MediaStream stream) {
+        if (stream instanceof MediaStreamImpl) {
+            MediaStreamImpl i = (MediaStreamImpl)stream;
+            return i.rtc;
+        }
+        
+        return null;
+    }
+    
+    public static RTC getRTC(RTCPeerConnection pc) {
+        if (pc instanceof RTCPeerConnectionImpl) {
+            RTCPeerConnectionImpl pci = (RTCPeerConnectionImpl)pc;
+            return pci.rtc;
+        }
+        return null;
+    }
+    
+    
+    /**
+     * Imports a MediaStream from another RTC instance into this instance.  This will
+     * allow you to more easily communicate between RTC instances.
+     * @param stream  The stream to import
+     * @return Promise that resolves to the imported stream.  If the given stream is part of this
+     * RTC instance, then it will resolve immediately with the same stream that was provided.  If not
+     * it will create an RTCPeerConnection to connect the instances get a new stream via that connection.
+     */
+    public Promise<MediaStream> importStream(MediaStream stream) {
+        AsyncResource<MediaStream> out = new AsyncResource<MediaStream>();
+        RTC rtc = getRTC(stream);
+        if (rtc == this) {
+            out.complete(stream);
+        } else {
+            RTCPeerConnection externalPC = rtc.newRTCPeerConnection(new RTCConfiguration());
+            RTCPeerConnection internalPC = newRTCPeerConnection(new RTCConfiguration());
+            
+            externalPC.onicecandidate(evt->{
+                
+                internalPC.addIceCandidate(evt.getCandidate());
+            });
+            internalPC.onicecandidate(evt->{
+                externalPC.addIceCandidate(evt.getCandidate());
+            });
+            internalPC.ontrack(evt->{
+                if (!out.isDone()) {
+                    out.complete(evt.getStreams().get(0));
+                }
+            });
+            
+            for (MediaStreamTrack track : stream.getTracks()) {
+                externalPC.addTrack(track, stream);
+            }
+            
+            externalPC.createOffer(new RTCPeerConnection.RTCOfferOptions()
+                .offerToReceiveAudio(true)
+                .offerToReceiveVideo(true)).then(desc->{
+                    Promise p1 = externalPC.setLocalDescription(desc);
+                    Promise p2 = internalPC.setRemoteDescription(desc);
+                    return Promise.all(p1, p2);
+                }).then(res->{
+                    return internalPC.createAnswer();
+                    
+                }).then(res->{
+                    RTCSessionDescription desc = (RTCSessionDescription)res;
+                    internalPC.setLocalDescription(desc);
+                    externalPC.setRemoteDescription(desc);
+                    return null;
+                }).except(err->{
+                    out.error((Throwable)err);
+                    return null;
+                });
+        
+       
+        }
+        
+        return Promise.promisify(out);
+    }
+    
+    public RTCSessionDescription createSessionDescription(RTCSessionDescription.RTCSdpType type, String sdp) {
+        Map m = new HashMap();
+        m.put("type", type.stringValue());
+        m.put("sdp", sdp);
+        return new RTCSessionDescriptionImpl(m);
     }
     
     /**
@@ -203,7 +288,7 @@ public class RTC implements AutoCloseable {
      * Creates a new RTC object.
      * @return Promise that resolves to the resulting {@link RTC} object.
      */
-    public static AsyncResource<RTC> createRTC() {
+    public static Promise<RTC> createRTC() {
         return createRTC("", "");
     }
     
@@ -214,8 +299,8 @@ public class RTC implements AutoCloseable {
      * @param css CSS styles to inject into a `<style>` tag in the `<head>` of the page.
      * @return Promise that resolves to the resulting {@link RTC} object.
      */
-    public static AsyncResource<RTC> createRTC(String htmlBody, String css) {
-        return new RTC(htmlBody, css).async;
+    public static Promise<RTC> createRTC(String htmlBody, String css) {
+        return Promise.promisify(new RTC(htmlBody, css).async);
     }
     
     private void init(String htmlBody, String css) {
@@ -264,7 +349,7 @@ public class RTC implements AutoCloseable {
                             evt = new RTCPeerConnectionIceEventImpl(eventType, data);
                         } else if (eventType.equals("icecandidateerror")) {
                             evt = new RTCPeerConnectionIceErrorEventImpl(data);
-                        } else if (eventType.equals("track")) {
+                        } else if (eventType.equals("track") || eventType.equals("removetrack")) {
                             evt = new RTCTrackEventImpl(data);
                         } else if (eventType.equals("error")) {
                             evt = new ErrorEventImpl(data);
@@ -1213,7 +1298,7 @@ public class RTC implements AutoCloseable {
             
             sender = new RTCRtpSenderImpl((Map)w.get("sender", null));
             receiver = new RTCRtpReceiverImpl((Map)w.get("receiver", null));
-            
+            /*
             poller = CN.setInterval(1000, ()->{
                 web.execute("var t = registry.get(${0}); if (t) callback.onSuccess(t.currentDirection) else callback.onSuccess(null)", new Object[]{refId}, res->{
                     String dir = res.getValue();
@@ -1235,6 +1320,7 @@ public class RTC implements AutoCloseable {
                     }
                 });
             });
+            */
         }
 
         @Override
@@ -1611,8 +1697,8 @@ public class RTC implements AutoCloseable {
             }
             count--;
             if (count == 0) {
-                dealloc();
-                registry.remove(refId);
+                //dealloc();
+                //registry.remove(refId);
             }
             web.execute("registry.release(${0})", new Object[]{refId});
             
@@ -1648,7 +1734,7 @@ public class RTC implements AutoCloseable {
         private ReadyState readyState;
         private EventSupport es = new EventSupport(this);
         private MediaStreamTracks tracks=new MediaStreamTracks();
-                
+        private RTC rtc=RTC.this;     
                 
         
         
@@ -1659,17 +1745,28 @@ public class RTC implements AutoCloseable {
 
         @Override
         public boolean isActive() {
-            return active;
+            for (MediaStreamTrack track : tracks) {
+                if (track.getReadyState() == MediaStreamTrack.ReadyState.Live) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         @Override
         public boolean isEnded() {
-            return ended;
+            return getReadyState() == ReadyState.Ended;
         }
 
         @Override
         public ReadyState getReadyState() {
-            return readyState;
+            
+            for (MediaStreamTrack track : tracks) {
+                if (track.getReadyState() == MediaStreamTrack.ReadyState.Live) {
+                    return ReadyState.Live;
+                }
+            }
+            return tracks.size() > 0 ? ReadyState.Ended : ReadyState.Live;
         }
 
         @Override
@@ -1781,7 +1878,9 @@ public class RTC implements AutoCloseable {
             }
         }
         
-        
+        public RTC getRTC() {
+            return RTC.this;
+        }
         
     }
     
@@ -3221,14 +3320,32 @@ public class RTC implements AutoCloseable {
         if (el instanceof RefCounted) {
             RefCountedImpl ref = (RefCountedImpl)el;
             web.execute("document.body.appendChild(registry.get(${0}))", new Object[]{ref.getRefId()});
+            elements.add(el);
         }
+    }
+    
+    public RTCMediaElement findElementForStream(MediaStream stream) {
+        for (RTCElement el : elements) {
+            if (el instanceof RTCMediaElement) {
+                RTCMediaElement mel = (RTCMediaElement)el;
+                if (mel.getSrcObject() == stream) {
+                    return mel;
+                }
+                
+            }
+        }
+        return null;
     }
     
     
     private class RTCPeerConnectionImpl extends RefCountedImpl implements RTCPeerConnection {
-
+        
+        private void debug(String message) {
+            Log.p("[RTCPeerConnectionImpl] "+message, Log.DEBUG);
+        }
+        private RTC rtc=RTC.this;  
         private boolean canTrickleIceCandidates;
-        private RTCPeerConnectionState connectionState;
+        private RTCPeerConnectionState connectionState = RTCPeerConnectionState.New;
         private RTCSessionDescription currentLocalDescription, 
                 currentRemoteDescription, 
                 localDescription, 
@@ -3237,14 +3354,14 @@ public class RTC implements AutoCloseable {
                 pendingRemoteDescription;
         
        
-        private RTCIceConnectionState iceConnectionState;
-        private RTCIceGatheringState iceGatheringState;
+        private RTCIceConnectionState iceConnectionState = RTCIceConnectionState.New;
+        private RTCIceGatheringState iceGatheringState = RTCIceGatheringState.New;
         private RTCIdentityAssertion peerIdentity;
         private RTCSctpTransport sctp;
         private RTCSignalingState signalingState;
         
-        private RTCRtpReceivers receivers;
-        private RTCRtpSenders senders;
+        private RTCRtpReceivers receivers = new RTCRtpReceivers();
+        private RTCRtpSenders senders = new RTCRtpSenders();
         private EventSupport es = new EventSupport(this);
 
         @Override
@@ -3402,8 +3519,9 @@ public class RTC implements AutoCloseable {
                     
                     if (senders == null) {
                         senders = new RTCRtpSenders();
-                        senders.add(sender);
+                        
                     }
+                    senders.add(sender);
                     sender.fireReady();
                     
                 } catch (Throwable ex) {
@@ -3433,10 +3551,11 @@ public class RTC implements AutoCloseable {
             web.execute("registry.get(${0}).close()", new Object[]{getRefId()});
             if (receivers != null) {
                 receivers.clear();
-                receivers = null;
+                
             }
             if (senders != null) {
                 senders.clear();
+                
             }
             connectionState = RTCPeerConnectionState.Closed;
             signalingState = RTCSignalingState.Closed;
@@ -3553,7 +3672,14 @@ public class RTC implements AutoCloseable {
 
         @Override
         public void removeTrack(RTCRtpSender sender) {
-            throw new RuntimeException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            if (senders == null) {
+                return;
+            }
+            RTCRtpSender removed = senders.removeById(sender.getTrack().getId());
+            
+            web.execute("var conn = registry.get(${0}); var sender = conn.getSenders().find(s => s.track.id === ${1}); if (sender) conn.removeTrack(sender);",
+                    new Object[]{getRefId(), sender.getTrack().getId()});
+            
         }
 
         @Override
@@ -3580,6 +3706,7 @@ public class RTC implements AutoCloseable {
 
         @Override
         public Promise setLocalDescription(RTCSessionDescription sessionDescription) {
+            debug("setLocalDescription("+sessionDescription.toJSON()+")");
             return new Promise((resolve, reject) -> {
                 execute("var conn = registry.get(${0}); conn.setLocalDescription("+sessionDescription.toJSON()+").then(function(res) {"
                     + "  callback.onSuccess(null);"
@@ -3599,6 +3726,7 @@ public class RTC implements AutoCloseable {
 
         @Override
         public Promise setRemoteDescription(RTCSessionDescription sessionDescription) {
+            debug("setRemoteDescription("+sessionDescription.toJSON()+")");
             return new Promise((resolve, reject) -> {
                 execute("var conn = registry.get(${0}); conn.setRemoteDescription("+sessionDescription.toJSON()+").then(function(res) {"
                     + "  callback.onSuccess(null);"
@@ -3631,6 +3759,27 @@ public class RTC implements AutoCloseable {
         public boolean dispatchEvent(Event evt) {
             return es.dispatchEvent(evt);
         }
+        
+        private void setConnectionState(Map data) {
+            if (data.containsKey("connectionState")) {
+                setConnectionState((String)data.get("connectionState"));
+            }
+        }
+        
+        private void setConnectionState(String stateStr) {
+            for (RTCPeerConnectionState state : RTCPeerConnectionState.values()) {
+                if (state.matches(stateStr)) {
+                    if (connectionState != state) {
+                        connectionState = state;
+                        Map data = new HashMap();
+                        data.put("connectionState", stateStr);
+                        es.dispatchEvent(new EventImpl("connectionstatechange", data));
+                    }
+
+                    break;
+                }
+            }
+        }
 
         public RTCPeerConnectionImpl(RTCConfiguration configuration) {
             String strConfiguration = configuration == null ? null :
@@ -3638,6 +3787,18 @@ public class RTC implements AutoCloseable {
             init(Util.getUUID(), "new RTCPeerConnection("+strConfiguration+")");
             
             retain();
+            execute("var conn = registry.get(${0}); callback.onSuccess(conn.connectionState);", new Object[]{
+                getRefId()
+            }, (res, err) -> {
+                if (err != null) {
+                    Log.e(err);
+                    return;
+                }
+                String stateStr = res.toString();
+                
+                setConnectionState(stateStr);
+                
+            });
             addEventListener("connectionstatechange", evt-> {
                 EventImpl e = (EventImpl)evt;
                 String stateStr = (String)e.getData().get("connectionState");
@@ -3649,11 +3810,11 @@ public class RTC implements AutoCloseable {
                 }
             });
             addEventListener("datachannel", evt->{
-               
+               setConnectionState(((EventImpl)evt).getData());
                 
             });
             addEventListener("icecandidate", evt->{
-                
+                setConnectionState(((EventImpl)evt).getData());
             });
             addEventListener("icecandidateerror", evt->{
                 RTCPeerConnectionIceErrorEventImpl e = (RTCPeerConnectionIceErrorEventImpl)evt;
@@ -3681,10 +3842,11 @@ public class RTC implements AutoCloseable {
                         break;
                     }
                 }
+                setConnectionState(((EventImpl)evt).getData());
             });
             
             addEventListener("negotiationneeded", evt->{
-                
+                setConnectionState(((EventImpl)evt).getData());
             });
             addEventListener("signalingstatechange", evt->{
                 EventImpl e = (EventImpl)evt;
@@ -3695,12 +3857,30 @@ public class RTC implements AutoCloseable {
                         break;
                     }
                 }
-                
+                setConnectionState(((EventImpl)evt).getData());
                 
             });
             
             addEventListener("track", evt->{
-                
+                RTCTrackEventImpl te = (RTCTrackEventImpl)evt;
+                RTCRtpReceiver receiver = te.getReceiver();
+                if (receiver != null) {
+                    if (receivers == null) {
+                        receivers = new RTCRtpReceivers();
+                    }
+                    receivers.add(receiver);
+                }
+                setConnectionState(((EventImpl)evt).getData());
+            });
+            
+            addEventListener("removetrack", evt -> {
+                if (receivers == null) {
+                    return;
+                }
+                RTCTrackEventImpl te = (RTCTrackEventImpl)evt;
+                RTCRtpReceiver receiver = te.getReceiver();
+                receivers.removeById(receiver.getTrack().getId());
+                setConnectionState(((EventImpl)evt).getData());
             });
             
             
@@ -3712,6 +3892,26 @@ public class RTC implements AutoCloseable {
             return addTrackListener(rl);
         }
 
+        @Override
+        public RTCPeerConnection onremovetrack(RTCTrackEventListener l) {
+            return addRemoveTrackListener(l);
+        }
+
+        @Override
+        public RTCPeerConnection addRemoveTrackListener(RTCTrackEventListener l) {
+            addEventListener(EVENT_REMOVETRACK, l);
+            return this;
+        }
+
+        @Override
+        public RTCPeerConnection removeRemoveTrackListener(RTCTrackEventListener l) {
+            removeEventListener(EVENT_REMOVETRACK, l);
+            return this;
+        }
+        
+        
+        
+        
         @Override
         public RTCPeerConnection addSignalingStateChangeListener(RTCSignalingStateChangeEventListener rl) {
             addEventListener(EVENT_SIGNALINGSTATECHANGE, rl);
@@ -4329,7 +4529,7 @@ public class RTC implements AutoCloseable {
 
         @Override
         public Object toJSONStruct() {
-            Map out = new LinkedHashMap();
+            Map out = new HashMap();
             if (type != null) {
                 out.put("type", type.stringValue());
             }
@@ -4396,4 +4596,19 @@ public class RTC implements AutoCloseable {
                 throw new IllegalArgumentException("Unrecognized rtp capability type.  Looking or audio or video but found "+type);
         }
     }
+    
+    public RTCIceCandidate newRTCIceCandidate(String candidate) {
+        
+        try {
+            return new RTCIceCandidateImpl(parseJSON(candidate));
+        } catch (IOException ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+        
+        
+        
+
+        
 }

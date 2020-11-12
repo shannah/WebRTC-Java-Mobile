@@ -42,7 +42,7 @@ public class InputOutputDemo extends Form implements AutoCloseable {
     public InputOutputDemo() {
         super("Select sources & outputs", new BorderLayout());
         
-        RTC.createRTC().ready(rtc->{
+        RTC.createRTC().onSuccess(rtc->{
             InputOutputDemo.this.rtc = rtc;
             
             rtc.enumerateDevices().onSuccess(devices->gotDevices(devices))

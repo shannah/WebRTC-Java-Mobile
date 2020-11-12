@@ -10,5 +10,17 @@ package com.codename1.webrtc;
  * @author shannah
  */
 public class RTCRtpSenders extends RTCList<RTCRtpSender> {
-    
+    public RTCRtpSender removeById(String id) {
+        RTCRtpSender found = null;
+        for (RTCRtpSender r : this) {
+            if (id.equals(r.getTrack().getId())) {
+                found = r;
+                break;
+            }
+        }
+        if (found != null) {
+            remove(found);
+        }
+        return found;
+    }
 }
