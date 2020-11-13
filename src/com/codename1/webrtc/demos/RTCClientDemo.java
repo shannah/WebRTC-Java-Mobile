@@ -169,7 +169,12 @@ public class RTCClientDemo extends Form implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        for (RTCClientSession s : sessions) {
+            try {
+                s.close();
+            } catch (Throwable t){}
+        }
+        
     }
     
 }

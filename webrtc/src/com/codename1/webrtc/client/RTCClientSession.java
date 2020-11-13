@@ -21,7 +21,7 @@ import java.util.Iterator;
  * Encapsulates a client session.  A single client session may have many connections, all with the same "local" username.
  * @author shannah
  */
-public class RTCClientSession implements Iterable<RTCClientConnection> {
+public class RTCClientSession implements Iterable<RTCClientConnection>, AutoCloseable {
     private final RTCClientConnections connections = new RTCClientConnections();
     private String username;
     private RTCClient client;
@@ -211,6 +211,22 @@ public class RTCClientSession implements Iterable<RTCClientConnection> {
     @Override
     public Iterator<RTCClientConnection> iterator() {
         return connections.iterator();
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (rtc != null) {
+            rtc.onComplete(_rtc -> {
+                try {
+                    ((RTC)_rtc).close();
+                } catch (Throwable t){}
+            });
+        }
+        for (RTCClientConnection conn: connections) {
+            try {
+                conn.close();
+            } catch (Throwable t){}
+        }
     }
     
     

@@ -12,7 +12,7 @@ import com.codename1.ui.events.ActionListener;
  *
  * @author shannah
  */
-public interface RTCClient {
+public interface RTCClient extends AutoCloseable {
    
     /**
      * A message sent from one client to another.
@@ -108,6 +108,15 @@ public interface RTCClient {
     }
     
     /**
+     * A "hangup" message.
+     */
+    public static class Hangup extends ClientMessage {
+        public Hangup(RTCClient client, String fromUser, String toUser) {
+            super(client, fromUser, toUser, null);
+        }
+    }
+    
+    /**
      * Adds a listener to be notified when messages are received from the client.
      * @param l 
      */
@@ -139,6 +148,11 @@ public interface RTCClient {
      * @param answerSdp 
      */
     public void sendAnswer(RTCClientConnection connection, String answerSdp);
+    
+    /**
+     * Sends a hangup message to the given connection.
+     */
+    public void sendHangup(RTCClientConnection connection);
 
     
 }

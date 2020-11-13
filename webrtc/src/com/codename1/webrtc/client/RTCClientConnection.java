@@ -5,53 +5,32 @@
  */
 package com.codename1.webrtc.client;
 
-import com.codename1.io.Log;
 import com.codename1.util.AsyncResource;
-import com.codename1.webrtc.Event;
-import com.codename1.webrtc.EventListener;
 import com.codename1.webrtc.MediaStream;
 import com.codename1.webrtc.MediaStreamConstraints;
 import com.codename1.webrtc.MediaStreamTrack;
 import com.codename1.webrtc.Promise;
 import com.codename1.webrtc.RTC;
-import static com.codename1.webrtc.RTC.getRTC;
-import com.codename1.webrtc.RTCAnswerOptions;
 import com.codename1.webrtc.RTCConfiguration;
-import com.codename1.webrtc.RTCConnectionStateChangeEventListener;
-import com.codename1.webrtc.RTCDataChannel;
-import com.codename1.webrtc.RTCDataChannelEventListener;
-import com.codename1.webrtc.RTCIceCandidate;
 import com.codename1.webrtc.RTCIceCandidateEventListener;
 import com.codename1.webrtc.RTCIceConnectionStateChangeEventListener;
-import com.codename1.webrtc.RTCIceGatheringStateChangeEventListener;
-import com.codename1.webrtc.RTCIdentityAssertion;
-import com.codename1.webrtc.RTCIdentityResultEventListener;
 import com.codename1.webrtc.RTCNegotiationNeededEventListener;
 import com.codename1.webrtc.RTCPeerConnection;
-import com.codename1.webrtc.RTCRtpReceivers;
-import com.codename1.webrtc.RTCRtpSender;
-import com.codename1.webrtc.RTCRtpSenders;
-import com.codename1.webrtc.RTCRtpTransceivers;
-import com.codename1.webrtc.RTCSctpTransport;
 import com.codename1.webrtc.RTCSessionDescription;
-import com.codename1.webrtc.RTCSignalingStateChangeEventListener;
-import com.codename1.webrtc.RTCStatsReport;
 import com.codename1.webrtc.RTCTrackEventListener;
 import com.codename1.webrtc.RTCVideoElement;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Encapsulates a connection from the local user to another user.
  * @author shannah
  */
-public class RTCClientConnection {
+public class RTCClientConnection implements AutoCloseable {
     private Promise<RTCPeerConnection> peerConnection;
     private String remoteUsername;
     private RTCClientSession session;
     private MediaStream stream;
     private RTCClient client;
-    private boolean remoteDescriptionSet, localDescriptionSet;
+    //private boolean remoteDescriptionSet, localDescriptionSet;
     private Promise<RTC> rtc;
     
     
@@ -152,7 +131,7 @@ public class RTCClientConnection {
                 offerSdp.append(offer.getSdp());
                 return peerConnection.setLocalDescription(offer);
             }).then(__ -> {
-                localDescriptionSet = true;
+                //localDescriptionSet = true;
 
                 debug("[negotiationNeeded] Sending offer");
                 if (!offerSdp.toString().equals(peerConnection.getLocalDescription().getSdp())) {
@@ -263,7 +242,7 @@ public class RTCClientConnection {
             return getRTC().then(rtc->{
                 return peerConnection.setRemoteDescription(rtc.createSessionDescription(RTCSessionDescription.RTCSdpType.Offer, sdp));
             }).then(__->{
-                remoteDescriptionSet = true;
+                //remoteDescriptionSet = true;
 
                 
                 return getLocalStream().then(localStream -> {
@@ -280,7 +259,7 @@ public class RTCClientConnection {
                 debug("handleOffer() :: Setting localDescription");
                 return peerConnection.setLocalDescription((RTCSessionDescription)desc);
             }).then(__ -> {
-                localDescriptionSet = true;
+                //localDescriptionSet = true;
 
                 debug("handleOffer():: Sending Answer to client");
                 client.sendAnswer(this, peerConnection.getLocalDescription().getSdp());
@@ -300,7 +279,7 @@ public class RTCClientConnection {
                         .setRemoteDescription(
                                 rtc.createSessionDescription(RTCSessionDescription.RTCSdpType.Answer, sdp))
                         .then(__ -> {
-                            remoteDescriptionSet = true;
+                            //remoteDescriptionSet = true;
                             return null;
                          });
             });
@@ -426,6 +405,17 @@ public class RTCClientConnection {
         }
         
         return Promise.promisify(out);
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (rtc != null) {
+            rtc.onComplete(_rtc -> {
+                try {
+                    ((RTC)_rtc).close();
+                } catch (Throwable t){}
+            });
+        }
     }
     
 }

@@ -45,5 +45,18 @@ public class MockRTCClient implements RTCClient {
         messageListeners.fireActionEvent(answer);
         
     }
+
+    @Override
+    public void sendHangup(RTCClientConnection connection) {
+        System.out.println("[MockRTCClient] Firing hangup");
+        messageListeners.fireActionEvent(new Hangup(this, connection.getLocalUsername(), connection.getRemoteUsername()));
+    }
+
+    @Override
+    public void close() throws Exception {
+        
+    }
+    
+    
     
 }
