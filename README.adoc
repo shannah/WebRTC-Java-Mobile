@@ -1,6 +1,6 @@
 = Codename One WebRTC Library
 
-A https://webrtc.github.io/[WebRTC] implementation for https://www.codenameone.com[Codename One].
+A Java/Kotlin https://webrtc.github.io/[WebRTC] implementation for cross-platform mobile/desktop/web development with https://www.codenameone.com[Codename One]. This project aims to provide Codename One (Java/Kotlin) implementations for all APIs.
 
 == Project Status
 
